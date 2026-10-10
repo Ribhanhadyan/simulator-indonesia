@@ -10,7 +10,7 @@
 [![WebRTC](https://img.shields.io/badge/WebRTC-333333?style=for-the-badge&logo=webrtc&logoColor=white)](https://webrtc.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-[🎮 Mainkan Sekarang](https://your-username.github.io/monopoli-indonesia/) · [🐛 Laporkan Bug](https://github.com/your-username/monopoli-indonesia/issues) · [✨ Minta Fitur](https://github.com/your-username/monopoli-indonesia/issues)
+[🎮 Mainkan Sekarang](https://ribhanhadyan.github.io/simulator-indonesia/) · [🐛 Laporkan Bug](https://ribhanhadyan.github.io/simulator-indonesia/issues) · [✨ Minta Fitur](https://ribhanhadyan.github.io/simulator-indonesia/issues)
 
 </div>
 
