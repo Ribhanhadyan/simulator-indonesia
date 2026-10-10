@@ -3628,5 +3628,1123 @@
       $("#mpb").onclick = () => mpHost().catch((e) => alert("Gagal memulai online: " + (e.message || e)));
       location.hash.startsWith("#join=") ? mpJoin(location.hash.slice(6)) : boot();
     </script>
+    <!-- UX PRO PATCH: lapisan UI/UX (tidak mengubah logika game) -->
+    <style id="ux-pro">
+      /* ---------- Design tokens ---------- */
+      :root {
+        --ui: 1;
+        --dock: 0px;
+        --r: 10px;
+        --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+        --acc: #c8261b;
+        --gold: #ffd400;
+        --vig: rgba(255, 255, 255, 0.45);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --vig: rgba(255, 255, 255, 0.04);
+        }
+      }
+      :root[data-theme="dark"] {
+        --vig: rgba(255, 255, 255, 0.04);
+      }
+      body {
+        background-image: radial-gradient(120% 70% at 50% 0, var(--vig), transparent 65%);
+        background-attachment: fixed;
+      }
+
+      /* ---------- Fokus & target sentuh ---------- */
+      :focus-visible {
+        outline: 3px solid var(--gold);
+        outline-offset: 2px;
+      }
+      button:focus-visible {
+        box-shadow: 0 0 0 6px #111;
+      }
+      button {
+        min-height: 44px;
+        border-radius: var(--r);
+        box-shadow: 0 2px 0 #111;
+        transition:
+          transform 0.12s var(--ease),
+          box-shadow 0.12s,
+          filter 0.12s;
+      }
+      button:active:not(:disabled) {
+        transform: translateY(2px);
+        box-shadow: 0 0 0 #111;
+      }
+      @media (hover: hover) {
+        button:hover:not(:disabled) {
+          filter: brightness(1.07);
+        }
+      }
+      button:disabled {
+        opacity: 0.45;
+        pointer-events: none; /* alasan ditampilkan lewat toast */
+      }
+      #roll {
+        min-height: 54px;
+        font-size: 18px;
+        border-radius: 12px;
+      }
+      #roll:not(:disabled) {
+        animation: ux-pulse 1.8s ease-in-out infinite;
+      }
+      #ng {
+        order: 99;
+      }
+      .btns button {
+        zoom: var(--ui);
+      }
+
+      /* ---------- Banner giliran ---------- */
+      #who {
+        border-radius: 12px;
+        box-shadow: 0 4px 0 #0003;
+        zoom: var(--ui);
+      }
+      #who.flash {
+        animation: ux-wflash 0.8s var(--ease);
+      }
+
+      /* ---------- Papan ---------- */
+      #board {
+        border-radius: 10px;
+        box-shadow:
+          0 12px 40px #0004,
+          0 0 0 6px #111;
+      }
+      .t {
+        transition: filter 0.15s;
+      }
+      @media (hover: hover) {
+        .t:hover {
+          outline: 3px solid var(--gold);
+          outline-offset: -3px;
+          z-index: 4;
+        }
+      }
+      .t:focus-visible {
+        outline: 3px solid var(--gold);
+        outline-offset: -3px;
+        box-shadow: none;
+        z-index: 4;
+      }
+      .t.here {
+        outline: 3px solid var(--gold);
+        outline-offset: -3px;
+        animation: ux-here 1.4s ease-in-out infinite;
+      }
+      /* Penanda pemilik: angka + warna (tidak bergantung warna saja) */
+      .t[data-own]::before {
+        content: attr(data-own);
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        z-index: 3;
+        min-width: 1.7em;
+        padding: 0 0.35em;
+        font:
+          700 max(1em, 7px) / 1.6 Oswald,
+          sans-serif;
+        color: #fff;
+        background: var(--oc, #333);
+        border-top-left-radius: 5px;
+        text-shadow: 0 1px 1px #0008;
+        pointer-events: none;
+      }
+      /* Digadai: pola garis (isyarat non-warna) */
+      .t[data-mg] {
+        background-image: repeating-linear-gradient(135deg, #0000 0 6px, #0003 6px 8px);
+      }
+
+      /* ---------- Panel pemain ---------- */
+      .pc {
+        border-radius: var(--r);
+        border-left-width: 9px;
+        transition:
+          transform 0.2s var(--ease),
+          box-shadow 0.2s;
+        zoom: var(--ui);
+      }
+      .pc.on {
+        box-shadow:
+          0 0 0 3px var(--gold),
+          0 8px 20px #0004;
+      }
+      .cash,
+      .nwl,
+      #log {
+        font-variant-numeric: tabular-nums;
+      }
+      .nwl {
+        opacity: 0.8;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) .cash {
+          color: #62d98e;
+        }
+        :root:not([data-theme="light"]) .dbt {
+          color: #ff9a92;
+        }
+      }
+      :root[data-theme="dark"] .cash {
+        color: #62d98e;
+      }
+      :root[data-theme="dark"] .dbt {
+        color: #ff9a92;
+      }
+      #news {
+        border-radius: var(--r);
+        zoom: var(--ui);
+      }
+
+      /* ---------- Log ---------- */
+      #log {
+        border-radius: var(--r);
+        border: 2px solid #1112;
+        zoom: var(--ui);
+      }
+      #log div {
+        padding: 3px 6px;
+        border-left: 4px solid transparent;
+        border-radius: 3px;
+      }
+      #log div.pos {
+        border-left-color: #1b7f3a;
+      }
+      #log div.neg {
+        border-left-color: #b3261e;
+      }
+      #log div:first-child {
+        animation: ux-flash 1.2s ease-out;
+        font-weight: 600;
+      }
+
+      /* ---------- Modal ---------- */
+      #ov {
+        backdrop-filter: blur(3px);
+        animation: ux-fade 0.15s;
+      }
+      #mod {
+        max-width: 480px;
+        border-radius: 14px;
+        box-shadow: 0 24px 70px #000a;
+        animation: ux-pop 0.2s var(--ease);
+        zoom: var(--ui);
+        overscroll-behavior: contain;
+      }
+      #mod:focus {
+        outline: none;
+      }
+      #mod h3 {
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        border-radius: 11px 11px 0 0;
+      }
+      #mod .mb {
+        position: sticky;
+        bottom: 0;
+        z-index: 2;
+        padding: 18px 14px 4px;
+        margin-top: 4px;
+        background: linear-gradient(#fffdf300, #fffdf3 14px);
+      }
+      #mod .mb button {
+        min-height: 46px;
+      }
+      #mod .mb button:first-child {
+        background: var(--acc);
+        color: #fff;
+      }
+      #mod .mb button:first-child:disabled {
+        background: #fff;
+        color: #111;
+      }
+      @media (hover: hover) and (pointer: fine) {
+        #mod .mb button[data-k]::before {
+          content: attr(data-k);
+          display: inline-block;
+          min-width: 1.5em;
+          margin-right: 0.45em;
+          padding: 0 0.25em;
+          border: 1px solid currentColor;
+          border-radius: 4px;
+          font-size: 0.75em;
+          opacity: 0.7;
+        }
+      }
+      .ux-modal {
+        overflow: hidden;
+      }
+
+      /* ---------- Toast & hint ---------- */
+      #ux-toast {
+        position: fixed;
+        left: 50%;
+        bottom: calc(var(--dock) + 18px + env(safe-area-inset-bottom, 0px));
+        transform: translate(-50%, 20px);
+        z-index: 60;
+        max-width: min(92vw, 420px);
+        padding: 10px 16px;
+        background: #111;
+        color: #fff;
+        border: 2px solid var(--gold);
+        border-radius: 999px;
+        font:
+          600 15px/1.35 Oswald,
+          sans-serif;
+        text-align: center;
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 0.2s,
+          transform 0.25s var(--ease);
+      }
+      #ux-toast.on {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+      #ux-hint {
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        bottom: calc(var(--dock) + 14px + env(safe-area-inset-bottom, 0px));
+        z-index: 8;
+        max-width: 420px;
+        margin: 0 auto;
+        padding: 12px 14px;
+        background: var(--card);
+        color: var(--tx);
+        border: 3px solid #111;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px #0006;
+        font:
+          15px/1.4 system-ui,
+          sans-serif;
+        animation: ux-pop 0.25s var(--ease);
+      }
+      #ux-hint ul {
+        margin: 6px 0 10px;
+        padding-left: 18px;
+      }
+      #ux-hint b {
+        font:
+          700 18px Oswald,
+          sans-serif;
+      }
+      #ux-hint button {
+        width: 100%;
+        background: var(--acc);
+        color: #fff;
+      }
+      #wtb,
+      #mp {
+        margin-bottom: var(--dock);
+      }
+
+      /* ---------- Mobile: dock aksi di zona jempol ---------- */
+      #gdk {
+        display: none;
+      }
+      @media (max-width: 999px) {
+        #who {
+          position: sticky;
+          top: 0;
+          z-index: 15;
+          border-radius: 0 0 12px 12px;
+        }
+      }
+      @media (max-width: 999px) and (min-height: 521px) {
+        :root {
+          --dock: 78px;
+        }
+        body {
+          padding-bottom: calc(var(--dock) + env(safe-area-inset-bottom, 0px));
+        }
+        .btns {
+          position: fixed;
+          inset: auto 0 0 0;
+          z-index: 20;
+          margin: 0;
+          padding: 9px 10px calc(9px + env(safe-area-inset-bottom, 0px));
+          gap: 8px;
+          flex-wrap: nowrap;
+          overflow-x: auto;
+          scrollbar-width: none;
+          background: var(--card);
+          border-top: 3px solid #111;
+          box-shadow: 0 -8px 24px #0003;
+        }
+        .btns::-webkit-scrollbar {
+          display: none;
+        }
+        .btns button {
+          flex: 0 0 auto;
+          white-space: nowrap;
+        }
+        #roll {
+          flex: 0 0 auto;
+          min-width: 52vw;
+          order: -2;
+          position: sticky;
+          left: 0;
+          z-index: 2;
+        }
+        #gtab {
+          display: none;
+        }
+        #gdk {
+          display: inline-block;
+          order: -1;
+        }
+      }
+
+      /* ---------- Kontras tinggi & gerak berkurang ---------- */
+      @media (prefers-contrast: more) {
+        .t,
+        .pc,
+        #log,
+        #news {
+          border-width: 3px;
+        }
+        #mod .sub,
+        .rl {
+          color: inherit;
+          opacity: 1;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #roll:not(:disabled),
+        .t.here,
+        #who.flash,
+        #log div:first-child,
+        #mod,
+        #ov,
+        #ux-hint {
+          animation: none;
+        }
+        #ux-toast,
+        button {
+          transition: none;
+        }
+      }
+
+      @keyframes ux-pulse {
+        50% {
+          box-shadow:
+            0 2px 0 #111,
+            0 0 0 6px #ffd40088;
+        }
+      }
+      @keyframes ux-pop {
+        from {
+          opacity: 0;
+          transform: translateY(14px) scale(0.97);
+        }
+      }
+      @keyframes ux-fade {
+        from {
+          opacity: 0;
+        }
+      }
+      @keyframes ux-flash {
+        from {
+          background: #ffd40066;
+        }
+      }
+      @keyframes ux-here {
+        50% {
+          outline-color: #fff;
+        }
+      }
+      @keyframes ux-wflash {
+        0% {
+          transform: scale(1.04);
+          filter: brightness(1.4);
+        }
+        100% {
+          transform: none;
+          filter: none;
+        }
+      }
+    </style>
+
+    <script id="ux-pro-js">
+      (() => {
+        "use strict";
+        const $ = (s) => document.querySelector(s),
+          $$ = (s) => [...document.querySelectorAll(s)],
+          O = $("#ov"),
+          M = $("#mod");
+        const LS = (k, v) => {
+          try {
+            if (v === undefined) return localStorage.getItem(k);
+            localStorage.setItem(k, v);
+          } catch (e) {}
+        };
+        const blocked = () => {
+          try {
+            return MP.on && mpRem(mpOwn());
+          } catch (e) {
+            return false;
+          }
+        };
+
+        /* ===== Toast ===== */
+        let tt;
+        const toast = (m) => {
+          let e = $("#ux-toast");
+          if (!e) {
+            e = document.createElement("div");
+            e.id = "ux-toast";
+            e.setAttribute("role", "status");
+            e.setAttribute("aria-live", "polite");
+            document.body.appendChild(e);
+          }
+          e.textContent = m;
+          e.classList.add("on");
+          clearTimeout(tt);
+          tt = setTimeout(() => e.classList.remove("on"), 2600);
+        };
+
+        /* ===== Audio & haptik ===== */
+        let ac,
+          soundOn = LS("ux-snd") !== "0";
+        const tone = (f, d = 0.09, ty = "sine", v = 0.05, at = 0) => {
+          if (!soundOn) return;
+          try {
+            ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+            if (ac.state === "suspended") ac.resume();
+            const o = ac.createOscillator(),
+              g = ac.createGain(),
+              t = ac.currentTime + at;
+            o.type = ty;
+            o.frequency.setValueAtTime(f, t);
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.linearRampToValueAtTime(v, t + 0.01);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+            o.connect(g).connect(ac.destination);
+            o.start(t);
+            o.stop(t + d + 0.02);
+          } catch (e) {}
+        };
+        const SFX = {
+          dice: () => [0, 1, 2].forEach((i) => tone(180 + i * 40, 0.05, "square", 0.03, i * 0.06)),
+          turn: () => {
+            tone(660, 0.12);
+            tone(880, 0.18, "sine", 0.05, 0.12);
+          },
+          up: () => {
+            tone(660, 0.08);
+            tone(990, 0.14, "sine", 0.05, 0.08);
+          },
+          dn: () => {
+            tone(300, 0.12, "triangle", 0.06);
+            tone(220, 0.18, "triangle", 0.06, 0.1);
+          },
+          tap: () => tone(520, 0.04, "sine", 0.025),
+        };
+        const buzz = (n) => {
+          try {
+            navigator.vibrate && navigator.vibrate(n);
+          } catch (e) {}
+        };
+
+        /* ===== Aksesibilitas dasar ===== */
+        $("#who").setAttribute("role", "status");
+        $("#who").setAttribute("aria-live", "polite");
+        $("#now").setAttribute("aria-live", "polite");
+        $("#log").setAttribute("role", "log");
+        $("#pl").setAttribute("aria-label", "Daftar pemain");
+        $("#roll").title = "Lempar dadu / akhiri giliran (Spasi)";
+        $("#mng").title = "Kelola aset (A)";
+        $("#bnk").title = "Bank (B)";
+        $("#trd").title = "Dagang (D)";
+        M.setAttribute("role", "dialog");
+        M.setAttribute("aria-modal", "true");
+        M.tabIndex = -1;
+        $$("#board > .t").forEach((e, i) => {
+          e.setAttribute("role", "button");
+          e.tabIndex = 0;
+          e.setAttribute("aria-label", T[i].n);
+        });
+
+        /* ===== Tombol tambahan: kecepatan, suara, ukuran teks, panduan ===== */
+        const mk = (id, txt, title) => {
+          const b = document.createElement("button");
+          b.id = id;
+          b.type = "button";
+          b.textContent = txt;
+          b.title = title;
+          return b;
+        };
+        const SPS = [
+            ["Lambat", 1.6],
+            ["Normal", 1],
+            ["Cepat", 0.5],
+            ["Kilat", 0.25],
+          ],
+          spIdx = () => SPS.reduce((b, s, i) => (Math.abs(s[1] - SET.sp) < Math.abs(SPS[b][1] - SET.sp) ? i : b), 0);
+        const fast = mk("ux-fast", "", "Kecepatan animasi (F)"),
+          sndB = mk("ux-snd", "", "Suara (M)"),
+          txtB = mk("ux-txt", "", "Ukuran teks"),
+          gdk = mk("gdk", "📖 Panduan", "Buku panduan (P)");
+        const UIS = [1, 1.15, 1.3];
+        let ui = Math.max(0, UIS.indexOf(+LS("ux-ui")));
+        const paint = () => {
+          fast.textContent = "⏩ " + SPS[spIdx()][0];
+          sndB.textContent = soundOn ? "🔊 Suara" : "🔇 Hening";
+          txtB.textContent = "🔠 " + Math.round(UIS[ui] * 100) + "%";
+          document.documentElement.style.setProperty("--ui", UIS[ui]);
+        };
+        fast.onclick = () => {
+          SET.sp = SPS[(spIdx() + 1) % SPS.length][1];
+          paint();
+          toast("Animasi: " + SPS[spIdx()][0]);
+        };
+        sndB.onclick = () => {
+          soundOn = !soundOn;
+          LS("ux-snd", soundOn ? "1" : "0");
+          paint();
+          SFX.tap();
+        };
+        txtB.onclick = () => {
+          ui = (ui + 1) % UIS.length;
+          LS("ux-ui", UIS[ui]);
+          paint();
+        };
+        gdk.onclick = () => $("#gtab").click();
+        $("#mng").before(gdk);
+        $("#thm").after(fast, sndB, txtB);
+        paint();
+
+        /* ===== Dekorasi setelah setiap render ===== */
+        const shade = (hex, k) => {
+          const n = parseInt(hex.slice(1), 16);
+          return "rgb(" + [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => Math.round(v * k)).join(",") + ")";
+        };
+        let lastCur = -1;
+        function decorate() {
+          if (!P.length) return;
+          const w = P[cur];
+          $$("#board > .t").forEach((e, i) => {
+            const o = own[i];
+            if (o) {
+              e.dataset.own = o.o === NEG ? "N" : String(o.o + 1);
+              e.style.setProperty("--oc", o.o === NEG ? "#555" : P[o.o].c);
+            } else delete e.dataset.own;
+            e.toggleAttribute("data-mg", !!(o && o.m));
+            e.classList.toggle("here", !!w && !w.x && w.pos === i);
+            e.setAttribute("aria-label", T[i].n + (o ? ", milik " + (o.o === NEG ? "negara" : P[o.o].n) : "") + (o && o.m ? ", digadai" : "") + (o && o.h ? (o.h > 4 ? ", hotel" : ", " + o.h + " rumah") : ""));
+          });
+          const rank = P.filter((p) => !p.x)
+            .sort((a, b) => nw(b) - nw(a))
+            .map((p) => p.id);
+          $$("#pl .pc").forEach((c, k) => {
+            const p = P[k];
+            if (!p || p.x) return;
+            const d = document.createElement("div");
+            d.className = "rl nwl";
+            d.textContent = "Kekayaan bersih " + fm(nw(p)) + " · peringkat " + (rank.indexOf(k) + 1) + "/" + rank.length;
+            c.appendChild(d);
+          });
+          if (w) $("#who").style.background = shade(w.c, 0.62); /* kontras teks putih ≥ 4.5:1 */
+          if (lastCur !== cur) {
+            lastCur = cur;
+            const e = $("#who");
+            e.classList.remove("flash");
+            void e.offsetWidth;
+            e.classList.add("flash");
+            if (w && !w.b && !w.x && !MP.cl) SFX.turn();
+          }
+        }
+        const _render = render;
+        render = function () {
+          _render.apply(this, arguments);
+          try {
+            decorate();
+          } catch (e) {}
+        };
+
+        /* ===== Log berwarna ===== */
+        new MutationObserver(() => {
+          $$("#log div").forEach((d) => {
+            const t = d.textContent;
+            d.className = /bayar|denda|bangkrut|menunggak|disita|menyita|suap|pajak|masuk penjara/i.test(t) ? "neg" : /menerima|gaji|dividen|menang|melunasi|santunan|terima/i.test(t) ? "pos" : "";
+          });
+        }).observe($("#log"), { childList: true });
+
+        /* ===== Efek suara dari perubahan DOM ===== */
+        new MutationObserver(() => {
+          SFX.dice();
+          buzz(15);
+        }).observe($("#dice"), { childList: true });
+        new MutationObserver((ms) =>
+          ms.forEach((m) =>
+            m.addedNodes.forEach((n) => {
+              if (n.classList && n.classList.contains("pop")) {
+                n.classList.contains("up") ? SFX.up() : SFX.dn();
+                buzz(n.classList.contains("dn") ? [30, 40, 30] : 20);
+              }
+            }),
+          ),
+        ).observe(document.body, { childList: true });
+        let gLast = -1;
+        new MutationObserver(() => {
+          if (MP.cl && MP.seat >= 0 && MP.cur === MP.seat && gLast !== MP.cur) SFX.turn();
+          gLast = MP.cur;
+        }).observe($("#who"), { childList: true, characterData: true, subtree: true });
+
+        /* ===== Modal: fokus, trap, restore ===== */
+        let prevFocus = null,
+          lastBtn = null;
+        M.addEventListener(
+          "click",
+          (e) => {
+            const b = e.target.closest("button");
+            lastBtn = b ? { a: b.dataset.a, i: b.dataset.i } : null;
+            if (b && !b.disabled) {
+              SFX.tap();
+              buzz(10);
+            }
+          },
+          true,
+        );
+        function tuneModal() {
+          const h = M.querySelector("h3");
+          if (h) {
+            h.id = "ux-mt";
+            M.setAttribute("aria-labelledby", "ux-mt");
+          }
+          M.querySelectorAll(".mb button").forEach((b, i) => (i < 9 ? (b.dataset.k = i + 1) : b.removeAttribute("data-k")));
+          if (M.contains(document.activeElement) && document.activeElement !== M) return;
+          let t = null;
+          if (lastBtn && lastBtn.a !== undefined) t = [...M.querySelectorAll("button:not(:disabled)")].find((b) => b.dataset.a === lastBtn.a && b.dataset.i === lastBtn.i);
+          const mb = M.querySelectorAll(".mb button");
+          t = t || M.querySelector("input:not([type=hidden]),select") || (mb.length === 1 && !mb[0].disabled ? mb[0] : null);
+          (t || M).focus({ preventScroll: true });
+        }
+        new MutationObserver(() => {
+          if (O.hidden) {
+            document.body.classList.remove("ux-modal");
+            if (prevFocus && document.contains(prevFocus)) prevFocus.focus({ preventScroll: true });
+            prevFocus = null;
+            lastBtn = null;
+            return;
+          }
+          if (!prevFocus && !M.contains(document.activeElement)) prevFocus = document.activeElement;
+          document.body.classList.add("ux-modal");
+          tuneModal();
+        }).observe(O, { attributes: true, attributeFilter: ["hidden"] });
+        new MutationObserver(() => {
+          if (!O.hidden) tuneModal();
+        }).observe(M, { childList: true });
+
+        /* ===== Alasan tombol nonaktif (toast) ===== */
+        const WHY = {
+          b: "Kas kurang, sudah hotel, atau bangun merata dulu di properti lain dalam set",
+          s: "Belum ada bangunan untuk dijual (atau jual merata dulu)",
+          g: "Kas kurang, MBG sudah maksimal, atau MBG dinonaktifkan",
+          v: "Tidak ada MBG di properti ini",
+          u: "Kas belum cukup untuk menebus",
+          m: "Jual dulu rumah/MBG di set warna ini sebelum menggadaikan",
+          l: "Uangmu belum cukup untuk melunasi",
+          n: "Melebihi plafon pinjamanmu",
+        };
+        function why(b) {
+          if (b.id === "roll") return !O.hidden ? "Selesaikan dialog yang terbuka dulu" : MP.cl ? "Bukan giliranmu" : P[cur] && P[cur].b ? "Bot sedang bermain…" : "Belum bisa dilempar sekarang";
+          if (b.id === "kbj") return "Kebijakan: hanya Presiden, sekali per putaran, di gilirannya";
+          if (["mng", "bnk", "trd"].includes(b.id)) return "Bukan giliranmu";
+          if (b.closest("#mod")) {
+            const a = b.dataset.a;
+            if (WHY[a]) return WHY[a];
+            const t = b.textContent;
+            if (/saham/i.test(t)) return "Uang kurang atau saham sudah maksimal (3)";
+            if (/^\W*(Beli|Tawar|Bayar|Sewa|Tebus|Lunasi|Alat berat)/i.test(t.trim())) return "Uangmu belum cukup untuk pilihan ini";
+            return "Pilihan ini belum tersedia";
+          }
+          return "Tidak tersedia saat ini";
+        }
+        document.addEventListener(
+          "click",
+          (e) => {
+            const x = e.clientX,
+              y = e.clientY;
+            for (const b of $$("button:disabled")) {
+              const r = b.getBoundingClientRect();
+              if (r.width && x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+                toast(why(b));
+                buzz(30);
+                return;
+              }
+            }
+            const b = e.target.closest && e.target.closest("#mng,#bnk,#trd");
+            if (b) {
+              if (!O.hidden) toast("Selesaikan dialog yang sedang terbuka dulu");
+              else if (!MP.cl && P[cur] && P[cur].b) toast("Sedang giliran bot — tunggu sebentar");
+            }
+          },
+          true,
+        );
+
+        /* ===== Keyboard ===== */
+        document.addEventListener("keydown", (e) => {
+          if (e.ctrlKey || e.metaKey || e.altKey) return;
+          const tg = e.target,
+            typing = /^(INPUT|SELECT|TEXTAREA)$/.test(tg.tagName);
+          if (!O.hidden) {
+            if (e.key === "Tab") {
+              const f = [M, ...M.querySelectorAll("button:not(:disabled),input,select")];
+              const i = f.indexOf(document.activeElement);
+              const n = e.shiftKey ? (i <= 0 ? f.length - 1 : i - 1) : i === f.length - 1 ? 0 : i + 1;
+              e.preventDefault();
+              f[n].focus();
+            } else if (e.key === "Escape") {
+              const b = [...M.querySelectorAll("button:not(:disabled)")].filter((x) => /^(Tutup|Selesai|Batal)$/i.test(x.textContent.replace(/^\d+\s*/, "").trim())).pop();
+              if (b && !blocked()) {
+                e.preventDefault();
+                b.click();
+              }
+            } else if (!typing && /^[1-9]$/.test(e.key) && !O.classList.contains("wt") && !blocked()) {
+              const b = M.querySelectorAll(".mb button")[+e.key - 1];
+              if (b && !b.disabled) {
+                e.preventDefault();
+                b.click();
+              }
+            }
+            return;
+          }
+          if ($("#gb").classList.contains("o") || typing) return;
+          if (tg.classList && tg.classList.contains("t") && (e.key === "Enter" || e.key === " ")) {
+            e.preventDefault();
+            tg.click();
+            return;
+          }
+          if (tg.tagName === "BUTTON" || tg.tagName === "SUMMARY") return;
+          const K = { " ": "#roll", Enter: "#roll", a: "#mng", b: "#bnk", d: "#trd", p: "#gtab", f: "#ux-fast", m: "#ux-snd" }[e.key.toLowerCase()];
+          if (!K) return;
+          const b = $(K);
+          e.preventDefault();
+          if (b.disabled) return toast(why(b));
+          if (blocked() && /roll|mng|bnk|trd/.test(K)) return;
+          b.click();
+        });
+
+        /* ===== Hint pertama kali ===== */
+        if (!LS("ux-hint")) {
+          const iv = setInterval(() => {
+            if (P.length && O.hidden && LS("ux-tour") && !$("#ux-hint")) {
+              clearInterval(iv);
+              const h = document.createElement("div");
+              h.id = "ux-hint";
+              h.setAttribute("role", "region");
+              h.setAttribute("aria-label", "Tips cepat");
+              h.innerHTML =
+                '<b>💡 Tips cepat</b><ul><li>Ketuk petak untuk melihat harga & sewa</li><li>Pintasan: Spasi = dadu · A Aset · B Bank · D Dagang · P Panduan · 1–9 pilih opsi</li><li>Tombol ⏩ mempercepat animasi</li></ul><button type="button">Mengerti</button>';
+              h.querySelector("button").onclick = () => {
+                h.remove();
+                LS("ux-hint", "1");
+              };
+              document.body.appendChild(h);
+            }
+          }, 1500);
+        }
+      })();
+    </script>
+
+    <!-- UX PRO PATCH 2: layar judul + tur singkat -->
+    <style id="ux-pro-2">
+      #ux-title {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        background: radial-gradient(120% 90% at 50% 0, #e84a3d, #8f1a12 70%);
+        color: #fff;
+        overflow: auto;
+        animation: ux-fade 0.3s;
+      }
+      #ux-title[hidden] {
+        display: none;
+      }
+      #ux-title .card {
+        width: min(100%, 420px);
+        text-align: center;
+        font-family: Oswald, Impact, sans-serif;
+      }
+      #ux-title h1 {
+        margin: 0;
+        font:
+          700 clamp(44px, 14vw, 84px) / 0.95 Oswald,
+          Impact,
+          sans-serif;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        text-shadow: 0 4px 0 #0006;
+        transform: rotate(-3deg);
+      }
+      #ux-title h1 small {
+        display: block;
+        margin-top: 10px;
+        font-size: 0.3em;
+        letter-spacing: 0.6em;
+        background: #fff;
+        color: #c8261b;
+        padding: 4px 0 4px 0.6em;
+        border: 3px solid #111;
+        text-shadow: none;
+      }
+      #ux-title .sv {
+        margin: 22px 0 0;
+        font:
+          600 16px Oswald,
+          sans-serif;
+        background: #0004;
+        border-radius: 8px;
+        padding: 6px 10px;
+      }
+      #ux-title .menu {
+        display: grid;
+        gap: 10px;
+        margin-top: 22px;
+      }
+      #ux-title button {
+        font-size: 18px;
+        min-height: 54px;
+        background: #fff;
+        color: #111;
+      }
+      #ux-title button.pri {
+        background: #ffd400;
+        font-size: 22px;
+        min-height: 62px;
+      }
+      #ux-title .ft {
+        margin-top: 16px;
+        font:
+          14px system-ui,
+          sans-serif;
+        opacity: 0.9;
+      }
+      #ux-tour {
+        position: fixed;
+        inset: 0;
+        z-index: 55;
+      }
+      #ux-tour[hidden] {
+        display: none;
+      }
+      #ux-tour .sp {
+        position: fixed;
+        border-radius: 10px;
+        box-shadow:
+          0 0 0 9999px #000a,
+          0 0 0 4px #ffd400;
+        transition: all 0.3s var(--ease);
+        pointer-events: none;
+      }
+      #ux-tour .bx {
+        position: fixed;
+        left: 50%;
+        width: min(92vw, 400px);
+        transform: translateX(-50%);
+        padding: 14px;
+        background: var(--card);
+        color: var(--tx);
+        border: 3px solid #111;
+        border-radius: 14px;
+        box-shadow: 0 14px 40px #0008;
+        font:
+          16px/1.45 system-ui,
+          sans-serif;
+      }
+      #ux-tour .bx b {
+        font:
+          700 20px Oswald,
+          sans-serif;
+        display: block;
+        margin-bottom: 4px;
+      }
+      #ux-tour .st {
+        font:
+          600 13px Oswald,
+          sans-serif;
+        opacity: 0.7;
+        letter-spacing: 0.08em;
+      }
+      #ux-tour .row {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      #ux-tour .row button {
+        flex: 1;
+      }
+      #ux-tour .row .nx {
+        background: var(--acc);
+        color: #fff;
+        flex: 2;
+      }
+      @media (min-width: 1000px) {
+        #ux-hint {
+          left: auto;
+          right: 16px;
+          bottom: 16px;
+          width: 360px;
+          margin: 0;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #ux-title,
+        #ux-tour .sp {
+          animation: none;
+          transition: none;
+        }
+      }
+    </style>
+    <script id="ux-pro-js-2">
+      (() => {
+        "use strict";
+        if (location.hash.startsWith("#join=")) return; /* tamu online langsung ke game */
+        const $ = (s) => document.querySelector(s);
+        const LS = (k, v) => {
+          try {
+            if (v === undefined) return localStorage.getItem(k);
+            localStorage.setItem(k, v);
+          } catch (e) {}
+        };
+
+        /* ===== Tur singkat ===== */
+        const STEPS = [
+          ["#board", "Papan permainan", "Ketuk petak mana saja untuk melihat harga dan sewa. Petak berkedip emas = posisi pemain yang sedang giliran. Angka kecil di sudut petak menunjukkan pemiliknya."],
+          ["#who", "Giliran siapa?", "Banner ini selalu menunjukkan pemain yang sedang main dan kasnya. Warnanya mengikuti warna pion."],
+          ["#pl", "Panel pemain", "Kas, utang, peran, kekayaan bersih, dan peringkat setiap pemain. Ketuk kotak warna kecil untuk melihat asetnya."],
+          ["#roll", "Lempar dadu", "Tombol utama giliranmu. Pintasan keyboard: Spasi. Kalau tombol abu-abu, ketuk untuk tahu alasannya."],
+          ["#mng", "Aset, Bank, Dagang", "Bangun rumah, gadai, pinjam uang, atau tukar properti kapan saja di gilirannya. Pintasan: A, B, D."],
+          ["#gdk,#gtab", "Panduan & pengaturan", "Aturan lengkap ada di Panduan (P). Tombol ⏩ mempercepat animasi, 🔊 mengatur suara, 🔠 memperbesar teks."],
+        ];
+        let ti = 0,
+          tour = null;
+        function vis(sel) {
+          for (const e of document.querySelectorAll(sel)) {
+            const r = e.getBoundingClientRect();
+            if (r.width > 8 && r.height > 8 && getComputedStyle(e).display !== "none") return e;
+          }
+          return null;
+        }
+        function showStep() {
+          const [sel, ttl, txt] = STEPS[ti],
+            el = vis(sel),
+            sp = tour.querySelector(".sp"),
+            bx = tour.querySelector(".bx");
+          bx.innerHTML = `<div class="st">LANGKAH ${ti + 1} / ${STEPS.length}</div><b>${ttl}</b>${txt}${el ? "" : "<br><i>(bagian ini baru terlihat setelah permainan dimulai)</i>"}<div class="row"><button type="button" class="sk">Lewati</button><button type="button" class="nx">${ti == STEPS.length - 1 ? "Selesai ✓" : "Lanjut ➜"}</button></div>`;
+          const H = innerHeight,
+            bh = bx.offsetHeight;
+          bx.style.top = "auto";
+          bx.style.bottom = "auto";
+          if (el) {
+            el.scrollIntoView({ block: "nearest", inline: "nearest" });
+            const r = el.getBoundingClientRect(),
+              pad = 6;
+            Object.assign(sp.style, { display: "block", left: r.left - pad + "px", top: r.top - pad + "px", width: r.width + pad * 2 + "px", height: r.height + pad * 2 + "px" });
+            if (r.height > H * 0.5) bx.style.bottom = "16px";
+            else if (H - r.bottom >= bh + 24) bx.style.top = r.bottom + 14 + "px";
+            else if (r.top >= bh + 24) bx.style.bottom = H - r.top + 14 + "px";
+            else bx.style.bottom = "16px";
+          } else {
+            sp.style.display = "none";
+            bx.style.top = Math.max(12, (H - bh) / 2) + "px";
+          }
+          bx.querySelector(".sk").onclick = endTour;
+          const nx = bx.querySelector(".nx");
+          nx.onclick = () => (ti == STEPS.length - 1 ? endTour() : (ti++, showStep()));
+          nx.focus({ preventScroll: true });
+        }
+        function endTour() {
+          if (tour) tour.hidden = true;
+          LS("ux-tour", "1");
+          window.removeEventListener("resize", rs);
+          document.removeEventListener("keydown", tk, true);
+        }
+        const rs = () => tour && !tour.hidden && showStep(),
+          tk = (e) => {
+            if (e.key === "Escape") {
+              e.stopPropagation();
+              endTour();
+            }
+          };
+        window.uxTour = () => {
+          if (!tour) {
+            tour = document.createElement("div");
+            tour.id = "ux-tour";
+            tour.setAttribute("role", "dialog");
+            tour.setAttribute("aria-label", "Tur singkat");
+            tour.innerHTML = '<div class="sp"></div><div class="bx"></div>';
+            document.body.appendChild(tour);
+          }
+          tour.hidden = false;
+          ti = 0;
+          window.addEventListener("resize", rs);
+          document.addEventListener("keydown", tk, true);
+          showStep();
+        };
+
+        /* ===== Layar judul ===== */
+        let sv = null;
+        try {
+          sv = JSON.parse(localStorage.getItem("monopoli-id-save"));
+        } catch (e) {}
+        const t = document.createElement("div");
+        t.id = "ux-title";
+        t.setAttribute("role", "dialog");
+        t.setAttribute("aria-modal", "true");
+        t.setAttribute("aria-label", "Menu utama");
+        const has = sv && sv.P && sv.P.length;
+        t.innerHTML = `<div class="card"><h1>Monopoli<small>INDONESIA</small></h1>${has ? `<div class="sv">💾 Ada permainan tersimpan · putaran ${sv.rnd} · ${sv.P.length} pemain</div>` : ""}<div class="menu"><button type="button" class="pri" id="ux-go">${has ? "▶️ Lanjutkan / Main" : "🎲 Mulai Main"}</button><button type="button" id="ux-how">📖 Cara Bermain</button><button type="button" id="ux-tr">🎓 Tur Singkat</button></div><div class="ft">Main bersama teman lewat 🌐 Online · Pintasan: Spasi = lempar dadu</div></div>`;
+        document.body.appendChild(t);
+        const close = (after) => {
+          t.hidden = true;
+          after && setTimeout(after, 50);
+        };
+        $("#ux-go").onclick = () => {
+          close();
+          if (!LS("ux-tour")) {
+            const iv = setInterval(() => {
+              if (typeof P !== "undefined" && P.length && $("#ov").hidden) {
+                clearInterval(iv);
+                confirmTour();
+              }
+            }, 1000);
+          }
+        };
+        $("#ux-how").onclick = () => close(() => ($("#gtab") || $("#gdk")).click());
+        $("#ux-tr").onclick = () => close(window.uxTour);
+        function confirmTour() {
+          /* tawarkan tur sekali saja, tidak memaksa */
+          const h = document.createElement("div");
+          h.id = "ux-hint";
+          h.innerHTML =
+            '<b>🎓 Baru pertama kali?</b><p style="margin:6px 0 10px">Tur singkat 6 langkah menjelaskan layar permainan.</p><div style="display:flex;gap:8px"><button type="button" class="n" style="flex:1;background:#fff;color:#111">Nanti</button><button type="button" class="y" style="flex:2">Mulai tur</button></div>';
+          h.querySelector(".n").onclick = () => {
+            h.remove();
+            LS("ux-tour", "1");
+            LS("ux-hint", "1");
+          };
+          h.querySelector(".y").onclick = () => {
+            h.remove();
+            LS("ux-hint", "1");
+            window.uxTour();
+          };
+          document.body.appendChild(h);
+        }
+        $("#ux-go").focus();
+      })();
+    </script>
   </body>
 </html>
