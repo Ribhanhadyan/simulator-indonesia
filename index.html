@@ -1091,6 +1091,43 @@
       body.cl #mpb {
         display: none;
       }
+      /* ===== MARKET KARTU ===== */
+      .t.mk {
+        background: #ffe4f0;
+      }
+      .t.mk::after {
+        content: "🛒";
+        position: absolute;
+        top: 0;
+        right: 1px;
+        font-size: max(1.2em, 8px);
+        pointer-events: none;
+      }
+      /* ===== UPGRADE LELANG ===== */
+      .psn-badge {
+        display: inline-block;
+        padding: 0 0.4em;
+        border-radius: 4px;
+        background: #d62b1f;
+        color: #fff;
+        font:
+          700 0.72em/1.5 Oswald,
+          sans-serif;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+        vertical-align: middle;
+      }
+      .lg-r {
+        align-items: center;
+      }
+      .lg-gp {
+        flex: 0 0 1.8em;
+        text-align: center;
+      }
+      .lg-n {
+        flex: 1;
+        text-align: left;
+      }
     </style>
   </head>
   <body>
@@ -1114,6 +1151,8 @@
           ><button id="thm" title="Ganti tema" aria-label="Ganti tema">🌓</button><button id="stg">⚙️ Atur</button><button id="ng">🔄 Game Baru</button><button id="mpb">🌐 Online</button>
         </div>
         <div id="news"></div>
+        <div id="pchips"></div>
+        <!-- ===== PRES LOG ===== -->
         <div id="pl"></div>
         <div id="log"></div>
       </div>
@@ -1132,6 +1171,7 @@
       let MBG_MAX = 1;
       const PRES = { id: -1, t: 0, used: 0, offer: null, bi: 1, biT: 0, sup: [] },
         isP = (p) => p.id === PRES.id;
+      const PRES_LOG = []; // ===== PRES LOG ===== {rnd, id, key, note, t}
       const K = 1e4,
         $ = (s) => document.querySelector(s),
         sleep = (ms) => new Promise((r) => setTimeout(r, ms * SET.sp)),
@@ -1189,9 +1229,9 @@
         { t: "x", n: "Pajak Barang Mewah", p: 100 * K, i: "💎" },
         S("IKN Nusantara", 400, "db", 50, 200, 600, 1400, 1700, 2000),
       ];
-      const NEWT = { Lelang: { t: "la", n: "Lelang", i: "🔨" }, BUMN: { t: "bu", n: "BUMN", i: "🏭", p: 2e6 }, Bandara: { t: "ap", n: "Bandara", i: "✈️" } };
+      const NEWT = { Lelang: { t: "la", n: "Lelang", i: "🔨" }, BUMN: { t: "bu", n: "BUMN", i: "🏭", p: 2e6 }, Bandara: { t: "ap", n: "Bandara", i: "✈️" }, Market: { t: "mk", n: "Market", i: "🛒" } }; // ===== MARKET KARTU =====
       const SEQ =
-        "Mulai|Medan|Dana Umum|Palembang|Pajak Penghasilan|Stasiun Gambir|Lelang|Pontianak|Kesempatan|Banjarmasin|Makassar|Penjara|Manado|PLN|Ambon|Jayapura|Dana Umum|BUMN|Malang|Kesempatan|Semarang|Surabaya|Dana Bansos APBN|Bandung|Kesempatan|Yogyakarta|Solo|Stasiun Tugu|Lelang|Bali|Lombok|PDAM|Labuan Bajo|Karier & Peran|Borobudur|Raja Ampat|Dana Umum|Komodo|Kesempatan|Bandara|Tambang Emas|Jakarta|Pajak Barang Mewah|IKN Nusantara".split(
+        "Mulai|Medan|Dana Umum|Palembang|Pajak Penghasilan|Stasiun Gambir|Lelang|Pontianak|Kesempatan|Banjarmasin|Makassar|Penjara|Manado|PLN|Ambon|Jayapura|Dana Umum|BUMN|Malang|Kesempatan|Semarang|Surabaya|Dana Bansos APBN|Bandung|Kesempatan|Yogyakarta|Solo|Stasiun Tugu|Market|Bali|Lombok|PDAM|Labuan Bajo|Karier & Peran|Borobudur|Raja Ampat|Dana Umum|Komodo|Kesempatan|Bandara|Tambang Emas|Jakarta|Pajak Barang Mewah|IKN Nusantara".split(
           "|",
         );
       const T = SEQ.map((n) =>
@@ -1424,7 +1464,7 @@
           [r, c] = pos(i);
         e.id = "t" + i;
         e.style.gridArea = r + "/" + c;
-        e.className = "t " + (i % 11 == 0 ? "cn" : ["bo", "le", "to", "ri"][(i / 11) | 0]) + (["la", "bu", "ap"].includes(t.t) ? " " + t.t : "");
+        e.className = "t " + (i % 11 == 0 ? "cn" : ["bo", "le", "to", "ri"][(i / 11) | 0]) + (["la", "bu", "ap", "mk"].includes(t.t) ? " " + t.t : "");
         e.innerHTML =
           (gl(t) ? `<b class="gl">${gl(t)}</b>` : "") +
           (t.g ? `<div class="bar" style="background:${G[t.g][0]}"></div>` : "") +
@@ -1469,7 +1509,7 @@
         }
         $("#pl").innerHTML = P.map(
           (p, k) =>
-            `<div class="pc${k == cur ? " on" : ""}${p.x ? " out" : ""}" style="border-color:${p.c}"><div><span>${p.k}</span> <b>${p.n}</b>${p.id == PRES.id ? " 👑" : ""}${p.cards ? " 🔑×" + p.cards : ""}${p.jail >= 0 ? " ⛓️" : ""}</div><div class="rl">${R(p).i} ${R(p).n}</div>${nmb(p) ? `<div class="rl mbt">🍱 MBG ×${nmb(p)} · santunan ${fm(nmb(p) * MBG_PAY)} tiap lewat MULAI</div>` : ""}${p.imun || p.gk ? `<div class="rl">${p.imun ? "⚖️ kebal hukum 1× " : ""}${p.gk ? "🩺 berobat gratis 1×" : ""}</div>` : ""}${p.sb ? `<div class="rl">🏭 Saham BUMN ×${p.sb} · dividen ${fm(p.sb * DIV())} tiap lewat MULAI</div>` : ""}<div class="cash">${fm(p.cash)}</div>${p.loans.length ? `<div class="dbt">🏦 Utang ${fm(p.loans.reduce((a, l) => a + l.pr, 0))} · jatuh tempo ${Math.min(...p.loans.map((l) => l.n))} giliran</div>` : ""}<div class="ch">${Object.keys(
+            `<div class="pc${k == cur ? " on" : ""}${p.x ? " out" : ""}" style="border-color:${p.c}"><div><span>${p.k}</span> <b>${p.n}</b>${p.id == PRES.id ? " 👑" : ""}${p.cards ? " 🔑×" + p.cards : ""}${p.jail >= 0 ? " ⛓️" : ""}</div><div class="rl">${R(p).i} ${R(p).n}</div>${p.ab?.length ? '<div class="rl">🎴 Kartu ×' + p.ab.length + "</div>" : ""}${nmb(p) ? `<div class="rl mbt">🍱 MBG ×${nmb(p)} · santunan ${fm(nmb(p) * MBG_PAY)} tiap lewat MULAI</div>` : ""}${p.imun || p.gk ? `<div class="rl">${p.imun ? "⚖️ kebal hukum 1× " : ""}${p.gk ? "🩺 berobat gratis 1×" : ""}</div>` : ""}${p.sb ? `<div class="rl">🏭 Saham BUMN ×${p.sb} · dividen ${fm(p.sb * DIV())} tiap lewat MULAI</div>` : ""}<div class="cash">${fm(p.cash)}</div>${p.loans.length ? `<div class="dbt">🏦 Utang ${fm(p.loans.reduce((a, l) => a + l.pr, 0))} · jatuh tempo ${Math.min(...p.loans.map((l) => l.n))} giliran</div>` : ""}<div class="ch">${Object.keys(
               own,
             )
               .filter((i) => own[i].o == k)
@@ -1605,6 +1645,7 @@
               .map(Number);
             mod.innerHTML =
               `<h3>Kelola Aset · ${fm(p.cash)}</h3><p>Beli rumah di tanah milikmu mana saja, tanpa perlu mendarat di sana.</p>` +
+              abSec(p) +
               (ids.length
                 ? ids
                     .map((i) => {
@@ -1620,7 +1661,7 @@
                         gb = st && !o.m && (o.mb || 0) < MBG_MAX && p.cash >= MBG_COST,
                         gs = st && o.mb > 0,
                         u = o.m && p.cash >= Math.ceil(t.p * 0.55);
-                      return `<div class="mr"><b style="background:${t.g ? G[t.g][0] : "#ddd"};color:${t.g == "lb" || t.g == "yl" || !t.g ? "#111" : "#fff"}">${gtag(i)}${t.n} ${o.h > 4 ? "🏨" : "🏠".repeat(o.h)}${"🍱".repeat(o.mb || 0)}${o.m ? " (digadai)" : ""}</b>${st ? `<button data-a="b" data-i="${i}" ${b ? "" : "disabled"}>+🏠 ${sh(hc)}</button><button data-a="s" data-i="${i}" ${s ? "" : "disabled"}>−🏠 +${sh(hc / 2)}</button><button data-a="g" data-i="${i}" ${gb ? "" : "disabled"}>+🍱 ${sh(MBG_COST)}</button><button data-a="v" data-i="${i}" ${gs ? "" : "disabled"}>−🍱 +${sh(MBG_COST / 2)}</button>` : ""}${o.m ? `<button data-a="u" data-i="${i}" ${u ? "" : "disabled"}>Tebus −${sh(t.p * 0.55)}</button>` : `<button data-a="m" data-i="${i}" ${m ? "" : "disabled"}>Gadai +${sh(t.p / 2)}</button>`}</div>`;
+                      return `<div class="mr"><b style="background:${t.g ? G[t.g][0] : "#ddd"};color:${t.g == "lb" || t.g == "yl" || !t.g ? "#111" : "#fff"}">${gtag(i)}${t.n} ${o.h > 4 ? "🏨" : "🏠".repeat(o.h)}${"🍱".repeat(o.mb || 0)}${o.m ? " (digadai)" : ""}</b>${evBtn(p, i)}${st ? `<button data-a="b" data-i="${i}" ${b ? "" : "disabled"}>+🏠 ${sh(hc)}</button><button data-a="s" data-i="${i}" ${s ? "" : "disabled"}>−🏠 +${sh(hc / 2)}</button><button data-a="g" data-i="${i}" ${gb ? "" : "disabled"}>+🍱 ${sh(MBG_COST)}</button><button data-a="v" data-i="${i}" ${gs ? "" : "disabled"}>−🍱 +${sh(MBG_COST / 2)}</button>` : ""}${o.m ? `<button data-a="u" data-i="${i}" ${u ? "" : "disabled"}>Tebus −${sh(t.p * 0.55)}</button>` : `<button data-a="m" data-i="${i}" ${m ? "" : "disabled"}>Gadai +${sh(t.p / 2)}</button>`}</div>`;
                     })
                     .join("")
                 : "<p>Belum punya aset.</p>") +
@@ -1666,6 +1707,9 @@
               p.cash -= Math.ceil(t.p * 0.55);
               o.m = 0;
             }
+            // ===== EVENT BENCANA =====
+            if (a == "e") repairEvent(i);
+            if (a == "k") useAbil(p, i); // ===== MARKET KARTU =====
             render();
             draw();
           };
@@ -1713,7 +1757,7 @@
         }
         if (l.startsWith("Tawar")) {
           const nb = +l.replace(/\D/g, "");
-          return nb <= t.p * 0.95 && p.cash - nb >= 1e6 ? a : ok[1];
+          return nb <= (AUC && AUC.psn ? AUC.base * 1.2 : t.p * 0.95) && p.cash - nb >= 1e6 ? a : ok[1]; // ===== UPGRADE LELANG =====
         }
         if (a[1] == "p" || a[1] == "r") return ok.find((b) => b[1] == "k") || (a[1] == "p" && p.cash > 6e6 ? a : ok.find((b) => b[1] == "r"));
         if (a[1] == "m") return Object.keys(own).some((i) => own[i].o == p.id && (!own[i].m || own[i].h)) || cap(p) >= 1e6 ? a : ok.find((b) => b[1] == "b" || b[1] == "t");
@@ -2244,6 +2288,7 @@
         toNeg(i);
         say(`🏗️ Negara membeli paksa ${t.n} milik ${p.n} (ganti rugi ${fm(c)})`);
         render();
+        return i; // ===== PRES LOG =====
       }
       async function sita(p, why) {
         const a = mine(p).sort((x, y) => worth(y) - worth(x));
@@ -2344,7 +2389,7 @@
         `<label class="ck" style="display:flex;justify-content:space-between;align-items:center;gap:8px">${lb}<select id="${id}">${o.map(([n, v]) => `<option value="${v}"${v == c ? " selected" : ""}>${n}</option>`).join("")}</select></label>`;
       function save() {
         try {
-          localStorage.setItem(SK, JSON.stringify({ v: 1, nn: NN, t: Date.now(), P, own, dk, cur, rnd, POOL, ECO, DIR, ud, lv: LVL.indexOf(LV), LS, PRES, POLS, log, SET, ST }));
+          localStorage.setItem(SK, JSON.stringify({ v: 1, nn: NN, t: Date.now(), P, own, dk, cur, rnd, POOL, ECO, DIR, ud, lv: LVL.indexOf(LV), LS, PRES, POLS, log, SET, ST, PRES_LOG }));
         } catch (e) {}
       }
       function clearSave() {
@@ -2354,7 +2399,10 @@
       }
       function restore(sv) {
         P.length = 0;
-        sv.P.forEach((x) => P.push(x));
+        sv.P.forEach((x) => {
+          if (!x.ab) x.ab = [];
+          P.push(x);
+        }); // ===== MARKET KARTU =====
         for (const k in own) delete own[k];
         Object.assign(own, sv.own);
         dk.c = sv.dk.c;
@@ -2370,6 +2418,8 @@
         Object.assign(SET, sv.SET);
         MBG_MAX = SET.mbg ? 1 : 0;
         Object.assign(PRES, sv.PRES);
+        PRES_LOG.length = 0; // ===== PRES LOG =====
+        (sv.PRES_LOG || []).forEach((x) => PRES_LOG.push(x));
         POLS.length = 0;
         sv.POLS.forEach((x) => POLS.push(x));
         log.length = 0;
@@ -2514,15 +2564,210 @@
         save();
       };
       const DIV = () => Math.round((4e5 * crG()) / 1e3) * 1e3;
-      async function lelang(p) {
-        const a = T.map((t, i) => i).filter((i) => ["s", "r", "u"].includes(T[i].t) && !own[i]);
-        if (!a.length) {
-          await nt("<h3>🔨 Lelang Properti</h3><p>Semua properti sudah terjual. Tidak ada yang dilelang.</p>");
+      // ===== MARKET KARTU =====
+      TY.mk = "Market Kemampuan";
+      NT.mk = "Beli kartu kemampuan umum atau khusus peran. Kartu disimpan di inventori dan bisa dipakai kapan saja lewat menu Aset.";
+      // a. Kartu umum (acak 3 tiap mendarat)
+      const ABIL_GEN = [
+        { id: "dadu2", n: "Dadu Ganda", i: "🎲", p: 6e5, d: "Lemparan berikutnya ×2" },
+        { id: "shield", n: "Asuransi Sewa", i: "🛡️", p: 12e5, d: "Bebas sewa 1×" },
+        { id: "jail", n: "Kunci Bebas", i: "🔓", p: 8e5, d: "Bebas penjara 1×" },
+        { id: "diskon", n: "Kupon Diskon", i: "🏷️", p: 15e5, d: "Diskon 30% beli properti berikutnya" },
+        { id: "sembako", n: "Paket Sembako", i: "🎁", p: 5e5, d: "Langsung +Rp1.500.000" },
+        { id: "taxtrick", n: "SPT Palsu", i: "📝", p: 1e6, d: "Bebas pajak 1×" },
+      ];
+      // b. Kartu khusus peran: id "r"+indeks ROLES (harga = asumsi ±60% dari hasil; ubah sesuka hati)
+      const ABIL_ROLE = [
+        { id: "r0", n: "Amplop DPR", i: "💼", p: 12e5, d: "Pungut Rp300.000 dari tiap pemain" },
+        { id: "r1", n: "SK Kenaikan Pangkat", i: "📋", p: 12e5, d: "+Rp2.000.000" },
+        { id: "r2", n: "Infaq Jumat", i: "🕌", p: 1e6, d: "Terima Rp200.000 dari tiap pemain" },
+        { id: "r3", n: "Lembur Proyek", i: "⏰", p: 9e5, d: "+Rp1.500.000" },
+        { id: "r4", n: "Tantiem Direksi", i: "🏭", p: 15e5, d: "+Rp2.500.000" },
+        { id: "r5", n: "Modal Ventura", i: "💹", p: 2e6, d: "Diskon 50% beli properti berikutnya" },
+        { id: "r6", n: "Panen Raya", i: "🌾", p: 11e5, d: "+Rp1.800.000" },
+        { id: "r7", n: "Konten Viral", i: "📱", p: 12e5, d: "+Rp2.000.000" },
+        { id: "r8", n: "Hasil Laut", i: "🐟", p: 11e5, d: "+Rp1.800.000" },
+        { id: "r9", n: "Sertifikasi", i: "📚", p: 7e5, d: "+Rp1.200.000" },
+        { id: "r10", n: "Operasi Sukses", i: "🩺", p: 15e5, d: "+Rp2.500.000" },
+        { id: "r11", n: "Kenaikan Pangkat", i: "🎖️", p: 12e5, d: "+Rp2.000.000" },
+        { id: "r12", n: "Fee Klien", i: "⚖️", p: 13e5, d: "+Rp2.200.000" },
+        { id: "r13", n: "Juara Nasional", i: "🏅", p: 15e5, d: "+Rp2.500.000" },
+        { id: "r14", n: "Pameran Seni", i: "🎨", p: 11e5, d: "+Rp1.800.000" },
+        { id: "r15", n: "Proyek Startup", i: "💻", p: 15e5, d: "+Rp2.500.000" },
+      ];
+      // c. Kartu statis: id -> uang yang diterima
+      const ABIL_CASH = { sembako: 15e5, r1: 2e6, r3: 15e5, r4: 25e5, r6: 18e5, r7: 2e6, r8: 18e5, r9: 12e5, r10: 25e5, r11: 2e6, r12: 22e5, r13: 25e5, r14: 18e5, r15: 25e5 };
+      const abDef = (id) => ABIL_GEN.concat(ABIL_ROLE).find((a) => a.id == id),
+        discP = (p, t) => Math.round((t.p * (p.disc || 1)) / 1e3) * 1e3; // harga beli setelah diskon kartu
+      function useAbil(p, idx) {
+        const id = p.ab[idx],
+          a = id && abDef(id);
+        if (!a) return;
+        if (id == "dadu2") p.mul = (p.mul || 1) * 2;
+        else if (id == "shield") p.shield = 1;
+        else if (id == "jail") p.cards++;
+        else if (id == "diskon") p.disc = Math.min(p.disc || 1, 0.7);
+        else if (id == "taxtrick") p.taxfree = 1;
+        else if (id == "r5") p.disc = Math.min(p.disc || 1, 0.5);
+        else if (id == "r0" || id == "r2") {
+          const m = id == "r0" ? 3e5 : 2e5;
+          let tot = 0;
+          P.filter((q) => !q.x && q !== p).forEach((q) => {
+            const x = Math.min(m, q.cash);
+            q.cash -= x;
+            tot += x;
+          });
+          p.cash += tot;
+        } else if (ABIL_CASH[id]) p.cash += ABIL_CASH[id];
+        p.ab.splice(idx, 1);
+        say(`🎴 ${p.n} memakai ${a.i} ${a.n}: ${a.d}`);
+        render();
+      }
+      // bagian "Kartu Kemampuan" di jendela Kelola Aset
+      const abSec = (p) =>
+        p.ab && p.ab.length
+          ? sec(
+              "🎴 Kartu Kemampuan",
+              p.ab
+                .map((id, k) => {
+                  const a = abDef(id);
+                  return `<div class="rw"><span>${a.i} <b>${a.n}</b><br><small>${a.d}</small></span><button data-a="k" data-i="${k}">Pakai</button></div>`;
+                })
+                .join(""),
+            )
+          : "";
+      function buyAbil(p, a) {
+        p.cash -= a.p;
+        toApbn(a.p, p);
+        p.ab.push(a.id);
+        say(`🛒 ${p.n} membeli ${a.i} ${a.n} (${fm(a.p)})`);
+        render();
+      }
+      async function market(p) {
+        if (!p.ab) p.ab = [];
+        const offer = shuf(ABIL_GEN).slice(0, 3),
+          rc = p.role >= 0 ? ABIL_ROLE[p.role] : null;
+        if (p.b) {
+          // bot: hanya beli kartu uang yang untung, lalu langsung dipakai
+          for (const a of [rc].concat(offer.filter((x) => x.id == "sembako")))
+            if (a && ABIL_CASH[a.id] > a.p && p.cash - a.p >= 3e6 * BM()) {
+              buyAbil(p, a);
+              useAbil(p, p.ab.length - 1);
+            }
           return;
         }
-        const i = a[(Math.random() * a.length) | 0];
-        await nt(`<h3>🔨 Lelang Properti</h3><div class="sub">${p.n}</div>${sec("Dilelang", rw(gtag(i) + T[i].n, fm(T[i].p)))}${gInfo(i)}${sec("Aturan", '<p class="ct">Semua pemain boleh menawar. Kenaikan tawaran 10% dari harga.</p>')}`);
-        say(`🔨 Lelang dadakan: ${T[i].n}`);
+        await new Promise((res) => {
+          const row = (a, act, i, dis) => `<div class="rw"><span>${a.i} <b>${a.n}</b><br><small>${a.d}</small></span><b>${fm(a.p)}</b><button data-a="${act}" data-i="${i}" ${dis ? "disabled" : ""}>Beli</button></div>`,
+            draw = () => {
+              mod.innerHTML =
+                `<h3>🛒 Market Kemampuan</h3><div class="sub">${p.n} · kas ${fm(p.cash)}</div>` +
+                sec("Kartu Umum", offer.length ? offer.map((a, i) => row(a, "g", i, p.cash < a.p)).join("") : "<p>Semua kartu hari ini sudah terjual.</p>") +
+                (rc ? sec("Kartu Khusus · " + R(p).i + " " + R(p).n, row(rc, "r", 0, p.cash < rc.p)) : sec("Kartu Khusus", '<p class="ct">Belum punya peran. Mendarat di petak Karier & Peran dulu.</p>')) +
+                sec(
+                  "🎴 Inventori",
+                  p.ab.length
+                    ? p.ab
+                        .map((id, k) => {
+                          const a = abDef(id);
+                          return `<div class="rw"><span>${a.i} <b>${a.n}</b><br><small>${a.d}</small></span><button data-a="u" data-i="${k}">Pakai</button></div>`;
+                        })
+                        .join("")
+                    : "<p>Belum ada kartu.</p>",
+                ) +
+                '<div class="mb"><button data-a="x">Selesai</button></div>';
+            };
+          draw();
+          ov.hidden = false;
+          mod.onclick = (e) => {
+            const b = e.target.closest("button");
+            if (!b || b.disabled) return;
+            const a = b.dataset.a,
+              i = +b.dataset.i;
+            if (a == "x") {
+              ov.hidden = true;
+              mod.onclick = null;
+              render();
+              return res();
+            }
+            if (a == "g" && p.cash >= offer[i].p) buyAbil(p, offer.splice(i, 1)[0]);
+            else if (a == "r" && p.cash >= rc.p) buyAbil(p, rc);
+            else if (a == "u") useAbil(p, i);
+            draw();
+          };
+        });
+      }
+      // ===== UPGRADE LELANG =====
+      const psnPrice = (i) => Math.round((T[i].p * 1.5) / 1e3) * 1e3,
+        lelangList = () => ({
+          free: T.map((t, i) => i).filter((i) => ["s", "r", "u"].includes(T[i].t) && !own[i]),
+          psn: Object.keys(own)
+            .map(Number)
+            .filter((i) => own[i].o == NEG),
+        });
+      // bot ikut rebut PSN bila kas > 3x harga PSN dan properti menambah set yang sudah dia punya
+      const psnWant = (q, i) => q.cash > 3 * psnPrice(i) && T.some((t, j) => j != i && own[j]?.o == q.id && (T[i].g ? t.g == T[i].g : t.t == T[i].t));
+      // properti PSN jatuh ke pemain: rumah/hotel/MBG lama dihapus, hitungan "disita" dikurangi
+      function psnTake(p, i) {
+        own[i] = { o: p.id, h: 0 };
+        if (ST[p.id] && ST[p.id].taken > 0) stat(p.id, "taken", -1);
+        say(`🏛️ ${p.n} merebut ${gtag(i)}${T[i].n} dari negara`);
+        render();
+      }
+      // uang pembelian aset negara masuk APBN (presiden ambil 20%, sama seperti pay())
+      function toApbn(amt, from) {
+        const pr = P[PRES.id];
+        if (pr && !pr.x && pr !== from) {
+          const c = Math.round((amt * 0.2) / 1e3) * 1e3;
+          pr.cash += c;
+          POOL += amt - c;
+        } else POOL += amt;
+      }
+      async function setBonus(p, i) {
+        if (T[i].g && mono(i, p.id)) {
+          say(`🎉 ${p.n} melengkapi set ${gl(T[i])}!`);
+          await nt(`<h3>🎉 Set lengkap [${gl(T[i])}]!</h3><div class="sub">${p.n}</div>${sec("Bonus", '<p class="ct">' + p.n + " kini menguasai seluruh set warna ini: sewa tanah kosong ×2 dan boleh membangun rumah.</p>")}`, p);
+        }
+      }
+      async function rebutPSN(p, i) {
+        const base = psnPrice(i);
+        if (p.cash < base) {
+          await nt(`<h3>🏛️ Rebut Aset Negara</h3><p>Uang tidak cukup. PSN harus dibayar lunas (${fm(base)}).</p>`, p);
+          return;
+        }
+        const want = [p];
+        for (const q of P.filter((x) => !x.x && x !== p && x.cash >= base)) {
+          const y = await yn(
+            q,
+            `<h3>🏛️ Rebut Aset Negara</h3><div class="sub">${q.n}</div>${sec("Ditawarkan", rw(gtag(i) + T[i].n, fm(base)))}<p class="ct">${p.n} ingin merebut properti ini. Ikut rebut berarti masuk lelang dengan harga dasar ${fm(base)}.</p>`,
+            "Ikut rebut",
+            psnWant(q, i),
+          );
+          if (y) want.push(q);
+        }
+        if (want.length > 1) {
+          say(`🏛️ ${want.map((x) => x.n).join(", ")} berebut ${T[i].n}: masuk lelang`);
+          await auction(i, base, want);
+        } else if (await pay(p, base, 0, 1)) {
+          toApbn(base, p);
+          psnTake(p, i);
+          await setBonus(p, i);
+        }
+      }
+      async function lelang(p) {
+        const { free, psn } = lelangList();
+        if (!free.length && !psn.length) {
+          await nt("<h3>🔨 Lelang & PSN</h3><p>Tidak ada properti tersedia.</p>", p);
+          return;
+        }
+        let ch;
+        if (p.b) {
+          const w = psn.filter((i) => p.cash >= psnPrice(i) && psnWant(p, i)).sort((a, b) => T[b].p - T[a].p);
+          ch = w.length ? { k: "n", i: w[0] } : free.length ? { k: "r" } : { k: "x" };
+        } else ch = await auctionMenu(p);
+        if (ch.k == "x") return say(`🔨 ${p.n} melewati lelang`);
+        if (ch.k == "n") return rebutPSN(p, ch.i);
+        const i = ch.k == "r" ? free[(Math.random() * free.length) | 0] : ch.i;
+        say(`🔨 ${ch.k == "r" ? "Lelang dadakan" : p.n + " melelang"}: ${T[i].n}`);
         await auction(i);
       }
       async function bumn(p) {
@@ -2574,20 +2819,53 @@
           k = GK.indexOf(t.g);
         return sec("Grup aset " + l, rw("Anggota", mem.map((j) => T[j].n).join(", ")) + (t.g ? rw("Nilai grup", "★".repeat(k + 1) + "☆".repeat(GK.length - k - 1)) : rw("Jenis", t.t == "r" ? "Stasiun" : "Utilitas")));
       };
-      async function auction(i) {
+      // ===== UPGRADE LELANG =====
+      function auctionMenu(p) {
+        const { free, psn } = lelangList(),
+          row = (i, price, a, lbl, dis, badge) =>
+            `<div class="rw lg-r"><b class="lg-gp">${gl(T[i]) || "–"}</b><span class="lg-n">${T[i].i || ""} ${T[i].n}${badge ? ' <span class="psn-badge">🏛️ NEGARA</span>' : ""}</span><b>${fm(price)}</b><button data-a="${a}" data-i="${i}" ${dis ? "disabled" : ""}>${lbl}</button></div>`;
+        return new Promise((res) => {
+          mod.innerHTML =
+            `<h3>🔨 Lelang & PSN</h3><div class="sub">${p.n} · kas ${fm(p.cash)}</div>` +
+            sec("Lelang Bebas", free.length ? free.map((i) => row(i, T[i].p, "f", "Pilih")).join("") : "<p>Tidak ada properti tersedia.</p>") +
+            (psn.length
+              ? sec(
+                  "Aset Negara (PSN)",
+                  psn.map((i) => row(i, psnPrice(i), "n", "Rebut", p.cash < psnPrice(i), 1)).join("") +
+                    '<p class="ct" style="font-size:13px">Harga 1,5× harga asli, bayar lunas. Rumah/hotel lama dihapus. Bila ada pemain lain yang ikut berebut, masuk lelang.</p>',
+                )
+              : "") +
+            sec("Nasib", `<div class="rw"><span>Pilih 1 properti kosong secara acak</span><button data-a="r" ${free.length ? "" : "disabled"}>🎲 Acak 1 properti</button></div>`) +
+            '<div class="mb"><button data-a="x">Lewati</button></div>';
+          ov.hidden = false;
+          mod.onclick = (e) => {
+            const b = e.target.closest("button");
+            if (!b || b.disabled) return;
+            ov.hidden = true;
+            mod.onclick = null;
+            res({ k: b.dataset.a, i: +b.dataset.i });
+          };
+        });
+      }
+      // ===== UPGRADE LELANG =====
+      let AUC = null;
+      async function auction(i, base, part) {
         CT = i;
         const t = T[i],
-          inc = t.p / 10,
+          psn = own[i]?.o == NEG;
+        base = base || t.p;
+        AUC = { base, psn };
+        const inc = base / 10,
           out = new Set(),
-          live = () => P.filter((x) => !x.x && !out.has(x));
-        let bid = 0,
+          live = () => P.filter((x) => !x.x && !out.has(x) && (!part || part.includes(x)));
+        let bid = psn ? base - inc : 0,
           lead = null;
         while (live().length > 1 || (live().length == 1 && !lead))
           for (const q of live()) {
             if (q == lead) continue;
             if (live().length == 1 && lead) break;
             const c = await ask(
-              `<h3>Lelang: ${gtag(i)}${t.n}</h3>${gInfo(i)}<p>Tawaran tertinggi: ${fm(bid)}${lead ? " oleh " + lead.n : ""}<br>Giliran ${q.k} ${q.n} (uang ${fm(q.cash)})</p>`,
+              `<h3>Lelang: ${gtag(i)}${t.n}${psn ? ' <span class="psn-badge">🏛️ NEGARA</span>' : ""}</h3>${gInfo(i)}<p>Harga dasar: ${fm(base)}<br>Tawaran tertinggi: ${lead ? fm(bid) + " oleh " + lead.n : "belum ada"}<br>Giliran ${q.k} ${q.n} (uang ${fm(q.cash)})</p>`,
               [
                 [`Tawar ${fm(bid + inc)}`, 1, q.cash < bid + inc],
                 ["Mundur", 0],
@@ -2599,10 +2877,18 @@
               lead = q;
             } else out.add(q);
           }
+        AUC = null;
         if (lead) {
           lead.cash -= bid;
-          own[i] = { o: lead.id, h: 0 };
-          say(`${lead.n} memenangkan lelang ${gtag(i)}${t.n} (${fm(bid)})`);
+          if (psn) {
+            toApbn(bid, lead); // negara tidak butuh uang: masuk APBN, tanpa ganti rugi ke pemain
+            psnTake(lead, i);
+            say(`${lead.n} memenangkan lelang PSN ${gtag(i)}${t.n} (${fm(bid)})`);
+            await setBonus(lead, i);
+          } else {
+            own[i] = { o: lead.id, h: 0 };
+            say(`${lead.n} memenangkan lelang ${gtag(i)}${t.n} (${fm(bid)})`);
+          }
         } else say(`${t.n} tidak terjual`);
         render();
       }
@@ -2653,7 +2939,7 @@
             let c;
             for (;;) {
               c = await ask(info(i) + `<p>Uangmu: ${fm(p.cash)}</p>`, [
-                [`Beli ${fm(t.p)}`, 1, p.cash < t.p],
+                [`Beli ${fm(discP(p, t))}${p.disc ? " (diskon)" : ""}`, 1, p.cash < discP(p, t)], // ===== MARKET KARTU =====
                 ["Lelang", 0],
                 ["🏦 Pinjam ke Bank", 2],
               ]);
@@ -2661,11 +2947,20 @@
               await bank(P[cur]);
             }
             if (c) {
-              p.cash -= t.p;
+              p.cash -= discP(p, t);
+              p.disc = 0;
               own[i] = { o: p.id, h: 0 };
               say(`${p.n} membeli ${gtag(i)}${t.n}`);
               render();
             } else await auction(i);
+          } else if (o.o != p.id && !o.m && evOn(i)) {
+            // ===== EVENT BENCANA =====
+            say(`⚠️ ${t.n} sedang terkena bencana: ${p.n} bebas sewa`);
+          } else if (o.o != p.id && !o.m && p.shield) {
+            // ===== MARKET KARTU =====
+            p.shield = 0;
+            say(`🛡️ ${p.n} bebas sewa ${t.n} berkat Asuransi Sewa`);
+            render();
           } else if (o.o != p.id && !o.m) {
             const r = Math.round((rent(i, sum) * R(p).rp * (t.t != "s" ? R(p).rs : 1) * (o.o == NEG ? 1 : R(P[o.o]).ri)) / 1e3) * 1e3;
             await ask(
@@ -2676,6 +2971,11 @@
             stat(o.o == NEG ? -1 : o.o, "rent", r);
             await pay(p, r, o.o == NEG ? 0 : P[o.o]);
           }
+        } else if (t.t == "x" && p.taxfree) {
+          // ===== MARKET KARTU =====
+          p.taxfree = 0;
+          say(`📝 ${p.n} bebas ${t.n} berkat SPT Palsu`);
+          render();
         } else if (t.t == "x") {
           const a = Math.round(((i == IP ? Math.max(t.p, Math.round(p.cash / 1e5) * 1e4) : t.p) * R(p).tax * (isP(p) ? 0 : 1) * crM()) / 1e3) * 1e3;
           await ask(`<h3>${t.n}</h3>${sec("Pajak", rw(i == IP ? "Progresif 10% kas (min. " + fm(t.p) + ")" : "Tarif tetap", fm(a)))}${sec("Tujuan", '<p class="ct">Masuk Dana Bansos APBN</p>')}`, [["Bayar", 1]]);
@@ -2686,6 +2986,8 @@
         else if (t.t == "bu") await bumn(p);
         else if (t.t == "ap") await bandara(p);
         else if (t.t == "gm") await tambang(p);
+        else if (t.t == "mk")
+          await market(p); // ===== MARKET KARTU =====
         else if (t.t == "fp") {
           const g = POOL;
           POOL = 0;
@@ -2856,6 +3158,7 @@
           .map(Number)
           .filter((k) => !P[k].x);
         PRES.sup.forEach((k) => (P[k].cash += 2e5));
+        PRES.sumpah = []; // ===== PRES LOG =====
         say(`👑 ${w.n} terpilih menjadi presiden (periode ${PRES.t}/2)`);
         render();
         await nt(
@@ -2879,11 +3182,14 @@
             p,
           );
         if (!k) return;
+        let note = ""; // ===== PRES LOG =====
         if (k == "bansos") {
           for (const q of P.filter((x) => !x.x)) q.cash += 3e5 + (PRES.sup.includes(q.id) ? 1e5 : 0);
           say(`🎁 Presiden ${p.n} membagikan bansos massal`);
+          note = "Bansos massal untuk semua pemain";
         } else if (k == "pajak") {
           say(`📈 Presiden ${p.n} menaikkan pajak: Rp100.000 per pemain`);
+          note = "Pajak naik Rp100rb/pemain";
           for (const q of P.filter((x) => !x.x && x !== p)) {
             if (p.x) break;
             await pay(q, 1e5, p);
@@ -2904,6 +3210,7 @@
           PRES.bi = m;
           PRES.biT = 2;
           say(`🏦 Presiden ${p.n} mengatur bunga pinjaman ×${String(m).replace(".", ",")}`);
+          note = "Bunga BI ×" + (m == 0.6 ? "0,6" : "1,5") + " selama 2 putaran";
         } else if (k == "amnesti") {
           const js = jailed();
           let q;
@@ -2915,6 +3222,7 @@
           }
           q.jail = -1;
           say(`⚖️ Presiden ${p.n} memberi amnesti kepada ${q.n}`);
+          note = "Amnesti untuk " + q.n;
         } else if (k == "psn") {
           const cs = P.filter((x) => !x.x && x !== p && mine(x).length);
           if (!cs.length) return;
@@ -2925,8 +3233,12 @@
             if (id < 0) return;
             q = P[id];
           }
-          await paksa(q, "Proyek Strategis Nasional atas kebijakan Presiden " + p.n);
+          const it = await paksa(q, "Proyek Strategis Nasional atas kebijakan Presiden " + p.n);
+          note = "PSN: properti " + (it != null ? T[it].n : "acak") + " milik " + q.n + " dibebaskan";
         }
+        // ===== PRES LOG =====
+        PRES_LOG.unshift({ rnd: rnd, id: p.id, key: k, note: note, t: Date.now() });
+        PRES_LOG.length = Math.min(PRES_LOG.length, 8);
         PRES.used = 1;
         render();
         if (bot) await sleep(700);
@@ -3109,7 +3421,9 @@
           );
           mod
             .querySelectorAll(".sr")
-            .forEach((r, i) => P.push({ id: i, b: +r.querySelector("select").value, n: r.querySelector("input").value.trim() || "Pemain " + (i + 1), k: TK[i][0], c: TK[i][1], cash: SET.cash, pos: 0, jail: -1, cards: 0, x: 0, loans: [] }));
+            .forEach((r, i) =>
+              P.push({ id: i, b: +r.querySelector("select").value, n: r.querySelector("input").value.trim() || "Pemain " + (i + 1), k: TK[i][0], c: TK[i][1], cash: SET.cash, pos: 0, jail: -1, cards: 0, x: 0, loans: [], ab: [] }),
+            );
           say("Permainan dimulai! Tap petak untuk melihat harga sewa.");
           dice(1, 1);
         } else {
@@ -3251,14 +3565,33 @@
               "Pemilih yang memilih pemenang dapat bonus Rp200.000 dari APBN.",
               "<b>Pasif</b>: gaji MULAI ×1,5 dan kebal pajak; kebal OTT dan tilang; ambil 20% dari setiap setoran ke Dana Bansos.",
               "<b>Kebijakan</b> (tombol 👑, 1× per putaran, pilih 1 dari 3 yang diundi): " + KB.map((x) => x[1] + " (" + x[2] + ")").join("; ") + ".",
+              "📜 Chip kuning di bawah status bar menunjukkan kebijakan terakhir yang diambil presiden. Ketuk untuk melihat riwayat 5 kebijakan terakhir. 🏦 Chip biru menandakan bunga BI sedang diubah, dengan sisa putaran. 🗳️ Chip ungu menunjukkan jumlah pendukung presiden. Chip akan berguncang bila kebijakan terakhir adalah PSN.",
+              "🗣️ <b>Sumpah Serapah Politik</b>: tahan lama chip kuning untuk mengurangi 1 pendukung presiden. Gratis, sekali per pemain tiap pemilu, tidak berlaku untuk presiden.",
             ]),
           ) +
           S(
             "🔨 Lelang, BUMN & bandara",
             L([
-              "<b>🔨 Lelang</b> (2 petak): satu properti yang belum terjual dipilih acak dan langsung dilelang ke semua pemain.",
+              "<b>🔨 Lelang</b> (1 petak, menu 2 tahap): pemain yang mendarat memilih <b>Lelang Bebas</b> (pilih sendiri properti yang belum terjual), <b>Rebut Aset Negara (PSN)</b>, atau <b>🎲 Acak</b> (satu properti kosong dipilih acak). Lelang dibuka untuk semua pemain.",
+              "<b>🏛️ Rebut PSN</b>: aset negara hasil sita/beli paksa bisa dibeli lagi dengan harga <b>1,5× harga asli</b>, dibayar <b>lunas</b> (tanpa cicilan/pinjaman di tengah jalan). Uangnya masuk Dana Bansos APBN. Bila pemain lain ikut berebut, masuk lelang dengan harga dasar 1,5× (kenaikan tawaran 10% dari harga dasar). <b>Rumah/hotel/MBG lama dihapus</b> dan properti kembali tanpa bangunan. Melengkapi set warna lewat PSN memunculkan popup 🎉. Bot ikut berebut bila kasnya lebih dari 3× harga PSN dan properti itu melengkapi set yang dia punya.",
               "<b>🏭 BUMN</b>: beli saham Rp2.000.000 (maks 3 per pemain, bayarannya masuk APBN). Pemegang saham menerima dividen Rp400.000 per saham tiap lewat MULAI; dividen turun mengikuti krisis ekonomi.",
               "<b>✈️ Bandara</b>: terbang gratis ke stasiun kereta mana pun, atau tetap di sini. Sewa berlaku bila stasiun milik pemain lain.",
+            ]),
+          ) +
+          S(
+            "🛒 Market Kemampuan",
+            L([
+              "Satu petak (setelah Stasiun Tugu). Mendarat di sini membuka toko kartu. Uang pembelian masuk Dana Bansos APBN. Tidak ada batas beli selain uangmu.",
+              "<b>Kartu umum</b> (3 acak dari 6 tiap kunjungan, tiap kartu satu per kunjungan): 🎲 Dadu Ganda Rp600rb (lemparan berikutnya ×2) · 🛡️ Asuransi Sewa Rp1,2jt (bebas sewa 1×) · 🔓 Kunci Bebas Rp800rb (bebas penjara 1×) · 🏷️ Kupon Diskon Rp1,5jt (diskon 30% beli properti) · 🎁 Paket Sembako Rp500rb (+Rp1,5jt) · 📝 SPT Palsu Rp1jt (bebas pajak 1×).",
+              "<b>Kartu khusus peran</b>: satu kartu sesuai perananmu (butuh sudah punya peran), dan boleh dibeli berulang. Isinya uang tunai " +
+                ABIL_ROLE.filter((a) => ABIL_CASH[a.id]).length +
+                " peran, Politisi dan Ulama memungut dari tiap pemain, Pengusaha diskon 50% beli properti. Harga " +
+                fm(Math.min(...ABIL_ROLE.map((a) => a.p))) +
+                " - " +
+                fm(Math.max(...ABIL_ROLE.map((a) => a.p))) +
+                ".",
+              "<b>Memakai kartu</b>: lewat tombol 🏠 Aset (bagian 🎴 Kartu Kemampuan) kapan saja, atau di jendela Market. Kartu diskon otomatis terpakai saat kamu membeli properti berikutnya; Asuransi Sewa dan SPT Palsu otomatis menggugurkan tagihan sewa/pajak berikutnya.",
+              "<b>Strategi</b>: simpan kartu penangkal (🛡️ 📝 🔓) untuk momen krusial, pakai kartu diskon saat mendarat di properti mahal, dan beli kartu uang bila kasmu longgar. Bot hanya membeli kartu uang yang untung.",
             ]),
           ) +
           S(
@@ -3343,10 +3676,12 @@
         who: () => [$("#who").innerHTML, $("#who").style.background],
         tiles: () =>
           [...$("#board").children]
-            .filter((e) => e.id != "pins" && e.id != "ctr")
+            .filter((e) => e.id != "pins" && e.id != "ctr" && e.id != "evts")
             .map((e) => e.outerHTML)
             .join(""),
         pins: () => $("#pins").innerHTML,
+        pchips: () => $("#pchips").innerHTML,
+        evts: () => $("#evts").innerHTML,
         ctr: () => $("#ctr").innerHTML,
         news: () => $("#news").innerHTML,
         pl: () => $("#pl").innerHTML,
@@ -3554,7 +3889,7 @@
             $("#who").style.background = v[1];
           } else if (k == "tiles") {
             $("#board")
-              .querySelectorAll(":scope>:not(#pins):not(#ctr)")
+              .querySelectorAll(":scope>:not(#pins):not(#ctr):not(#evts)")
               .forEach((e) => e.remove());
             $("#board").insertAdjacentHTML("beforeend", v);
           } else if (k == "btn") {
@@ -4153,6 +4488,7 @@
           } catch (e) {}
         };
 
+        window.UXFX = { SFX, buzz }; // ===== PRES LOG =====
         /* ===== Aksesibilitas dasar ===== */
         $("#who").setAttribute("role", "status");
         $("#who").setAttribute("aria-live", "polite");
@@ -4353,6 +4689,7 @@
           m: "Jual dulu rumah/MBG di set warna ini sebelum menggadaikan",
           l: "Uangmu belum cukup untuk melunasi",
           n: "Melebihi plafon pinjamanmu",
+          e: "Kas belum cukup untuk memperbaiki",
         };
         function why(b) {
           if (b.id === "roll") return !O.hidden ? "Selesaikan dialog yang terbuka dulu" : MP.cl ? "Bukan giliranmu" : P[cur] && P[cur].b ? "Bot sedang bermain…" : "Belum bisa dilempar sekarang";
@@ -4744,6 +5081,656 @@
           document.body.appendChild(h);
         }
         $("#ux-go").focus();
+      })();
+    </script>
+    <!-- ===== EVENT BENCANA ===== -->
+    <style id="evt-css">
+      /* ===== EVENT BENCANA ===== */
+      #evts {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 5;
+        --e: max(1em, 4.5px);
+        --evs: 2.8;
+      }
+      .ev {
+        position: absolute;
+        width: calc(var(--evs) * var(--e));
+        height: calc(var(--evs) * var(--e));
+        margin: calc(var(--evs) * var(--e) * -0.5) 0 0 calc(var(--evs) * var(--e) * -0.5);
+      }
+      .ev-b {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: var(--ec, #c62828);
+        color: #fff;
+        border: 2px solid #111;
+        border-radius: 6px;
+        transform: rotate(-15deg);
+        box-shadow: 0 0.15em 0.3em #0006;
+        animation:
+          ev-in 0.45s ease-out backwards,
+          ev-pulse 1.4s ease-in-out 0.45s infinite;
+      }
+      .ev-b .ei {
+        font-style: normal;
+        font-size: calc(1.35 * var(--e));
+        line-height: 1;
+      }
+      .ev-b span {
+        font:
+          700 calc(0.58 * var(--e)) / 1 Oswald,
+          sans-serif;
+        text-transform: uppercase;
+        margin-top: 0.1em;
+        text-shadow: 0 1px 1px #000;
+      }
+      .ev-b .ev-u {
+        position: absolute;
+        top: calc(-0.4 * var(--e));
+        right: calc(-0.4 * var(--e));
+        min-width: calc(1.2 * var(--e));
+        height: calc(1.2 * var(--e));
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: #111;
+        color: #ffd400;
+        font:
+          700 calc(0.75 * var(--e)) / 1 Oswald,
+          sans-serif;
+        transform: rotate(15deg);
+      }
+      @keyframes ev-in {
+        from {
+          opacity: 0;
+          transform: rotate(-15deg) scale(0.3);
+        }
+        to {
+          opacity: 1;
+          transform: rotate(-15deg) scale(1);
+        }
+      }
+      @keyframes ev-pulse {
+        0%,
+        100% {
+          transform: rotate(-15deg) scale(1);
+        }
+        50% {
+          transform: rotate(-15deg) scale(1.1);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .ev-b {
+          animation: none;
+        }
+      }
+    </style>
+    <script id="evt-js">
+      // ===== EVENT BENCANA =====
+      const EVENTS = []; // [{ pos, evId, umur, biaya, uid, rusak }]
+      const EV_CFG = { chance: [0.4, 0.55, 0.7], crisis: 0.07, min: 15e4 };
+      const evB = (p, i, a, b, k = 1) => {
+        const o = own[i],
+          raw = T[i].p * a + (o.h || 0) * hcs(T[i]) * b;
+        return Math.max(EV_CFG.min, Math.round((raw * R(p).cl * k * crM()) / 1e4) * 1e4);
+      };
+      const EVENT_PETAK = [
+        { id: "bandang", nama: "Banjir bandang", lbl: "Bandang", ikon: "🌊", warna: "#1565c0", desk: "Air bah dari hulu menerjang permukiman.", damage: (p, i) => evB(p, i, 0.12, 0.15) },
+        { id: "rob", nama: "Banjir rob", lbl: "Rob", ikon: "🌧️", warna: "#00838f", desk: "Air laut pasang menggenangi pesisir. Bisa menyerang petak yang sama 2×.", maks: 2, damage: (p, i) => evB(p, i, 0.08, 0.1) },
+        { id: "gempa", nama: "Gempa bumi", lbl: "Gempa", ikon: "🏚️", warna: "#5d4037", desk: "Guncangan keras meretakkan bangunan.", damage: (p, i) => evB(p, i, 0.15, 0.25) },
+        { id: "tsunami", nama: "Tsunami", lbl: "Tsunami", ikon: "🌐", warna: "#283593", desk: "Gelombang raksasa menyapu daratan. Bisa menghancurkan 1 rumah.", hancur: 1, damage: (p, i) => evB(p, i, 0.25, 0.3) },
+        { id: "gunung", nama: "Gunung meletus", lbl: "Meletus", ikon: "🌋", warna: "#bf360c", desk: "Abu dan lava pijar menutup kawasan. Bisa menghancurkan 1 rumah.", hancur: 1, damage: (p, i) => evB(p, i, 0.2, 0.25) },
+        { id: "api", nama: "Kebakaran rumah", lbl: "Api", ikon: "🔥", warna: "#c62828", desk: "Korsleting listrik memicu kebakaran.", damage: (p, i) => evB(p, i, 0.1, 0.3) },
+        { id: "longsor", nama: "Tanah longsor", lbl: "Longsor", ikon: "⛰️", warna: "#7b5a3c", desk: "Tebing runtuh menimbun bangunan.", damage: (p, i) => evB(p, i, 0.12, 0.12) },
+        { id: "puting", nama: "Angin puting beliung", lbl: "Puting", ikon: "🌪️", warna: "#00695c", desk: "Angin kencang menerbangkan atap.", damage: (p, i) => evB(p, i, 0.06, 0.2) },
+        { id: "kering", nama: "Kekeringan", lbl: "Kering", ikon: "☀️", warna: "#9a6700", desk: "Kemarau panjang, air bersih sulit didapat.", damage: (p, i) => evB(p, i, 0.08, 0.05) },
+        { id: "wabah", nama: "Wabah penyakit", lbl: "Wabah", ikon: "🦠", warna: "#2e7d32", desk: "Wabah menyebar, penghuni mengungsi. Biaya ikut potongan kesehatan peran.", damage: (p, i) => evB(p, i, 0.05, 0.05, R(p).ck) },
+        { id: "demo", nama: "Demonstrasi / kerusuhan", lbl: "Demo", ikon: "✊", warna: "#ad1457", desk: "Aksi massa berujung perusakan.", damage: (p, i) => evB(p, i, 0.1, 0.1) },
+        { id: "gas", nama: "Kebocoran gas", lbl: "Gas", ikon: "💨", warna: "#ef6c00", desk: "Tabung gas bocor, area disterilkan.", damage: (p, i) => evB(p, i, 0.09, 0.22) },
+        { id: "pohon", nama: "Pohon tumbang", lbl: "Pohon", ikon: "🌳", warna: "#33691e", desk: "Pohon besar menimpa bangunan.", damage: (p, i) => evB(p, i, 0.04, 0.12) },
+        { id: "jalan", nama: "Kerusakan jalan", lbl: "Jalan", ikon: "🚧", warna: "#455a64", desk: "Jalan akses amblas, pembeli enggan datang.", damage: (p, i) => evB(p, i, 0.06, 0.02) },
+      ];
+      (() => {
+        // ===== EVENT BENCANA ===== helper
+        if (location.hash.startsWith("#join=")) {
+          if (!$("#evts")) $("#pins").after(Object.assign(document.createElement("div"), { id: "evts" }));
+          return;
+        }
+        const EK = "monopoli-id-events";
+        const alive = () => P.filter((x) => !x.x).length > 1;
+        const evAt = (i) => EVENTS.filter((e) => e.pos === i);
+        const evDef = (id) => EVENT_PETAK.find((x) => x.id === id);
+        const evCost = (i) => evAt(i).reduce((a, e) => a + e.biaya, 0);
+        window.evOn = (i) => EVENTS.some((e) => e.pos === i);
+        if (!$("#evts")) $("#pins").after(Object.assign(document.createElement("div"), { id: "evts" }));
+        function evClean() {
+          for (let k = EVENTS.length - 1; k >= 0; k--) {
+            const o = own[EVENTS[k].pos];
+            if (!o || o.o === NEG || !P[o.o] || P[o.o].x) EVENTS.splice(k, 1);
+          }
+        }
+        // tombol Perbaiki untuk manage()
+        window.evBtn = (p, i) => (evOn(i) ? `<button data-a="e" data-i="${i}" ${p.cash >= evCost(i) ? "" : "disabled"}>🔧 Perbaiki −${sh(evCost(i))}</button>` : "");
+        // ===== EVENT BENCANA ===== repairEvent(i)
+        window.repairEvent = function (i) {
+          const es = evAt(i),
+            o = own[i];
+          if (!es.length || !o || o.o === NEG) return false;
+          const p = P[o.o],
+            cost = evCost(i);
+          if (p.cash < cost) return false;
+          p.cash -= cost;
+          const pr = P[PRES.id];
+          if (pr && !pr.x && pr !== p) {
+            const c = Math.round((cost * 0.2) / 1e3) * 1e3;
+            pr.cash += c;
+            POOL += cost - c;
+          } else POOL += cost;
+          for (let k = EVENTS.length - 1; k >= 0; k--) if (EVENTS[k].pos === i) EVENTS.splice(k, 1);
+          say(`🔧 ${p.n} memperbaiki ${T[i].n} (${fm(cost)}): sewa kembali normal`);
+          render();
+          return true;
+        };
+        // ===== EVENT BENCANA ===== renderEvents()
+        window.renderEvents = function () {
+          const L = $("#evts");
+          if (!L) return;
+          evClean();
+          const seen = new Set(),
+            cnt = {};
+          const g = (n) => ((n == 1 ? 0.85 : n == 12 ? 12.55 : n + 0.2) / 13.4) * 100;
+          EVENTS.forEach((e) => {
+            const d = evDef(e.evId);
+            if (!d) return;
+            const k = (cnt[e.pos] = (cnt[e.pos] ?? -1) + 1),
+              [r, c] = pos(e.pos);
+            let x = g(c),
+              y = g(r);
+            if (T[e.pos].g) {
+              const s = 0.746;
+              if (e.pos < 11) y += s;
+              else if (e.pos < 22) x -= s;
+              else if (e.pos < 33) y -= s;
+              else x += s;
+            }
+            let el = L.querySelector(`[data-uid="${e.uid}"]`);
+            if (!el) {
+              el = document.createElement("div");
+              el.className = "ev";
+              el.dataset.uid = e.uid;
+              el.innerHTML = `<div class="ev-b" style="--ec:${d.warna}"><i class="ei">${d.ikon}</i><span>${d.lbl}</span><b class="ev-u"></b></div>`;
+              L.appendChild(el);
+            }
+            el.style.left = x + "%";
+            el.style.top = y + "%";
+            el.style.transform = `translate(calc(${k} * .9 * var(--e)), calc(${k} * -.9 * var(--e)))`;
+            el.style.zIndex = k;
+            el.querySelector(".ev-u").textContent = e.umur;
+            seen.add(String(e.uid));
+          });
+          L.querySelectorAll(".ev").forEach((el) => {
+            if (!seen.has(el.dataset.uid)) el.remove();
+          });
+        };
+        async function evDecide(p, list) {
+          for (;;) {
+            const live = list.filter((e) => EVENTS.includes(e)),
+              tiles = [...new Set(live.map((e) => e.pos))];
+            if (!tiles.length) return;
+            const total = tiles.reduce((a, t) => a + evCost(t), 0);
+            const rows = live
+              .map((e) => {
+                const d = evDef(e.evId);
+                return rw(`${d.ikon} ${d.nama} · ${gtag(e.pos)}${T[e.pos].n}`, fm(e.biaya)) + `<p class="ct" style="font-size:13px;padding-top:0">${d.desk}${e.rusak ? " 💥 1 rumah hancur!" : ""}</p>`;
+              })
+              .join("");
+            const c = await ask(
+              `<h3>⚠️ Bencana Alam!</h3><div class="sub">${p.n}</div>${sec("Properti terdampak", rows)}${sec("Akibat", '<p class="ct">Selama belum diperbaiki, sewa properti ini = Rp0. Tag hilang sendiri setelah 2–4 putaran.</p>')}${sec("Biaya perbaikan", rw("Total", fm(total)) + rw("Uangmu", fm(p.cash)))}`,
+              [
+                ["🔧 Perbaiki Sekarang (bayar " + fm(total) + ")", "r", p.cash < total],
+                ["🏠 Kelola Aset", "m"],
+                ["🏦 Bank", "l"],
+                ["Biarkan (sewa = 0 sampai diperbaiki)", "b"],
+              ],
+              p,
+            );
+            if (c == "r") {
+              tiles.forEach((t) => repairEvent(t));
+              return;
+            }
+            if (c == "m") await manage(p);
+            else if (c == "l") await bank(p);
+            else return;
+          }
+        }
+        // ===== EVENT BENCANA ===== fireEvents()
+        window.fireEvents = async function () {
+          evClean();
+          [...new Set(EVENTS.map((e) => e.pos))].forEach((t) => {
+            const p = P[own[t].o];
+            if (p.b && p.cash > 3 * evCost(t)) repairEvent(t);
+          });
+          for (let k = EVENTS.length - 1; k >= 0; k--) {
+            const e = EVENTS[k];
+            if (--e.umur <= 0) {
+              const d = evDef(e.evId);
+              EVENTS.splice(k, 1);
+              say(`🌤️ ${d.ikon} ${d.nama} di ${T[e.pos].n} mereda sendiri`);
+            }
+          }
+          const li = Math.max(0, LVL.indexOf(LV)),
+            s = crS();
+          if (Math.random() > Math.min(0.95, EV_CFG.chance[li] + s * EV_CFG.crisis)) {
+            render();
+            return;
+          }
+          const cands = Object.keys(own)
+            .map(Number)
+            .filter((i) => {
+              const o = own[i];
+              if (o.o === NEG || !P[o.o] || P[o.o].x) return false;
+              const es = evAt(i);
+              return !es.length || (es.every((e) => e.evId === es[0].evId) && (evDef(es[0].evId).maks || 1) > es.length);
+            });
+          if (!cands.length) {
+            render();
+            return;
+          }
+          let n = 1;
+          if (Math.random() < 0.3 + 0.1 * li) n++;
+          if (Math.random() < 0.08 + 0.07 * li + 0.02 * s) n++;
+          n = Math.min(n, cands.length);
+          const fresh = [];
+          for (const i of shuf(cands).slice(0, n)) {
+            const es = evAt(i),
+              o = own[i],
+              p = P[o.o];
+            const d = es.length ? evDef(es[0].evId) : EVENT_PETAK[(Math.random() * EVENT_PETAK.length) | 0];
+            let rusak = 0;
+            if (d.hancur && o.h > 0 && Math.random() < 0.6) {
+              o.h--;
+              rusak = 1;
+            }
+            const ev = { pos: i, evId: d.id, umur: 2 + ((Math.random() * 3) | 0), uid: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), biaya: d.damage(p, i), rusak };
+            EVENTS.push(ev);
+            fresh.push(ev);
+            say(`⚠️ ${d.ikon} ${d.nama} menimpa ${gtag(i)}${T[i].n} milik ${p.n}${rusak ? " (1 rumah hancur)" : ""}`);
+          }
+          render();
+          const owners = [...new Set(fresh.map((e) => own[e.pos]?.o))].filter((id) => id !== undefined && P[id] && !P[id].x);
+          for (const id of owners.filter((id) => P[id].b)) {
+            const p = P[id];
+            for (const t of new Set(fresh.filter((e) => own[e.pos]?.o === id).map((e) => e.pos))) {
+              if (!evOn(t)) continue;
+              if (p.cash > 3 * evCost(t)) repairEvent(t);
+              else say(`🤖 ${p.n} membiarkan ${T[t].n} (sewa = 0)`);
+            }
+          }
+          const hum = owners.filter((id) => !P[id].b);
+          if (!hum.length)
+            await nt(
+              `<h3>⚠️ Bencana Alam!</h3>${sec(
+                "Kejadian baru",
+                fresh
+                  .map((e) => {
+                    const d = evDef(e.evId);
+                    return rw(`${d.ikon} ${d.nama} · ${gtag(e.pos)}${T[e.pos].n}`, P[own[e.pos].o].n);
+                  })
+                  .join(""),
+              )}${sec("Akibat", '<p class="ct">Sewa petak terdampak = Rp0 sampai diperbaiki atau bencana mereda.</p>')}`,
+            );
+          else
+            for (const id of hum)
+              if (!P[id].x)
+                await evDecide(
+                  P[id],
+                  fresh.filter((e) => own[e.pos]?.o === id),
+                );
+          render();
+        };
+        // ===== EVENT BENCANA ===== hook ke fungsi lama
+        const _r0 = rent0;
+        rent0 = function (i, s) {
+          return evOn(i) ? 0 : _r0(i, s);
+        };
+        const _pins = PINS;
+        PINS = function () {
+          _pins();
+          renderEvents();
+        };
+        const _kr = krisis;
+        krisis = async function () {
+          await _kr();
+          if (alive()) await fireEvents();
+        };
+        const _info = info;
+        info = function (i) {
+          let h = _info(i);
+          const es = evAt(i);
+          if (es.length)
+            h += sec(
+              "⚠️ Bencana aktif",
+              es
+                .map((e) => {
+                  const d = evDef(e.evId);
+                  return rw(d.ikon + " " + d.nama, "sisa " + e.umur + " putaran · " + fm(e.biaya));
+                })
+                .join("") + '<p class="ct">Sewa = Rp0 sampai diperbaiki.</p>',
+            );
+          return h;
+        };
+        const _save = save;
+        save = function () {
+          _save();
+          try {
+            localStorage.setItem(EK, JSON.stringify(EVENTS));
+          } catch (e) {}
+        };
+        const _rs = restore;
+        restore = function (sv) {
+          EVENTS.length = 0;
+          try {
+            (JSON.parse(localStorage.getItem(EK)) || []).forEach((x) => EVENTS.push(x));
+          } catch (e) {}
+          _rs(sv);
+        };
+        // ===== EVENT BENCANA ===== panduan
+        new MutationObserver(() => {
+          const gc = $("#gc");
+          if (!gc || gc.querySelector("#evt-guide")) return;
+          const d = document.createElement("details");
+          d.id = "evt-guide";
+          d.innerHTML =
+            "<summary>⚠️ Event Bencana</summary><div><ul>" +
+            [
+              "Tiap akhir putaran (setelah krisis) ada peluang bencana: " +
+                LVL.map((l, i) => l.i + " " + Math.round(EV_CFG.chance[i] * 100) + "%").join(", ") +
+                ", ditambah " +
+                Math.round(EV_CFG.crisis * 100) +
+                "% per tahap krisis. Bila terjadi, 1-3 properti milik pemain dipilih acak.",
+              "Petak terkena ditandai <b>tag miring berwarna</b> berikon bencana. Angka di pojok tag = sisa putaran (2-4 putaran, lalu hilang sendiri).",
+              "<b>Selama tag aktif, sewa petak itu = Rp0.</b>",
+              "<b>Biaya perbaikan</b> = harga properti × persen + jumlah rumah × biaya rumah × persen, dikali potongan kartu peran dan inflasi krisis. Minimal " + fm(EV_CFG.min) + ". Uangnya masuk Dana Bansos APBN.",
+              '<b>Perbaiki</b> lewat modal bencana ("Perbaiki Sekarang") atau tombol 🔧 Perbaiki di 🏠 Aset. Memperbaiki satu petak menghapus semua tag di petak itu.',
+              "<b>Bot</b> otomatis memperbaiki bila kasnya lebih dari 3× biaya.",
+              "<b>Banjir rob</b> bisa menimpa petak yang sama dua kali (biaya dijumlah). <b>Tsunami</b> dan <b>Gunung meletus</b> punya 60% peluang menghancurkan 1 rumah (hotel turun jadi 4 rumah).",
+              "Jenis bencana: " + EVENT_PETAK.map((e) => e.ikon + " " + e.nama).join(", ") + ".",
+            ]
+              .map((x) => "<li>" + x + "</li>")
+              .join("") +
+            "</ul></div>";
+          gc.appendChild(d);
+        }).observe($("#gc"), { childList: true });
+      })();
+    </script>
+
+    <!-- ===== PRES LOG ===== -->
+    <style id="pres-css">
+      /* ===== PRES LOG ===== */
+      #pchips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        zoom: var(--ui, 1);
+      }
+      #pchips:empty {
+        display: none;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35em;
+        padding: 3px 11px;
+        border: 2px solid #111;
+        border-radius: 999px;
+        background: #fff;
+        color: #111;
+        font:
+          600 14px/1.3 Oswald,
+          sans-serif;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+      }
+      .chip.clik {
+        cursor: pointer;
+      }
+      .chip.presbi {
+        background: #d6e8ff;
+        color: #0d3d73;
+        border-color: #0d3d73;
+      }
+      .chip.preslast {
+        background: #fff3cd;
+        color: #6b4c00;
+        border-color: #6b4c00;
+      }
+      .chip.preslast.psn {
+        border-color: #b3261e;
+      }
+      .chip.pressup {
+        background: #ede1ff;
+        color: #3f1a8a;
+        border-color: #3f1a8a;
+      }
+      .chip.preslast.new {
+        animation: preslast-pop 0.6s ease-out;
+      }
+      .chip.preslast.new.psn {
+        animation:
+          preslast-pop 0.6s ease-out,
+          preslast-shake 0.4s 0.6s 3;
+      }
+      @keyframes preslast-pop {
+        0% {
+          transform: scale(0.8);
+          background: #ffd400;
+        }
+        60% {
+          transform: scale(1.08);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+      @keyframes preslast-shake {
+        0%,
+        100% {
+          transform: none;
+        }
+        20% {
+          transform: translateX(-5px) rotate(-3deg);
+        }
+        40% {
+          transform: translateX(5px) rotate(3deg);
+        }
+        60% {
+          transform: translateX(-4px) rotate(-2deg);
+        }
+        80% {
+          transform: translateX(4px) rotate(2deg);
+        }
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) .chip.presbi {
+          background: #1e3a5f;
+          color: #cfe4ff;
+          border-color: #cfe4ff;
+        }
+        :root:not([data-theme="light"]) .chip.preslast {
+          background: #5c4400;
+          color: #ffe9a8;
+          border-color: #ffe9a8;
+        }
+        :root:not([data-theme="light"]) .chip.pressup {
+          background: #3a2766;
+          color: #e3d6ff;
+          border-color: #e3d6ff;
+        }
+      }
+      :root[data-theme="dark"] .chip.presbi {
+        background: #1e3a5f;
+        color: #cfe4ff;
+        border-color: #cfe4ff;
+      }
+      :root[data-theme="dark"] .chip.preslast {
+        background: #5c4400;
+        color: #ffe9a8;
+        border-color: #ffe9a8;
+      }
+      :root[data-theme="dark"] .chip.pressup {
+        background: #3a2766;
+        color: #e3d6ff;
+        border-color: #e3d6ff;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .chip.preslast.new,
+        .chip.preslast.new.psn {
+          animation: none;
+        }
+      }
+    </style>
+    <script id="pres-js">
+      (() => {
+        // ===== PRES LOG =====
+        if (location.hash.startsWith("#join=")) return; // tamu online hanya menerima cermin HTML chip
+        const el = $("#pchips"),
+          al = (k) => P[k] && !P[k].x,
+          bi = () => PRES.bi.toFixed(1).replace(".", ",");
+        let last = "",
+          seenT,
+          newUntil = 0;
+        // ===== PRES LOG ===== render chip (dipanggil setelah setiap render())
+        function presChips() {
+          let h = "";
+          if (PRES.id >= 0 && P[PRES.id]) {
+            const L0 = PRES_LOG[0],
+              sup = (PRES.sup || []).filter(al);
+            if (seenT === undefined)
+              seenT = L0 ? L0.t : 0; // load/restore: jangan bunyikan alarm
+            else if (L0 && L0.t !== seenT) {
+              seenT = L0.t;
+              newUntil = Date.now() + 3000;
+              try {
+                UXFX.SFX.turn();
+                UXFX.buzz(50);
+              } catch (e) {}
+            }
+            const isNew = L0 && Date.now() < newUntil;
+            if (L0)
+              h += `<span class="chip clik preslast${isNew ? " new" : ""}${L0.key == "psn" ? " psn" : ""}" data-c="preslast" role="button" tabindex="0" title="Ketuk: riwayat · tahan: sumpah serapah">📜 <b>${L0.key.toUpperCase()}</b> putaran ${L0.rnd}</span>`;
+            if (PRES.biT > 0) h += `<span class="chip clik presbi" data-c="presbi" role="button" tabindex="0">🏦 Bunga ×<b>${bi()}</b> · sisa ${PRES.biT}</span>`;
+            if (sup.length) h += `<span class="chip clik pressup" data-c="pressup" role="button" tabindex="0">🗳️ <b>${sup.length}</b> pendukung</span>`;
+          }
+          if (h !== last) {
+            last = h;
+            el.innerHTML = h;
+          }
+        }
+        const _rd = render;
+        render = function () {
+          _rd.apply(this, arguments);
+          try {
+            presChips();
+          } catch (e) {}
+        };
+        // ===== PRES LOG ===== detail saat chip diketuk
+        const dt = (h) => sec("Detail", '<p class="ct">' + h + "</p>");
+        function openChip(c) {
+          if (!ov.hidden) return;
+          const pn = P[PRES.id]?.n || "-";
+          if (c == "preslast")
+            ask(
+              `<h3>📜 Kebijakan Terakhir</h3><div class="sub">Presiden ${pn}</div>${
+                PRES_LOG.length
+                  ? sec(
+                      "5 terakhir",
+                      PRES_LOG.slice(0, 5)
+                        .map((x) => rw("Putaran " + x.rnd + " · " + (P[x.id]?.n || "-"), x.key.toUpperCase()) + '<p style="margin:2px 0 8px;font-size:13px">' + x.note + "</p>")
+                        .join(""),
+                    )
+                  : dt("Belum ada kebijakan.")
+              }<p style="font-size:13px">💡 Tahan lama chip untuk 🗣️ Sumpah Serapah Politik.</p>`,
+              [["Tutup", 1]],
+              {},
+            );
+          else if (c == "presbi")
+            ask(`<h3>🏦 Bunga BI</h3>${dt(PRES.biT > 0 ? "Presiden " + pn + " mengubah bunga BI menjadi ×" + bi() + ". Berlaku " + PRES.biT + " putaran lagi." : "Tidak ada perubahan bunga aktif.")}`, [["Tutup", 1]], {});
+          else if (c == "pressup") {
+            const s = (PRES.sup || []).filter(al);
+            ask(
+              `<h3>🗳️ Pendukung Presiden</h3>${dt(s.length ? "Pendukung presiden: " + s.map((k) => P[k].n).join(", ") + ". Mereka dapat bonus Rp200rb saat pemilu dan Rp100rb tambahan tiap bansos massal." : "Tidak ada data pendukung.")}`,
+              [["Tutup", 1]],
+              {},
+            );
+          }
+        }
+        // ===== PRES LOG ===== Sumpah Serapah Politik (tahan lama chip kuning)
+        async function sumpah() {
+          if (!ov.hidden) return;
+          const p = P[cur];
+          if (!p || p.x || p.b) return;
+          try {
+            if (MP.on && mpRem(cur)) return;
+          } catch (e) {}
+          PRES.sumpah = PRES.sumpah || [];
+          const used = PRES.sumpah.includes(p.id),
+            sup = (PRES.sup || []).filter(al);
+          const c = await ask(
+            `<h3>🗣️ Sumpah Serapah Politik</h3><div class="sub">${p.n}</div>${sec("Aksi", '<p class="ct">Kamu menyerapahi presiden di depan umum: <b>−1 pendukung</b>. Gratis, sekali per pemilu.</p>')}${sec("Status", rw("Pendukung presiden", sup.length) + rw("Jatahmu", used ? "sudah dipakai" : p.id === PRES.id ? "tidak berlaku untuk presiden" : "tersedia"))}`,
+            [
+              ["🗣️ Sumpah serapah", 1, used || p.id === PRES.id || !sup.length],
+              ["Batal", 0],
+            ],
+            p,
+          );
+          if (!c) return;
+          const q = P[sup[(Math.random() * sup.length) | 0]];
+          PRES.sup = PRES.sup.filter((k) => k !== q.id);
+          PRES.sumpah.push(p.id);
+          say(`🗣️ ${p.n} bersumpah serapah: ${q.n} tidak lagi mendukung presiden`);
+          render();
+        }
+        let tm = 0,
+          lp = 0;
+        el.addEventListener("pointerdown", (e) => {
+          if (!e.target.closest(".preslast")) return;
+          lp = 0;
+          clearTimeout(tm);
+          tm = setTimeout(() => {
+            lp = 1;
+            sumpah();
+          }, 600);
+        });
+        ["pointerup", "pointerleave", "pointercancel"].forEach((ev) => el.addEventListener(ev, () => clearTimeout(tm)));
+        el.addEventListener("contextmenu", (e) => {
+          if (e.target.closest(".preslast")) e.preventDefault();
+        });
+        el.addEventListener("click", (e) => {
+          const c = e.target.closest(".chip");
+          if (!c) return;
+          if (lp) {
+            lp = 0;
+            return;
+          }
+          openChip(c.dataset.c);
+        });
+        el.addEventListener("keydown", (e) => {
+          const c = e.target.closest(".chip");
+          if (c && (e.key == "Enter" || e.key == " ")) {
+            e.preventDefault();
+            e.stopPropagation();
+            openChip(c.dataset.c);
+          }
+        });
+        presChips();
       })();
     </script>
   </body>
