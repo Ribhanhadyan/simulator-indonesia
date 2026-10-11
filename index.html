@@ -1866,6 +1866,123 @@
     <script>
       const MBG_COST = 1e7,
         MBG_PAY = 15e5;
+      // Petak Dana Bansos APBN: pemain hanya ambil sebagian isi kas, sesuai total dadu saat mendarat
+      const BANSOS_PCT = 8; // persen per mata dadu (dadu 7 = 56%, dadu 12 = 96%)
+      const bansosPct = (sum) => Math.min(100, Math.max(0, Math.round((sum || 7) * BANSOS_PCT)));
+
+      /* ===== PPh Pasal 21 atas gaji MULAI (mengikuti UU HPP No. 7/2021 Pasal 17) =====
+         Gaji dianggap gaji bulanan: disetahunkan (×12), dikurangi PTKP, lalu dikenai tarif progresif per lapis.
+         PPH_EQ = ekuivalensi nilai game ke rupiah nyata (gaji dasar Rp2 juta di game ≈ Rp6 juta/bulan, setara UMP kota besar). */
+      const PPH_EQ = 3,
+        PTKP = 54e6, // PTKP wajib pajak TK/0 per tahun
+        PPH_LAYERS = [
+          [60e6, 0.05],
+          [250e6, 0.15],
+          [500e6, 0.25],
+          [5e9, 0.3],
+          [Infinity, 0.35],
+        ];
+      const pph21 = (g, p) => {
+        if (isP(p)) return 0; // Presiden kebal pajak (aturan peran yang sudah ada)
+        let rest = Math.max(0, g * PPH_EQ * 12 - PTKP),
+          low = 0,
+          tax = 0;
+        for (const [hi, r] of PPH_LAYERS) {
+          const part = Math.min(rest, hi - low);
+          if (part <= 0) break;
+          tax += part * r;
+          rest -= part;
+          low = hi;
+        }
+        // pajak setahun -> sebulan -> nilai game, lalu dikali pengali pajak peran dan penyesuaian fiskal APBN
+        return Math.round(((tax / 12 / PPH_EQ) * R(p).tax * fzTax()) / 1e3) * 1e3;
+      };
+      // setoran ke kas APBN (Presiden mengambil 20%, sama seperti pay())
+      const toAPBN = (amt, from) => {
+        const pr = P[PRES.id];
+        if (pr && !pr.x && pr !== from) {
+          const c = Math.round((amt * 0.2 * fzEff()) / 1e3) * 1e3;
+          pr.cash += c;
+          POOL += amt - c;
+        } else POOL += amt;
+      };
+
+      /* ===== Logika fuzzy: penyesuaian fiskal otomatis APBN (metode Sugeno) =====
+         Input 1 "cakupan"   = kas APBN / total kewajiban santunan MBG (santunan satu putaran + tunggakan)
+         Input 2 "tunggakan" = total tunggakan negara / santunan satu putaran
+         Output  L (0..1)    = tingkat pengetatan fiskal (0 = normal, 1 = maksimal), rata-rata berbobot aturan IF-THEN */
+      const FZ = { L: 0 };
+      const fzTri = (x, a, b, c) => (x <= a || x >= c ? 0 : x <= b ? (x - a) / (b - a) : (c - x) / (c - b));
+      const fzDn = (x, a, b) => (x <= a ? 1 : x >= b ? 0 : (b - x) / (b - a));
+      const fzUp = (x, a, b) => (x <= a ? 0 : x >= b ? 1 : (x - a) / (b - a));
+      const FZ_RULES = [
+        // [cakupan, tunggakan, tingkat pengetatan]
+        ["kritis", "berat", 1],
+        ["kritis", "sedang", 0.9],
+        ["kritis", "ringan", 0.75],
+        ["rendah", "berat", 0.8],
+        ["rendah", "sedang", 0.6],
+        ["rendah", "ringan", 0.4],
+        ["cukup", "berat", 0.2],
+        ["cukup", "sedang", 0.05],
+        ["cukup", "ringan", 0],
+        ["surplus", "berat", 0],
+        ["surplus", "sedang", 0],
+        ["surplus", "ringan", 0],
+      ];
+      const fzCalc = (cov, arr) => {
+        const C = { kritis: fzDn(cov, 0.25, 0.75), rendah: fzTri(cov, 0.25, 0.75, 1.5), cukup: fzTri(cov, 1, 2, 3.5), surplus: fzUp(cov, 2.5, 4) },
+          A = { ringan: fzDn(arr, 0.2, 1), sedang: fzTri(arr, 0.2, 1, 2.5), berat: fzUp(arr, 1.5, 3) };
+        let sw = 0,
+          sz = 0;
+        for (const [c, a, z] of FZ_RULES) {
+          const w = Math.min(C[c], A[a]);
+          sw += w;
+          sz += w * z;
+        }
+        return sw ? sz / sw : 0;
+      };
+      const fzInputs = () => {
+        const act = P.filter((x) => !x.x),
+          per = act.reduce((a, p) => a + nmb(p) * MBG_PAY, 0),
+          arr = act.reduce((a, p) => a + (p.mt || 0), 0),
+          need = per + arr;
+        return { per, arr, need, cov: need > 0 ? POOL / need : 99, ar: arr / Math.max(per, MBG_PAY) };
+      };
+      const fzLabel = (l) => (l < 0.05 ? ["Normal", "🟢"] : l < 0.35 ? ["Pengetatan ringan", "🟡"] : l < 0.65 ? ["Pengetatan sedang", "🟠"] : ["Pengetatan ketat", "🔴"]);
+      const fzTax = () => 1 + 0.6 * FZ.L, // pajak (PPh & barang mewah) naik maks ×1,6
+        fzRent = () => 1 + 0.4 * FZ.L, // sewa aset negara naik maks ×1,4
+        fzEff = () => 1 - 0.5 * FZ.L; // efisiensi: potongan Presiden turun maks setengahnya
+      async function fzUpdate() {
+        const I = fzInputs(),
+          target = I.need > 0 ? fzCalc(I.cov, I.ar) : 0,
+          before = FZ.L;
+        let L = before + 0.5 * (target - before); // bergerak bertahap, tidak melompat
+        if (L < 0.05 && target < 0.05) L = 0;
+        FZ.L = Math.round(L * 100) / 100;
+        const [la, ic] = fzLabel(FZ.L),
+          lb = fzLabel(before)[0];
+        if (la == lb) return;
+        const was = before < 0.05,
+          now = FZ.L < 0.05;
+        if (now) {
+          say(`✅ APBN pulih: pajak, sewa aset negara, dan potongan Presiden kembali normal`);
+          await nt(
+            "<h3>✅ Fiskal Negara Normal</h3>" +
+              sec("Kondisi APBN", rw("Kas APBN", fm(POOL)) + rw("Santunan MBG per putaran", fm(I.per)) + rw("Tunggakan negara", fm(I.arr))) +
+              sec("Kebijakan", '<p class="ct">Kas APBN sudah pulih. Pajak, sewa aset negara, dan potongan Presiden kembali ke tarif semestinya.</p>'),
+          );
+        } else {
+          say(`${ic} Fiskal otomatis: ${la}. Pajak ×${fx(fzTax())}, sewa aset negara ×${fx(fzRent())}, potongan Presiden ×${fx(fzEff())}`);
+          if (was)
+            await nt(
+              "<h3>🧮 APBN Defisit: Penyesuaian Fiskal</h3>" +
+                sec("Kondisi APBN", rw("Kas APBN", fm(POOL)) + rw("Santunan MBG per putaran", fm(I.per)) + rw("Tunggakan negara", fm(I.arr)) + rw("Cakupan kas", fx(Math.min(I.cov, 99)) + "× kewajiban")) +
+                sec("Kebijakan otomatis (" + ic + " " + la + ")", rw("Pajak", "×" + fx(fzTax())) + rw("Sewa aset negara", "×" + fx(fzRent())) + rw("Potongan Presiden", "×" + fx(fzEff()))) +
+                sec("Catatan", '<p class="ct">Berlaku bertahap dan kembali normal otomatis saat kas APBN pulih.</p>'),
+            );
+        }
+      }
       let MBG_MAX = 1;
       const PRES = { id: -1, t: 0, used: 0, offer: null, bi: 1, biT: 0, sup: [] },
         isP = (p) => p.id === PRES.id;
@@ -1905,7 +2022,7 @@
         C,
         S("Semarang", 180, "or", 14, 70, 200, 550, 750, 950),
         S("Surabaya", 200, "or", 16, 80, 220, 600, 800, 1000),
-        { t: "fp", n: "Dana Bansos APBN", i: "🅿️" },
+        { t: "fp", n: "KORUPSI", i: "🕵️" },
         S("Bandung", 220, "rd", 18, 90, 250, 700, 875, 1050),
         C,
         S("Yogyakarta", 220, "rd", 18, 90, 250, 700, 875, 1050),
@@ -1928,7 +2045,7 @@
       ];
       const NEWT = { Lelang: { t: "la", n: "Lelang", i: "🔨" }, Market: { t: "mk", n: "Market", i: "🛒" }, BUMN: { t: "bu", n: "BUMN", i: "🏭", p: 2e6 }, Bandara: { t: "ap", n: "Bandara", i: "✈️" } };
       const SEQ =
-        "Mulai|Medan|Dana Umum|Palembang|Pajak Penghasilan|Stasiun Gambir|Lelang|Pontianak|Kesempatan|Banjarmasin|Makassar|Penjara|Manado|PLN|Ambon|Jayapura|Dana Umum|BUMN|Malang|Kesempatan|Semarang|Surabaya|Dana Bansos APBN|Bandung|Kesempatan|Yogyakarta|Solo|Stasiun Tugu|Market|Bali|Lombok|PDAM|Labuan Bajo|Karier & Peran|Borobudur|Raja Ampat|Dana Umum|Komodo|Kesempatan|Bandara|Tambang Emas|Jakarta|Pajak Barang Mewah|IKN Nusantara".split(
+        "Mulai|Medan|Dana Umum|Palembang|Pajak Penghasilan|Stasiun Gambir|Lelang|Pontianak|Kesempatan|Banjarmasin|Makassar|Penjara|Manado|PLN|Ambon|Jayapura|Dana Umum|BUMN|Malang|Kesempatan|Semarang|Surabaya|KORUPSI|Bandung|Kesempatan|Yogyakarta|Solo|Stasiun Tugu|Market|Bali|Lombok|PDAM|Labuan Bajo|Karier & Peran|Borobudur|Raja Ampat|Dana Umum|Komodo|Kesempatan|Bandara|Tambang Emas|Jakarta|Pajak Barang Mewah|IKN Nusantara".split(
           "|",
         );
       const T = SEQ.map((n) =>
@@ -2196,7 +2313,7 @@
           const w = P[cur];
           0 && `${w.k} Giliran ${w.n} (${R(w).n})${w.b ? " 🤖" : ""} · ${w.jail >= 0 ? "sedang di penjara" : "kas " + fm(w.cash)}`;
           0 &&
-            `📰 <b>${ECO.n}</b>${ECO.d ? ` (${ECO.d} putaran lagi)` : ""}<br>🏛️ Dana Bansos APBN: ${fm(POOL)} · Putaran ${rnd}${SET.rl ? "/" + SET.rl : ""}<br>🏗️ Aset negara: ${nneg()} properti (sewanya masuk APBN)<br>${LV.i} Level ${LV.n}${DIR < 0 ? " · 🔁 arah terbalik" : ""} · ${crS() ? "📉 Krisis tahap " + crS() + ": sewa ×" + fx(crM()) + ", gaji ×" + fx(crG()) : SET.cr ? "krisis mulai putaran " + LV.st : "krisis dimatikan"}<br>👮 OTT (${POLS.length} pion) di ${POLS.map((x) => T[x.pos].n).join(", ")}<br>${PRES.id >= 0 ? `👑 Presiden: <b>${P[PRES.id].n}</b> (periode ${PRES.t}/2)` : "👑 Belum ada presiden"} · 🗳️ pemilu setelah putaran ${Math.ceil(rnd / 5) * 5}`;
+            `📰 <b>${ECO.n}</b>${ECO.d ? ` (${ECO.d} putaran lagi)` : ""}<br>🏛️ Dana Bansos APBN: ${fm(POOL)}${FZ.L >= 0.05 ? " · " + fzLabel(FZ.L)[1] + " " + fzLabel(FZ.L)[0] + " (pajak ×" + fx(fzTax()) + ")" : ""} · Putaran ${rnd}${SET.rl ? "/" + SET.rl : ""}<br>🏗️ Aset negara: ${nneg()} properti (sewanya masuk APBN)<br>${LV.i} Level ${LV.n}${DIR < 0 ? " · 🔁 arah terbalik" : ""} · ${crS() ? "📉 Krisis tahap " + crS() + ": sewa ×" + fx(crM()) + ", gaji ×" + fx(crG()) : SET.cr ? "krisis mulai putaran " + LV.st : "krisis dimatikan"}<br>👮 OTT (${POLS.length} pion) di ${POLS.map((x) => T[x.pos].n).join(", ")}<br>${PRES.id >= 0 ? `👑 Presiden: <b>${P[PRES.id].n}</b> (periode ${PRES.t}/2)` : "👑 Belum ada presiden"} · 🗳️ pemilu setelah putaran ${Math.ceil(rnd / 5) * 5}`;
         }
         {
           const kb = $("#kbj");
@@ -2205,7 +2322,7 @@
         }
         $("#pl").innerHTML = P.map(
           (p, k) =>
-            `<div class="pc${k == cur ? " on" : ""}${p.x ? " out" : ""}" style="border-color:${p.c}"><div><span>${p.k}</span> <b>${p.n}</b>${p.id == PRES.id ? " 👑" : ""}${p.cards ? " 🔑×" + p.cards : ""}${p.jail >= 0 ? " ⛓️" : ""}</div><div class="rl">${R(p).i} ${R(p).n}</div>${nmb(p) ? `<div class="rl mbt">🍱 MBG ×${nmb(p)} · santunan ${fm(nmb(p) * MBG_PAY)} tiap lewat MULAI</div>` : ""}${p.imun || p.gk ? `<div class="rl">${p.imun ? "⚖️ kebal hukum 1× " : ""}${p.gk ? "🩺 berobat gratis 1×" : ""}</div>` : ""}${cardChip(p)}${p.sb ? `<div class="rl">🏭 Saham BUMN ×${p.sb} · dividen ${fm(p.sb * DIV())} tiap lewat MULAI</div>` : ""}<div class="cash">${fm(p.cash)}</div>${p.loans.length ? `<div class="dbt">🏦 Utang ${fm(p.loans.reduce((a, l) => a + l.pr, 0))} · jatuh tempo ${Math.min(...p.loans.map((l) => l.n))} giliran</div>` : ""}<div class="ch">${Object.keys(
+            `<div class="pc${k == cur ? " on" : ""}${p.x ? " out" : ""}" style="border-color:${p.c}"><div><span>${p.k}</span> <b>${p.n}</b>${p.id == PRES.id ? " 👑" : ""}${p.cards ? " 🔑×" + p.cards : ""}${p.jail >= 0 ? " ⛓️" : ""}</div><div class="rl">${R(p).i} ${R(p).n}</div>${nmb(p) || p.mt ? `<div class="rl mbt">🍱 MBG ×${nmb(p)} · santunan ${fm(nmb(p) * MBG_PAY)} (dari APBN) tiap lewat MULAI${p.mt ? " · ⚠️ tunggakan " + fm(p.mt) : ""}</div>` : ""}${p.kor > 0 ? `<div class="rl">🕵️ Jejak korupsi ${fm(p.kor)} · diincar OTT</div>` : ""}${p.imun || p.gk ? `<div class="rl">${p.imun ? "⚖️ kebal hukum 1× " : ""}${p.gk ? "🩺 berobat gratis 1×" : ""}</div>` : ""}${cardChip(p)}${p.sb ? `<div class="rl">🏭 Saham BUMN ×${p.sb} · dividen ${fm(p.sb * DIV())} tiap lewat MULAI</div>` : ""}<div class="cash">${fm(p.cash)}</div>${p.loans.length ? `<div class="dbt">🏦 Utang ${fm(p.loans.reduce((a, l) => a + l.pr, 0))} · jatuh tempo ${Math.min(...p.loans.map((l) => l.n))} giliran</div>` : ""}<div class="ch">${Object.keys(
               own,
             )
               .filter((i) => own[i].o == k)
@@ -2223,7 +2340,7 @@
           ap: "Terbang gratis ke stasiun kereta mana pun (sewa berlaku bila milik pemain lain), atau tetap di sini.",
           go: "Lewat atau mendarat di sini: terima gaji.",
           jl: "Hanya mampir, atau menunggu bila ditahan.",
-          fp: "Ambil seluruh dana pajak yang terkumpul.",
+          fp: "Pilih korupsi atau tidak. Korupsi: gelapkan sebagian kas APBN (total dadu × " + BANSOS_PCT + "%), tapi jadi buruan pion OTT. Tidak korupsi: tidak terjadi apa-apa.",
           gj: "Langsung masuk penjara, tanpa gaji MULAI.",
           c: "Ambil satu kartu Kesempatan.",
           k: "Ambil satu kartu Dana Umum.",
@@ -2279,7 +2396,7 @@
           h +=
             sec("Sewa", rw("Tanah kosong", fm(t.r[0])) + rw("Set lengkap (\u00d72)", fm(t.r[0] * 2)) + [1, 2, 3, 4].map((n) => rw("\ud83c\udfe0 " + n + " rumah", fm(t.r[n]))).join("") + rw("\ud83c\udfe8 Hotel", fm(t.r[5]))) +
             sec("Pembangunan", rw("Biaya per rumah / hotel", fm(hc)) + rw("Syarat", "Tanah milik sendiri")) +
-            sec("🍱 MBG (Makan Bergizi Gratis)", rw("Harga", fm(MBG_COST)) + rw("Santunan negara", "+" + fm(MBG_PAY) + " tiap lewat MULAI") + rw("Maks per properti", MBG_MAX));
+            sec("🍱 MBG (Makan Bergizi Gratis)", rw("Harga", fm(MBG_COST)) + rw("Santunan (dari APBN)", "+" + fm(MBG_PAY) + " tiap lewat MULAI, bila kas APBN cukup") + rw("Maks per properti", MBG_MAX));
         else if (t.t == "r") h += sec("Sewa", rw("Punya 1 stasiun", "Rp250.000") + rw("Punya 2", "Rp500.000"));
         else if (t.t == "u") h += sec("Sewa", rw("Punya 1", "4\u00d7 dadu \u00d7 Rp10.000") + rw("Punya 2", "10\u00d7 dadu \u00d7 Rp10.000"));
         else if (t.t == "x") h += sec("Tagihan", rw("Pajak", fm(t.p)));
@@ -2417,20 +2534,39 @@
         Object.keys(own)
           .filter((i) => own[i].o == p.id)
           .reduce((a, i) => a + (own[i].mb || 0), 0);
+      const bayarGaji = (p, ket) => {
+        const g = Math.round((ECO.go * R(p).go * (isP(p) ? 1.5 : 1) * crG()) / 1e3) * 1e3,
+          t = pph21(g, p);
+        p.cash += g - t;
+        if (t) toAPBN(t, p);
+        say(
+          t
+            ? `${p.n} menerima gaji ${fm(g)}, dipotong PPh 21 ${fm(t)} (${((t / g) * 100).toFixed(1).replace(".", ",")}%), bersih ${fm(g - t)}${ket}`
+            : `${p.n} menerima gaji ${fm(g)}${ket} (${isP(p) ? "Presiden bebas PPh 21" : "di bawah PTKP, bebas PPh 21"})`,
+        );
+      };
       const gaji = (p) => {
-        const g = Math.round((ECO.go * R(p).go * (isP(p) ? 1.5 : 1) * crG()) / 1e3) * 1e3;
-        p.cash += g;
-        say(`${p.n} menerima gaji ${fm(g)} (lewat MULAI)`);
+        bayarGaji(p, " (lewat MULAI)");
         if (p.sb) {
           const dv = p.sb * DIV();
           p.cash += dv;
           say(`🏭 ${p.n} menerima dividen BUMN ${fm(dv)}`);
         }
         {
-          const m = nmb(p);
-          if (m) {
-            p.cash += m * MBG_PAY;
-            say(`🍱 ${p.n} menerima santunan MBG ${fm(m * MBG_PAY)} dari negara (${m} MBG)`);
+          const m = nmb(p),
+            tg = p.mt || 0,
+            due = m * MBG_PAY + tg;
+          if (due > 0) {
+            const bayar = Math.min(due, POOL),
+              sisa = due - bayar;
+            POOL -= bayar;
+            p.cash += bayar;
+            p.mt = sisa;
+            if (!sisa) say(`🍱 ${p.n} menerima santunan MBG ${fm(bayar)} dari Dana APBN (${m} MBG${tg ? ", termasuk tunggakan " + fm(tg) : ""})`);
+            else
+              say(
+                `⚠️ Dana APBN kurang! ${p.n} hanya menerima ${fm(bayar)} dari ${fm(due)} santunan MBG. Sisa ${fm(sisa)} jadi tunggakan negara, dibayar lebih dulu saat APBN terisi dan kamu lewat MULAI lagi`,
+              );
           }
         }
         if (R(p).zk)
@@ -2675,7 +2811,57 @@
         say(`${r.i} ${p.n} kini menjadi ${r.n}`);
         render();
       }
+      const isPol = (p) => R(p) === ROLES[0];
+      // hukuman koruptor yang tertangkap: catatan dihapus, uang pengganti (sebesar jejak korupsi) kembali ke APBN
+      function vonis(p) {
+        const kor = p.kor || 0,
+          back = Math.min(p.cash, kor);
+        p.kor = 0;
+        if (back > 0) {
+          p.cash -= back;
+          POOL += back;
+        }
+        say(`⚖️ ${p.n} divonis korupsi${back ? ": uang pengganti " + fm(back) + " dikembalikan ke APBN" : ""}${isPol(p) ? " (gaji tetap cair selama di penjara)" : ""}`);
+        render();
+      }
+      async function korupsi(p, sum) {
+        const pc = bansosPct(sum),
+          g = Math.min(POOL, Math.round((POOL * pc) / 100 / 1e3) * 1e3);
+        if (!g) {
+          if (!p.b) await ask("<h3>🕵️ KORUPSI</h3><p>Kas APBN kosong, tidak ada yang bisa digelapkan.</p>", [["OK", 1]], p);
+          say(`🕵️ ${p.n} mendarat di KORUPSI, tapi kas APBN kosong`);
+          return;
+        }
+        let go;
+        if (p.b) go = Math.random() < Math.min(0.8, Math.max(0.15, 0.75 - 0.08 * POLS.length - ((p.kor || 0) > 0 ? 0.2 : 0)));
+        else
+          go = await ask(
+            `<h3>🕵️ KORUPSI</h3><div class="sub">${p.n}</div>` +
+              sec("Peluang", rw("Dadu", sum) + rw("Bisa digelapkan", pc + "% kas APBN") + rw("Jumlah", fm(g)) + rw("Kas APBN sekarang", fm(POOL))) +
+              sec(
+                "Risiko",
+                '<p class="ct">Korupsi tercatat sebagai jejak dan membuatmu diincar pion OTT. Jika tertangkap: penjara' +
+                  (isPol(p) ? " (gaji tetap cair)" : " tanpa gaji") +
+                  ", dan uang pengganti sebesar jejak korupsi dikembalikan ke APBN." +
+                  ((p.kor || 0) ? " Jejakmu sekarang " + fm(p.kor) + "." : "") +
+                  " Tidak korupsi: tidak terjadi apa-apa.</p>",
+              ),
+            [["Korupsi " + fm(g), 1], ["Tidak", 0]],
+            p,
+          );
+        if (go) {
+          POOL -= g;
+          p.cash += g;
+          p.kor = (p.kor || 0) + g;
+          say(`🕵️ ${p.n} menggelapkan ${fm(g)} dari APBN (${pc}% kas)`);
+        } else say(`🕵️ ${p.n} memilih tidak korupsi`);
+        render();
+      }
       async function tangkap(p) {
+        if (!(p.kor > 0)) {
+          say(`👮 OTT memeriksa ${p.n}: tidak ada catatan korupsi, dilepas`);
+          return;
+        }
         if (isP(p)) {
           say(`🛡️ Presiden ${p.n} kebal OTT berkat Paspampres`);
           return;
@@ -2688,7 +2874,7 @@
         }
         const amt = Math.max(1e6, Math.round((p.cash * 0.15) / 1e5) * 1e5);
         const c = await ask(
-          `<h3>👮 OTT Polisi!</h3><div class="sub">${p.n}</div>${sec("Situasi", '<p class="ct">Pion OTT berada di petak yang sama denganmu.</p>')}${sec("Pilihan", rw("Bayar suap", fm(amt)) + rw("Masuk penjara", "Tanpa gaji MULAI"))}`,
+          `<h3>👮 OTT Polisi!</h3><div class="sub">${p.n}</div>${sec("Situasi", '<p class="ct">Pion OTT berada di petak yang sama denganmu dan mengendus jejak korupsimu (' + fm(p.kor) + ').</p>')}${sec("Pilihan", rw("Bayar suap", fm(amt)) + rw("Masuk penjara", (isPol(p) ? "Gaji tetap cair" : "Tanpa gaji") + ", uang pengganti " + fm(Math.min(p.cash, p.kor))))}`,
           [
             ["Suap " + fm(amt), "s", p.cash < amt],
             ["Masuk Penjara", "j"],
@@ -2698,7 +2884,10 @@
         if (c == "s") {
           await pay(p, amt, 0, 1);
           say(`👮 ${p.n} menyuap OTT ${fm(amt)}`);
-        } else jail(p);
+        } else {
+          jail(p);
+          if (p.jail >= 0) vonis(p);
+        }
       }
       async function polisi() {
         for (const x of POLS) await pol1(x);
@@ -2709,7 +2898,16 @@
         dice(a, b);
         say(`👮 OTT melempar ${a} + ${b} = ${a + b}`);
         await sleep(900);
-        for (let k = 0; k < a + b; k++) {
+        let n = a + b;
+        const buron = P.filter((x) => !x.x && x.jail < 0 && x.pos != IJ && (x.kor || 0) > 0)
+          .map((x) => ({ x, d: (x.pos - POL.pos + NN) % NN }))
+          .filter((o) => o.d >= 1 && o.d <= 12)
+          .sort((m, q) => m.d - q.d)[0];
+        if (buron && Math.random() < Math.min(0.9, 0.35 + buron.x.kor / 2e7)) {
+          n = buron.d;
+          say(`🕵️ OTT dapat laporan korupsi ${buron.x.n}, langsung mengejar (${n} petak)`);
+        }
+        for (let k = 0; k < n; k++) {
           POL.pos = (POL.pos + 1) % NN;
           render();
           await sleep(POLS.length > 1 ? 90 : 150);
@@ -2920,7 +3118,7 @@
         else if (!nb) {
           const pr = P[PRES.id];
           if (pr && !pr.x && pr !== p) {
-            const c = Math.round((amt * 0.2) / 1e3) * 1e3;
+            const c = Math.round((amt * 0.2 * fzEff()) / 1e3) * 1e3;
             pr.cash += c;
             POOL += amt - c;
           } else POOL += amt;
@@ -3086,7 +3284,7 @@
         `<label class="ck" style="display:flex;justify-content:space-between;align-items:center;gap:8px">${lb}<select id="${id}">${o.map(([n, v]) => `<option value="${v}"${v == c ? " selected" : ""}>${n}</option>`).join("")}</select></label>`;
       function save() {
         try {
-          localStorage.setItem(SK, JSON.stringify({ v: 1, nn: NN, t: Date.now(), P, own, dk, cur, rnd, POOL, ECO, DIR, ud, lv: LVL.indexOf(LV), LS, PRES, POLS, log, SET, ST }));
+          localStorage.setItem(SK, JSON.stringify({ v: 1, nn: NN, t: Date.now(), P, own, dk, cur, rnd, POOL, fz: FZ.L, ECO, DIR, ud, lv: LVL.indexOf(LV), LS, PRES, POLS, log, SET, ST }));
         } catch (e) {}
       }
       function clearSave() {
@@ -3104,6 +3302,7 @@
         cur = sv.cur;
         rnd = sv.rnd;
         POOL = sv.POOL;
+        FZ.L = sv.fz || 0;
         ECO = sv.ECO;
         DIR = sv.DIR;
         ud = sv.ud || [];
@@ -3358,14 +3557,15 @@
           n: "Amplop DPR",
           i: "💼",
           p: 18e5,
-          d: "Pakai: ambil 60% isi Dana Bansos APBN.",
+          d: "Pakai: ambil 60% isi Dana Bansos APBN (tercatat sebagai jejak korupsi, diincar OTT).",
           use: 1,
           can: (p) => POOL >= 2e5,
           fx: (p) => {
             const a = Math.round((POOL * 0.6) / 1e3) * 1e3;
             POOL -= a;
             p.cash += a;
-            return "mengambil " + fm(a) + " dari Dana Bansos APBN";
+            p.kor = (p.kor || 0) + a;
+            return "menggelapkan " + fm(a) + " dari Dana Bansos APBN (tercatat sebagai jejak korupsi)";
           },
           bot: (p) => POOL >= 2e6,
         },
@@ -3954,11 +4154,11 @@
               render();
             } else await auction(i);
           } else if (o.o != p.id && !o.m) {
-            let r = Math.round((rent(i, sum) * R(p).rp * (t.t != "s" ? R(p).rs : 1) * (o.o == NEG ? 1 : R(P[o.o]).ri)) / 1e3) * 1e3;
+            let r = Math.round((rent(i, sum) * R(p).rp * (t.t != "s" ? R(p).rs : 1) * (o.o == NEG ? fzRent() : R(P[o.o]).ri)) / 1e3) * 1e3;
             const r0 = r;
             r = cardRent(p, r);
             await ask(
-              `<h3>Bayar Sewa</h3>${sec("Properti", rw(gtag(i) + t.n, ""))}${sec("Pemilik", rw(OW(o), ""))}${sec("Tagihan", rw("Sewa", fm(r0)) + (r < r0 ? rw("🛡️ Asuransi sewa", "−" + fm(r0 - r)) + rw("Kamu bayar", fm(r)) : ""))}${o.o == NEG ? sec("Tujuan", '<p class="ct">Aset negara: sewa masuk Dana Bansos APBN</p>') : ""}`,
+              `<h3>Bayar Sewa</h3>${sec("Properti", rw(gtag(i) + t.n, ""))}${sec("Pemilik", rw(OW(o), ""))}${sec("Tagihan", rw("Sewa", fm(r0)) + (o.o == NEG && FZ.L >= 0.05 ? rw("🧮 Penyesuaian fiskal APBN", "sewa aset negara ×" + fx(fzRent())) : "") + (r < r0 ? rw("🛡️ Asuransi sewa", "−" + fm(r0 - r)) + rw("Kamu bayar", fm(r)) : ""))}${o.o == NEG ? sec("Tujuan", '<p class="ct">Aset negara: sewa masuk Dana Bansos APBN</p>') : ""}`,
               [["Bayar", 1]],
             );
             say(`${p.n} bayar sewa ${fm(r)} ke ${o.o == NEG ? "Negara (APBN)" : P[o.o].n}`);
@@ -3966,14 +4166,14 @@
             await pay(p, r, o.o == NEG ? 0 : P[o.o]);
           }
         } else if (t.t == "x") {
-          let a = Math.round(((i == IP ? Math.max(t.p, Math.round(p.cash / 1e5) * 1e4) : t.p) * R(p).tax * (isP(p) ? 0 : 1) * crM()) / 1e3) * 1e3;
+          let a = Math.round(((i == IP ? Math.max(t.p, Math.round(p.cash / 1e5) * 1e4) : t.p) * R(p).tax * (isP(p) ? 0 : 1) * crM() * fzTax()) / 1e3) * 1e3;
           const a0 = a;
           if (a && hasC(p, "bp")) {
             dropC(p, "bp");
             a = 0;
             say(`🧾 ${p.n} bebas pajak berkat kartu`);
           }
-          await ask(`<h3>${t.n}</h3>${sec("Pajak", rw(i == IP ? "Progresif 10% kas (min. " + fm(t.p) + ")" : "Tarif tetap", a0 && !a ? "Rp0 (🧾 bebas pajak)" : fm(a)))}${sec("Tujuan", '<p class="ct">Masuk Dana Bansos APBN</p>')}`, [
+          await ask(`<h3>${t.n}</h3>${sec("Pajak", rw(i == IP ? "Progresif 10% kas (min. " + fm(t.p) + ")" : "Tarif tetap", a0 && !a ? "Rp0 (🧾 bebas pajak)" : fm(a)) + (FZ.L >= 0.05 ? rw("🧮 Penyesuaian fiskal APBN", "pajak ×" + fx(fzTax())) : ""))}${sec("Tujuan", '<p class="ct">Masuk Dana Bansos APBN</p>')}`, [
             ["Bayar", 1],
           ]);
           await pay(p, a);
@@ -3984,15 +4184,8 @@
         else if (t.t == "bu") await bumn(p);
         else if (t.t == "ap") await bandara(p);
         else if (t.t == "gm") await tambang(p);
-        else if (t.t == "fp") {
-          const g = POOL;
-          POOL = 0;
-          if (g) {
-            p.cash += g;
-            render();
-          }
-          await ask(`<h3>Dana Bansos APBN</h3><p>${g ? "Kamu menerima dana pajak terkumpul <b>" + fm(g) + "</b>" : "Kas masih kosong."}</p>`, [["OK", 1]]);
-        } else if (t.t == "gj") {
+        else if (t.t == "fp") await korupsi(p, sum);
+        else if (t.t == "gj") {
           await ask("<h3>Masuk Penjara!</h3><p>Langsung ke penjara, tanpa melewati MULAI.</p>", [["OK", 1]]);
           jail(p);
         }
@@ -4297,7 +4490,10 @@
         } else if (a == "j") jail(p);
         else if (a == "c") {
           jail(p);
-          if (p.jail >= 0) await sita(p, "Aset hasil korupsi disita negara");
+          if (p.jail >= 0) {
+            p.kor = 0;
+            await sita(p, "Aset hasil korupsi disita negara");
+          }
         } else if (a == "z") await paksa(p, "Proyek Strategis Nasional");
         else if (a == "y") await sita(p, "Negara menyita aset pengemplang pajak");
         else if (a == "f") {
@@ -4338,7 +4534,11 @@
       async function core(p) {
         let dbl = 0;
         if (p.jail >= 0) {
-          const c = await ask(`<h3>⛓️ Di Penjara</h3><p>Percobaan ${p.jail}/3. Denda keluar Rp500.000.</p>`, [["Bayar denda", "p", p.cash < 5e5], ["Lempar kembar", "r"], ...(p.cards ? [["Pakai kartu bebas", "k"]] : [])]);
+          if (isPol(p)) {
+          bayarGaji(p, " (gaji tetap saat di penjara)");
+          render();
+        }
+          const c = await ask(`<h3>⛓️ Di Penjara</h3><p>Percobaan ${p.jail}/3. Denda keluar Rp500.000. ${isPol(p) ? "Gajimu tetap cair selama di penjara." : "Tidak ada gaji selama di penjara."}</p>`, [["Bayar denda", "p", p.cash < 5e5], ["Lempar kembar", "r"], ...(p.cards ? [["Pakai kartu bebas", "k"]] : [])]);
           if (c == "p") {
             p.cash -= 5e5;
             p.jail = -1;
@@ -4469,6 +4669,7 @@
             if ((rnd - 1) % 5 == 0 && P.filter((x) => !x.x).length > 1) await election();
             if (ECO.d && !--ECO.d) ECO = BASE;
             if (!ECO.d && rnd % 3 == 0) await news();
+            await fzUpdate();
             if (P.filter((x) => !x.x).length > 1) {
               await krisis();
               if (P.filter((x) => !x.x).length > 1) await polisi();
@@ -4509,10 +4710,11 @@
           S(
             "🎯 Dasar permainan",
             L([
-              "Mulai dengan kas " + fm(SET.cash) + ", berjalan searah jarum jam. Lewat MULAI terima gaji " + fm(BASE.go) + " (dikali peran dan berita ekonomi).",
+              "Mulai dengan kas " + fm(SET.cash) + ", berjalan searah jarum jam. Lewat MULAI terima gaji " + fm(BASE.go) + " (dikali peran dan berita ekonomi), lalu dipotong PPh 21.",
+              "<b>PPh 21</b>: gaji dianggap bulanan, disetahunkan, dikurangi PTKP Rp54 juta, lalu dikenai tarif progresif UU HPP: 5% (sampai Rp60 jt), 15% (sampai Rp250 jt), 25% (sampai Rp500 jt), 30% (sampai Rp5 M), 35% (di atasnya). Nilai game dikonversi ×" + PPH_EQ + " ke rupiah nyata. Pengali pajak peran dan penyesuaian fiskal APBN ikut berlaku; Presiden bebas PPh. Pajaknya masuk Dana Bansos APBN.",
               "Lempar 2 dadu. Kembar = lempar lagi, kembar 3× = masuk penjara.",
               "Petak kosong: beli, atau dilelang jika tidak dibeli.",
-              "Pajak dan denda masuk <b>Dana Bansos APBN</b>. Mendarat di petak itu = ambil seluruh isinya.",
+              "Pajak dan denda masuk <b>Dana Bansos APBN</b>. Petak <b>KORUPSI</b>: pilih korupsi (gelapkan total dadu × " + BANSOS_PCT + "% isi kas, tapi jadi buruan OTT) atau tidak (tidak terjadi apa-apa).",
               "Penjara: bayar denda Rp500.000, lempar kembar (maks 3 percobaan), atau pakai kartu bebas.",
               "Menang: pemain terakhir yang tidak bangkrut.",
               "Tips: ketuk petak untuk lihat harga sewa; ketuk kotak warna di kartu pemain untuk melihat aset.",
@@ -4526,7 +4728,7 @@
               "Sewa naik dengan rumah (maks 4) lalu hotel. Set warna lengkap membuat sewa tanah kosong ×2.",
               "Bangun lewat tombol 🏠 Aset kapan saja, tidak perlu mendarat. Bangun merata dalam satu set warna.",
               "Gadai dapat 50% harga, tebus 55%. Properti berbangunan tidak bisa digadai.",
-              "<b>🍱 MBG</b> (kotak biru): " + fm(MBG_COST) + " per unit, maks " + MBG_MAX + " per properti kota. Pemilik terima santunan negara <b>" + fm(MBG_PAY) + "</b> tiap lewat atau mendarat di MULAI. Jual MBG dapat setengah harga.",
+              "<b>🍱 MBG</b> (kotak biru): " + fm(MBG_COST) + " per unit, maks " + MBG_MAX + " per properti kota. Pemilik terima santunan <b>" + fm(MBG_PAY) + "</b> per unit tiap lewat atau mendarat di MULAI, dibayar dari <b>Dana Bansos APBN</b>. Jika kas APBN kurang, pemilik hanya menerima sisa kas dan kekurangannya jadi <b>tunggakan negara</b> yang dibayar lebih dulu saat kas terisi. Jual MBG dapat setengah harga.",
               "Rumah dan MBG harus dijual dulu sebelum properti didagangkan atau digadai.",
             ]),
           ) +
@@ -4540,7 +4742,7 @@
             ]),
           ) +
           S("📰 Berita ekonomi", L(["Muncul tiap 3 putaran dan berlaku 3 putaran (atau sekali untuk bansos/pungutan)."].concat(EV.map((e) => e.n)))) +
-          S("👮 Pion OTT", L(["Berjalan tiap akhir putaran. Berhenti di petakmu: suap 15% kas (min. Rp1.000.000) atau masuk penjara.", "Presiden kebal OTT.", "Jumlah pion OTT bertambah seiring tahap krisis, sesuai level yang dipilih."])) +
+          S("👮 Pion OTT", L(["Berjalan tiap akhir putaran. OTT hanya menangkap pemain yang punya jejak korupsi (dari petak KORUPSI atau kartu Amplop DPR); pemain bersih dilepas.", "Berhenti di petak koruptor: suap 15% kas (min. Rp1.000.000) atau masuk penjara, lalu uang pengganti sebesar jejak korupsi dikembalikan ke APBN dan catatannya dihapus.", "Pion mengejar koruptor yang ada dalam jangkauan 12 petak (peluang naik seiring besar jejak korupsi).", "Presiden kebal OTT.", "Politisi yang dipenjara tetap menerima gaji tiap giliran; pemain lain tidak menerima gaji selama di penjara.", "Jumlah pion OTT bertambah seiring tahap krisis, sesuai level yang dipilih."])) +
           S(
             "🎭 Karier & peran",
             ROLES.map((r) => `<p><b>${r.i} ${r.n}</b><br>${r.d}</p>`).join("") +
@@ -4591,7 +4793,8 @@
               "<b>Pembelian paksa</b> (Proyek Strategis Nasional): negara mengambil 1 properti acak. Pemilik menerima ganti rugi 1,25× harga + nilai bangunan (dikurangi nilai gadai). Muncul lewat kartu, berita nasional, atau kebijakan Presiden.",
               "<b>Penyitaan</b>: kasus korupsi (kartu OTT KPK atau korupsi terdeteksi, bila benar-benar masuk penjara), kartu pengemplang pajak, atau berita Satgas BLBI. Properti termahal disita tanpa ganti rugi.",
               "Properti jadi <b>aset negara</b> (tanda 🏛️ di petak). MBG dibubarkan, rumah/hotel tetap berdiri, tidak bisa digadai atau didagangkan.",
-              "<b>Semua sewa</b> aset negara masuk <b>Dana Bansos APBN</b> (Presiden ambil 20%), bukan ke pemain. Ambil dengan mendarat di petak Dana Bansos.",
+              "<b>Semua sewa</b> aset negara masuk <b>Dana Bansos APBN</b> (Presiden ambil 20%), bukan ke pemain. Kas ini bisa digelapkan lewat petak KORUPSI.",
+              "<b>🧮 Fiskal otomatis (logika fuzzy)</b>: tiap awal putaran negara menilai cakupan kas APBN terhadap santunan MBG dan beban tunggakan. Hasilnya tingkat pengetatan (normal, ringan, sedang, ketat) yang menaikkan pajak (maks ×1,6) dan sewa aset negara (maks ×1,4), serta memangkas potongan Presiden (maks setengahnya). Bergerak bertahap, dan kembali normal otomatis saat kas APBN pulih.",
               "Aset negara menghalangi set warna: tidak ada pemain yang bisa melengkapi set jika satu petaknya dimiliki negara.",
             ]),
           ) +
@@ -5274,7 +5477,7 @@
             q("#news"),
             `<div class="nz">` +
               `<div class="w"><b>Ekonomi</b>${esc(ECO.n)}${ECO.d ? ` · ${ECO.d} putaran lagi` : ""}</div>` +
-              `<div><b>Dana Bansos APBN</b>${fm(POOL)}</div><div><b>Aset negara</b>${nneg()} properti</div>` +
+              `<div><b>Dana Bansos APBN</b>${fm(POOL)}</div><div><b>Aset negara</b>${nneg()} properti</div>${FZ.L >= 0.05 ? '<div class="w"><b>🧮 Fiskal · ' + fzLabel(FZ.L)[0] + '</b>pajak ×' + fx(fzTax()) + ', sewa aset negara ×' + fx(fzRent()) + ', potongan Presiden ×' + fx(fzEff()) + '</div>' : ""}` +
               `<div class="w"><b>Krisis · ${LV.i} ${LV.n}</b>${cr ? `Tahap ${cr} · sewa ×${fx(crM())}, gaji ×${fx(crG())}` : SET.cr ? `mulai putaran ${LV.st}` : "dimatikan"}${DIR < 0 ? " · 🔁 arah terbalik" : ""}</div>` +
               `<div><b>Presiden 👑</b>${pr}</div><div><b>Pemilu 🗳️</b>setelah putaran ${Math.ceil(rnd / 5) * 5}</div>` +
               `<div class="w"><b>Pion OTT 👮 (${POLS.length})</b>${POLS.map((x) => esc(T[x.pos].n)).join(", ")}</div></div>`,
