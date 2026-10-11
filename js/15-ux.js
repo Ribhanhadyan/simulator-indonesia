@@ -38,6 +38,43 @@
   });
   ["#stg", "#mpb"].forEach((s) => q(s).addEventListener("click", () => menu(false)));
 
+  /* ---------- Pasang aplikasi (PWA) ---------- */ // NEW (mulai)
+  {
+    const ib = q("#inst");
+    let dp = null;
+    const standalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const paint = () => {
+      ib.hidden = standalone() || !(dp || ios);
+    };
+    addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      dp = e;
+      paint();
+    });
+    addEventListener("appinstalled", () => {
+      dp = null;
+      paint();
+    });
+    ib.addEventListener("click", async () => {
+      menu(false);
+      if (dp) {
+        const p = dp;
+        dp = null;
+        paint();
+        p.prompt();
+        await p.userChoice.catch(() => {});
+      } else if (ios && ovl.hidden) {
+        await ask(
+          `<h3>📲 Pasang di iPhone / iPad</h3>${sec("Langkah", '<p class="ct">1. Ketuk tombol <b>Bagikan</b> (kotak dengan panah ke atas) di Safari.<br>2. Pilih <b>Tambahkan ke Layar Utama</b>.<br>3. Ketuk <b>Tambah</b>.</p>')}`,
+          [["OK", 1]],
+          {},
+        );
+      }
+    });
+    paint();
+  } // NEW (selesai)
+
   /* ---------- Tema: sinkronkan theme-color browser ---------- */
   const metaTC = () => {
     let m = q("meta[name=theme-color]");

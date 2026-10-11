@@ -1,6 +1,7 @@
 /* ===== Konverter emoji -> ikon SVG (Game Icon Pack by Nieobie, CC0) ===== */
 (() => {
   const MAP = {
+    "📲": ["mobile-phone", null],
     "⚖": ["hammer", null],
     "🏦": ["bank", null],
     "🏠": ["house", null],
