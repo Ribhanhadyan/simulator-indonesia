@@ -2,7 +2,7 @@
 
 # 🎲 Simulator Indonesia
 
-**Game papan bergaya Monopoli bertema Indonesia dengan ekonomi dinamis, karier, pemilu presiden, APBN, dan pion OTT.**
+**Game papan bergaya game papan properti bertema Indonesia dengan ekonomi dinamis, karier, pemilu presiden, APBN, dan pion OTT.**
 
 [![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)](https://developer.mozilla.org/docs/Web/HTML)
 [![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)](https://developer.mozilla.org/docs/Web/CSS)
@@ -16,7 +16,7 @@
 
 ## 📖 Tentang Proyek
 
-**Simulator Indonesia** adalah adaptasi permainan papan Monopoli yang dibuat sepenuhnya dengan **HTML, CSS, dan JavaScript murni**: tanpa framework, tanpa build step, tanpa dependensi untuk dijalankan. Buka `index.html` di browser dan mulai bermain.
+**Simulator Indonesia** adalah adaptasi permainan papan properti yang dibuat sepenuhnya dengan **HTML, CSS, dan JavaScript murni**: tanpa framework, tanpa build step, tanpa dependensi untuk dijalankan. Buka `index.html` di browser dan mulai bermain.
 
 Nuansa Indonesia hadir lewat:
 
