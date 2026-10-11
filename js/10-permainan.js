@@ -616,7 +616,7 @@ async function game() {
     );
     mod
       .querySelectorAll(".sr")
-      .forEach((r, i) => P.push({ id: i, b: +r.querySelector("select").value, n: r.querySelector("input").value.trim() || "Pemain " + (i + 1), k: TK[i][0], c: TK[i][1], cash: SET.cash, pos: 0, jail: -1, cards: 0, x: 0, loans: [] }));
+      .forEach((r, i) => P.push({ id: i, b: +r.querySelector("select").value, n: cleanName(r.querySelector("input").value) || "Pemain " + (i + 1), k: TK[i][0], c: TK[i][1], cash: SET.cash, pos: 0, jail: -1, cards: 0, x: 0, loans: [] }));
     say("Permainan dimulai! Tap petak untuk melihat harga sewa.");
     dice(1, 1);
   } else {
