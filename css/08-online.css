@@ -1,0 +1,67 @@
+/* ---------- 8. Online (multiplayer) ---------- */
+#mp {
+  position: fixed;
+  left: 12px;
+  bottom: calc(172px + env(safe-area-inset-bottom));
+  z-index: 40;
+  background: var(--surface);
+  color: var(--tx);
+  border: 2px solid var(--edge);
+  border-radius: var(--r);
+  padding: 10px 12px;
+  font: 14px/1.4 var(--font-b);
+  max-width: min(92vw, 380px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: var(--shadow);
+}
+#mp[hidden] {
+  display: none;
+}
+#mp input {
+  font: 13px var(--font-b);
+  padding: 8px;
+  border: 2px solid var(--edge);
+  border-radius: 6px;
+  width: 100%;
+  background: var(--surface2);
+  color: var(--tx);
+}
+#mp code {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+#mp .btns {
+  display: flex;
+  gap: 8px;
+}
+#mp .btns button {
+  flex: 1;
+  min-height: 40px;
+  font-size: 13px;
+}
+#wtb {
+  position: fixed;
+  bottom: calc(176px + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 55;
+  background: var(--gold);
+  color: #241a00;
+  border: 2px solid var(--edge);
+  border-radius: 99px;
+  padding: 8px 16px;
+  font: 600 15px var(--font-d);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  box-shadow: var(--shadow);
+}
+#wtb[hidden] {
+  display: none;
+}
+body.cl #stg,
+body.cl #ng,
+body.cl #mpb {
+  display: none;
+}

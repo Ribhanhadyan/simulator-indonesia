@@ -1,0 +1,89 @@
+/* ---------- 2. Dasar ---------- */
+* {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: env(safe-area-inset-top, 0px);
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--tx);
+  font: 15px/1.45 var(--font-b);
+  background:
+    radial-gradient(1100px 620px at 22% -8%, var(--glow), transparent 62%),
+    linear-gradient(var(--bg), var(--bg2)) fixed;
+  -webkit-tap-highlight-color: transparent;
+  text-rendering: optimizeLegibility;
+}
+button,
+select,
+input {
+  font-family: inherit;
+}
+i {
+  font-style: normal;
+}
+[hidden] {
+  display: none !important;
+}
+:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* Tombol: tebal ala papan permainan, ada "sisi bawah" yang menekan saat disentuh */
+button {
+  font: 600 15px/1 var(--font-d);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 2px solid var(--edge);
+  border-radius: var(--rs);
+  background: var(--surface);
+  color: var(--tx);
+  cursor: pointer;
+  box-shadow: 0 3px 0 var(--edge);
+  touch-action: manipulation;
+  user-select: none;
+  transition:
+    transform 0.12s var(--ease),
+    box-shadow 0.12s var(--ease),
+    background 0.15s,
+    filter 0.15s;
+}
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 var(--edge);
+  filter: brightness(1.04);
+}
+button:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--edge);
+}
+button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+.primary,
+#roll {
+  background: var(--brand);
+  color: #fff;
+  border-color: var(--edge);
+}
+.ghost {
+  background: transparent;
+  box-shadow: none;
+  border-color: var(--line);
+  color: var(--mut);
+}
+.ghost:hover:not(:disabled) {
+  box-shadow: none;
+  transform: none;
+  border-color: var(--tx);
+  color: var(--tx);
+}

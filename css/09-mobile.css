@@ -1,0 +1,114 @@
+/* ---------- 9. HP (<760px): papan muat layar, nama petak disingkat ---------- */
+@media (max-width: 759px) {
+  .in span {
+    display: none;
+  }
+  .ab {
+    display: block;
+    font-size: max(1em, 6.5px);
+  }
+  .in small {
+    display: none;
+  }
+  .in i {
+    font-size: 1.9em;
+  }
+  .in {
+    font-size: max(calc(var(--f) * 1.25), 6.5px);
+  }
+  .t {
+    font-size: calc(var(--f) * 1.3);
+  }
+  #mod .sr .pn {
+    width: 22px;
+    height: 30px;
+  }
+  #bwrap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  #bwrap::before {
+    content: "Ketuk petak untuk lihat harga & sewa";
+    order: 0;
+    font: 500 12px var(--font-b);
+    color: var(--mut);
+    flex: 1 1 150px;
+  }
+  #bw {
+    order: 3;
+    flex: 1 1 100%;
+  }
+  #zbtn {
+    order: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 0 12px;
+    font-size: 12px;
+    margin-right: 2px;
+  }
+  #tick {
+    display: none;
+  }
+  body.zoom {
+    --zs: max(720px, 235vw);
+  }
+  body.zoom #app {
+    --ring: 36px;
+    --s: var(--zs);
+  }
+  body.zoom #bw {
+    overflow: auto;
+    height: min(calc(100vw + 20px), calc(var(--vh) - 330px));
+    min-height: 260px;
+    border-radius: var(--r);
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    background: rgba(0, 0, 0, 0.05);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  body.zoom #board {
+    margin: 0;
+  }
+  body.zoom .in span {
+    display: block;
+  }
+  body.zoom .ab {
+    display: none;
+  }
+  body.zoom .in small {
+    display: block;
+  }
+  body.zoom .in {
+    font-size: max(calc(var(--f) * 1.15), 8px);
+  }
+  body.zoom #tick {
+    display: block;
+    order: 2;
+    flex: 1 1 100%;
+    pointer-events: none;
+    background: rgba(10, 16, 12, 0.86);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 12px;
+    font: 600 13px/1.3 var(--font-b);
+    text-align: center;
+  }
+}
+@media (max-width: 380px) {
+  #gtab span,
+  #menuBtn span {
+    display: none;
+  }
+  #gtab,
+  #menuBtn {
+    padding: 0 13px;
+  }
+  .wc {
+    font-size: 21px;
+  }
+}

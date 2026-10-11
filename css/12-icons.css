@@ -1,0 +1,58 @@
+/* ===== Ikon: Game Icon Pack by Nieobie (CC0) ===== */
+.ico {
+  display: inline-block;
+  width: 1.1em;
+  height: 1.1em;
+  vertical-align: -0.2em;
+  fill: currentColor;
+  flex: none;
+  margin-right: 0.28em;
+  overflow: visible;
+}
+.ico:only-child,
+.in i .ico,
+.acts i .ico {
+  margin-right: 0;
+}
+.in i .ico {
+  width: 1em;
+  height: 1em;
+  vertical-align: middle;
+}
+.acts button i .ico {
+  width: 22px;
+  height: 22px;
+}
+#gtab i .ico,
+#menuBtn i .ico {
+  width: 18px;
+  height: 18px;
+}
+#roll .ico {
+  width: 1.2em;
+  height: 1.2em;
+  vertical-align: -0.25em;
+}
+.pop .ico {
+  width: 0.95em;
+  height: 0.95em;
+}
+.stp {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px 12px;
+}
+.stp b {
+  flex: 1;
+  text-align: center;
+  font: 700 18px var(--font-d);
+  color: var(--ok);
+  font-variant-numeric: tabular-nums;
+}
+.stp button {
+  min-height: 40px;
+  padding: 0 8px;
+  font-size: 12px;
+  flex: 0 0 auto;
+}

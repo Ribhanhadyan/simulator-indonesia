@@ -1,0 +1,204 @@
+/* ---------- 3. Kerangka halaman (default = tumpuk, untuk HP & tablet) ---------- */
+#app {
+  --ring: clamp(24px, 6.2vw, 40px);
+  --pin: calc(var(--ring) - 4px);
+  --s: clamp(280px, calc(100vw - 20px - 2 * var(--ring)), 780px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: max(8px, env(safe-area-inset-top)) 10px 0;
+}
+body {
+  padding-bottom: calc(158px + env(safe-area-inset-bottom));
+}
+
+#top {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 48px;
+  z-index: 30;
+}
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+.brand b {
+  display: block;
+  background: var(--brand);
+  color: #fff;
+  font: 700 18px/1 var(--font-d);
+  letter-spacing: 0.07em;
+  padding: 7px 10px 5px;
+  border: 2px solid var(--edge);
+  border-radius: 6px;
+  transform: rotate(-2deg);
+  box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.25);
+}
+.brand small {
+  font: 600 10px/1 var(--font-d);
+  letter-spacing: 0.55em;
+  color: var(--mut);
+  text-transform: uppercase;
+  margin-left: 6px;
+}
+.tools {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  position: relative;
+}
+#gtab,
+#menuBtn {
+  position: static;
+  writing-mode: horizontal-tb;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px;
+  font-size: 13px;
+  background: var(--surface);
+  color: var(--tx);
+  border: 2px solid var(--edge);
+  border-radius: var(--rs);
+  letter-spacing: 0.05em;
+}
+#gtab i,
+#menuBtn i {
+  font-size: 17px;
+}
+#sysmenu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: min(260px, 88vw);
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  background: var(--surface);
+  border: 2px solid var(--edge);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  animation: pop 0.16s var(--ease);
+}
+#sysmenu button {
+  width: 100%;
+  justify-content: flex-start;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  font-size: 14px;
+}
+#mpb {
+  display: none !important; /* fitur Online disembunyikan; hapus aturan ini untuk mengaktifkan lagi */
+}
+#trk {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  margin-top: 2px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  color: #fff;
+  background: #be1e2d;
+  border: 2px solid var(--edge);
+  border-radius: var(--rs);
+}
+#trk:hover {
+  filter: brightness(1.1);
+}
+#thm::after,
+#snd::after {
+  content: attr(data-l);
+  margin-left: 10px;
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Banner giliran */
+#who {
+  background: transparent !important;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  text-shadow: none;
+  font: inherit;
+}
+#who:empty {
+  display: none;
+}
+.wi {
+  --pc: #c9281d;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 2px solid var(--edge);
+  border-left: 8px solid var(--pc);
+  border-radius: var(--r);
+  background: color-mix(in srgb, var(--pc) 16%, var(--surface));
+  box-shadow: 0 3px 0 var(--edge);
+}
+.wi.turn {
+  animation: turnIn 0.35s var(--ease);
+}
+.wp .pn {
+  display: block;
+  width: 26px;
+  height: 36px;
+}
+.wt {
+  flex: 1;
+  min-width: 0;
+}
+.wt b {
+  display: block;
+  font: 700 19px/1.15 var(--font-d);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wt small {
+  display: block;
+  color: var(--mut);
+  font-size: 13px;
+  font-weight: 500;
+}
+.wc {
+  font: 700 24px/1 var(--font-d);
+  color: var(--ok);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+@keyframes turnIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

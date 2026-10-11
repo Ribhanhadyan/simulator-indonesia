@@ -1,0 +1,100 @@
+/* =====================================================================
+MONOPOLI INDONESIA - UI/UX v2
+Pilar rasa: JELAS (tahu apa yang terjadi) - CEPAT (aksi utama 1 tap) - HANGAT (seperti papan sungguhan)
+===================================================================== */
+
+/* ---------- 1. Design tokens ---------- */
+:root {
+  --font-d: "Oswald", "Arial Narrow", Impact, sans-serif;
+  --font-b: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --bg: #dde7d8;
+  --bg2: #c6d6c1;
+  --glow: rgba(255, 255, 255, 0.6);
+  --surface: #fffdf6;
+  --surface2: #f4f0e3;
+  --surface3: #e9e4d3;
+  --tx: #1a201b;
+  --mut: #5a665c;
+  --line: #cfd5c8;
+  --edge: #141814;
+  --brand: #c9281d;
+  --brand2: #a21c13;
+  --gold: #f4b400;
+  --ok: #1b7f3a;
+  --bad: #b3261e;
+  --blue: #2f6bff;
+  --tile: #eef5ea;
+  --tline: #1b211c;
+  --center: #cde5d1;
+  --corner: #f7faf3;
+  --tt: #14181a;
+  --t-la: #ffe9a8;
+  --t-bu: #cfe3ff;
+  --t-ap: #d9efff;
+  --shadow: 0 14px 32px -14px rgba(20, 32, 22, 0.55), 0 2px 6px rgba(20, 32, 22, 0.18);
+  --r: 12px;
+  --rs: 8px;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --vh: 100vh;
+}
+@supports (height: 100dvh) {
+  :root {
+    --vh: 100dvh;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1612;
+    --bg2: #09100c;
+    --glow: rgba(120, 180, 140, 0.1);
+    --surface: #18221c;
+    --surface2: #1f2b24;
+    --surface3: #293829;
+    --tx: #ecf1ea;
+    --mut: #9aab9f;
+    --line: #2f3d34;
+    --edge: #050806;
+    --brand: #e0392d;
+    --ok: #5fd68a;
+    --bad: #ff8077;
+    --tile: #1d2922;
+    --tline: #07100a;
+    --center: #12201a;
+    --corner: #243329;
+    --tt: #e9efe7;
+    --t-la: #4b4120;
+    --t-bu: #1f3550;
+    --t-ap: #1d3f52;
+    --shadow: 0 14px 32px -14px rgba(0, 0, 0, 0.8), 0 2px 6px rgba(0, 0, 0, 0.4);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1612;
+  --bg2: #09100c;
+  --glow: rgba(120, 180, 140, 0.1);
+  --surface: #18221c;
+  --surface2: #1f2b24;
+  --surface3: #293829;
+  --tx: #ecf1ea;
+  --mut: #9aab9f;
+  --line: #2f3d34;
+  --edge: #050806;
+  --brand: #e0392d;
+  --ok: #5fd68a;
+  --bad: #ff8077;
+  --tile: #1d2922;
+  --tline: #07100a;
+  --center: #12201a;
+  --corner: #243329;
+  --tt: #e9efe7;
+  --t-la: #4b4120;
+  --t-bu: #1f3550;
+  --t-ap: #1d3f52;
+  --shadow: 0 14px 32px -14px rgba(0, 0, 0, 0.8), 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}

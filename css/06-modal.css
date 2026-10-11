@@ -1,0 +1,244 @@
+/* ---------- 6. Modal: bottom sheet di HP, dialog di desktop ---------- */
+#ov {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(8, 14, 10, 0.62);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  animation: fadeIn 0.18s ease-out;
+}
+#ov[hidden] {
+  display: none;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+#mod {
+  position: relative;
+  width: min(100%, 470px);
+  max-height: min(88vh, 820px);
+  max-height: min(88dvh, 820px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: var(--surface);
+  color: var(--tx);
+  border: 3px solid var(--edge);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  font-size: 16px;
+  outline: none;
+  animation: modIn 0.24s var(--ease);
+}
+@keyframes modIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes sheetIn {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+#ov.wt #mod {
+  opacity: 0.92;
+}
+#mod h3 {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0;
+  padding: 14px 16px;
+  background: var(--brand);
+  color: #fff;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font: 700 21px/1.2 var(--font-d);
+}
+#mod p {
+  margin: 8px 16px;
+  text-align: center;
+  line-height: 1.4;
+}
+#mod .sub {
+  text-align: center;
+  font: 600 12px var(--font-d);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mut);
+  margin: 8px 0 2px;
+}
+.sec {
+  margin: 10px 14px 0;
+  border: 2px solid var(--edge);
+  border-radius: var(--rs);
+  overflow: hidden;
+  background: var(--surface2);
+}
+.sec > h4 {
+  margin: 0;
+  padding: 5px 12px;
+  background: var(--edge);
+  color: #fff;
+  font: 600 12px var(--font-d);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.sec .rw {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 12px;
+  font-size: 15px;
+}
+.sec .rw + .rw {
+  border-top: 1px solid var(--line);
+}
+.sec .rw b {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+#mod .sec p {
+  margin: 0;
+  padding: 10px 12px;
+  text-align: left;
+}
+#mod .ct {
+  font-size: 17px;
+  line-height: 1.45;
+}
+#mod .ef {
+  font-weight: 700;
+  font-size: 17px;
+}
+.sec .rw button {
+  min-height: 36px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+.mb {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 16px 14px 14px;
+  margin-top: 2px;
+  background: linear-gradient(to bottom, transparent, var(--surface) 28%);
+}
+.mb button {
+  flex: 1 1 130px;
+  min-height: 52px;
+  font-size: 16px;
+}
+.mb button.pri:not(:disabled) {
+  background: var(--brand);
+  color: #fff;
+}
+.mb button.pri:only-child {
+  flex-basis: 100%;
+}
+#mod input,
+#mod select {
+  font: 16px var(--font-b);
+  color: var(--tx);
+  background: var(--surface);
+  border: 2px solid var(--edge);
+  border-radius: var(--rs);
+  padding: 10px;
+}
+#mod input {
+  display: block;
+  width: calc(100% - 28px);
+  margin: 6px 14px;
+}
+#mod .sr {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 8px 14px;
+}
+#mod .sr span {
+  display: grid;
+  place-items: center;
+  width: 30px;
+}
+#mod .sr .pn {
+  width: 26px;
+  height: 36px;
+}
+#mod .sr input {
+  flex: 1;
+  margin: 0;
+  width: auto;
+  min-width: 0;
+}
+#mod .ck {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--line);
+  font-size: 15px;
+  min-height: 46px;
+  cursor: pointer;
+}
+#mod .ck input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--brand);
+}
+#mod .sec input[type="number"] {
+  width: calc(100% - 24px);
+  margin: 8px 12px;
+}
+#mod label.ck[style*="flex"] {
+  justify-content: space-between;
+}
+.mr {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 12px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--rs);
+  flex-wrap: wrap;
+  font-size: 14px;
+  background: var(--surface2);
+}
+.mr b {
+  flex: 1 1 100%;
+  padding: 5px 8px;
+  border: 1px solid var(--edge);
+  border-radius: 6px;
+  font-weight: 700;
+}
+.mr button {
+  min-height: 40px;
+  padding: 0 10px;
+  font-size: 12px;
+  flex: 1 1 auto;
+}
