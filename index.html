@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Monopoli Indonesia</title>
+    <title>Simulator Indonesia</title>
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#dde7d8" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -1808,7 +1808,7 @@
   <body>
     <div id="app">
       <header id="top">
-        <div class="brand"><b>MONOPOLI</b><small>Indonesia</small></div>
+        <div class="brand"><b>SIMULATOR</b><small>Indonesia</small></div>
         <div class="tools">
           <button id="gtab" aria-controls="gb" aria-expanded="false" title="Buku panduan"><i>📖</i><span>Panduan</span></button>
           <button id="menuBtn" aria-haspopup="true" aria-expanded="false" aria-controls="sysmenu" title="Menu"><i>☰</i><span>Menu</span></button>
@@ -1829,7 +1829,7 @@
             <div id="ctr">
               <div class="dk d1">Kesempatan</div>
               <div class="dk d2">Dana Umum</div>
-              <div class="ban">MONOPOLI<small>INDONESIA</small></div>
+              <div class="ban">SIMULATOR<small>INDONESIA</small></div>
               <div id="dice"></div>
               <div id="now" role="status" aria-live="polite">Selamat datang!</div>
             </div>
@@ -3326,7 +3326,7 @@
         } catch (e) {}
         if (sv && sv.v == 1 && sv.nn == NN && sv.P && sv.P.length)
           ask(
-            `<h3>Monopoli Indonesia</h3>${sec("Permainan tersimpan", rw("Putaran", sv.rnd) + rw("Pemain", sv.P.map((p) => p.n).join(", ")) + rw("Disimpan", new Date(sv.t).toLocaleString("id-ID")))}`,
+            `<h3>Simulator Indonesia</h3>${sec("Permainan tersimpan", rw("Putaran", sv.rnd) + rw("Pemain", sv.P.map((p) => p.n).join(", ")) + rw("Disimpan", new Date(sv.t).toLocaleString("id-ID")))}`,
             [
               ["▶️ Lanjutkan", 1],
               ["🆕 Game Baru", 0],
@@ -4587,7 +4587,7 @@
       async function game() {
         if (!RESUME) {
           const n = await ask(
-            '<h3>Monopoli Indonesia</h3><div class="sub">Siapa saja yang main?</div><div class="sec"><h4>Cara cepat</h4><div class="rw"><span>🎲 Lempar dadu</span><b>Spasi / tombol merah</b></div><div class="rw"><span>🔎 Lihat harga sewa</span><b>Ketuk petak</b></div><div class="rw"><span>🏠 Bangun &amp; gadai</span><b>Tombol Aset</b></div></div><p>Pilih jumlah pemain:</p>',
+            '<h3>Simulator Indonesia</h3><div class="sub">Siapa saja yang main?</div><div class="sec"><h4>Cara cepat</h4><div class="rw"><span>🎲 Lempar dadu</span><b>Spasi / tombol merah</b></div><div class="rw"><span>🔎 Lihat harga sewa</span><b>Ketuk petak</b></div><div class="rw"><span>🏠 Bangun &amp; gadai</span><b>Tombol Aset</b></div></div><p>Pilih jumlah pemain:</p>',
             [
               ["2", 2],
               ["3", 3],
