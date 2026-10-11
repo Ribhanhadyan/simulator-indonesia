@@ -242,3 +242,90 @@
   font-size: 12px;
   flex: 1 1 auto;
 }
+
+/* ---------- Kecilkan kartu: lihat papan dulu tanpa menutup kartu ---------- */
+#mod h3.hmn {
+  padding-left: 52px;
+  padding-right: 52px;
+}
+#mod h3 .mn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  min-height: 0;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  border-radius: 10px;
+  box-shadow: none;
+  cursor: pointer;
+}
+#mod h3 .mn::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  margin-top: -4px;
+  border-right: 3px solid currentColor;
+  border-bottom: 3px solid currentColor;
+  transform: rotate(45deg);
+}
+#mod h3 .mn:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
+/* Saat dikecilkan: latar transparan tetap menahan klik ke papan/tombol di bawahnya */
+#ov.min {
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  animation: none;
+}
+#ov.min #mod {
+  display: none;
+}
+#modmin {
+  position: fixed;
+  z-index: 60;
+  left: 0;
+  right: 0;
+  bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  margin-inline: auto;
+  width: fit-content;
+  max-width: calc(100vw - 24px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 20px;
+  background: var(--brand);
+  color: #fff;
+  border: 3px solid var(--edge);
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+  font: 700 14px/1.2 var(--font-d);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  animation: modIn 0.2s var(--ease);
+}
+#modmin[hidden] {
+  display: none;
+}
+#modmin::before {
+  content: "";
+  flex: none;
+  width: 9px;
+  height: 9px;
+  margin-top: 4px;
+  border-left: 3px solid currentColor;
+  border-top: 3px solid currentColor;
+  transform: rotate(45deg);
+}
