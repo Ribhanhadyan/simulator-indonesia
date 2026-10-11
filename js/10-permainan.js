@@ -593,7 +593,7 @@ async function game() {
       ],
     );
     const lv = await ask(
-      `<h3>Tingkat Kesulitan</h3><div class="sub">Makin tinggi, makin cepat krisis datang</div>${LVL.map((l) => sec(l.i + " " + l.n, '<p class="ct">' + lvd(l) + "</p>")).join("")}`,
+      `<h3>Tingkat Kesulitan</h3>`,
       LVL.map((l, i) => [l.i + " " + l.n, i]),
     );
     LV = LVL[lv];
