@@ -2,7 +2,7 @@
       const ids = (p) =>
         Object.keys(own)
           .map(Number)
-          .filter((i) => own[i].o == p.id && !own[i].h && !own[i].mb);
+          .filter((i) => own[i].o == p.id && !own[i].h && !own[i].mb && !own[i].kd);
       const val = (i, w) => {
         const g = grp(i),
           m = g.filter((j) => j != i && own[j]?.o == w.id).length;
@@ -11,7 +11,7 @@
       const lst = (a, chk = []) =>
         a.length
           ? a.map((i) => `<label class="ck"><input type="checkbox" value="${i}"${chk.includes(i) ? " checked" : ""}> ${gtag(i)}${T[i].n}${own[i].m ? " (gadai)" : ""} · ${sh(T[i].p)}</label>`).join("")
-          : "<p>Tidak ada properti yang bisa ditukar (rumah & MBG harus dijual dulu).</p>";
+          : "<p>Tidak ada properti yang bisa ditukar (rumah, MBG & Kopdes tidak bisa ditukar).</p>";
       const num = (l, mx) =>
         `<div class="rw"><span>${l}</span><span style="font-size:12px;color:var(--mut)">maks ${fm(mx)}</span></div><div class="stp" data-mx="${mx}"><button type="button" data-s="-1000000">−1 jt</button><button type="button" data-s="-100000">−100 rb</button><b>Rp0</b><button type="button" data-s="100000">+100 rb</button><button type="button" data-s="1000000">+1 jt</button><input type="number" min="0" value="0" hidden></div>`;
       const stepper = (e) => {
@@ -79,6 +79,10 @@
           [gi, gc] = rd(S[0]),
           [ti, tc] = rd(S[1]);
         if (!gi.length && !ti.length && !gc && !tc) return;
+        if ([...gi, ...ti].some((i) => own[i]?.kd)) {
+          await ask("<h3>Tidak bisa</h3><p>Properti ber-Kopdes tidak bisa didagangkan.</p>", [["OK", 1]], {});
+          return;
+        }
         if (gc > p.cash || tc > q.cash) {
           await ask("<h3>Tidak bisa</h3><p>Uang tidak cukup untuk tawaran ini.</p>", [["OK", 1]], {});
           return;
