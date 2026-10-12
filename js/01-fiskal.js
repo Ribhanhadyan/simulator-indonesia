@@ -78,8 +78,8 @@
       };
       const fzInputs = () => {
         const act = P.filter((x) => !x.x),
-          per = act.reduce((a, p) => a + nmb(p) * MBG_PAY, 0),
-          arr = act.reduce((a, p) => a + (p.mt || 0), 0),
+          per = act.reduce((a, p) => a + nmb(p) * MBG_PAY * pgM() + kdAktif(p) * kdCil(), 0),
+          arr = act.reduce((a, p) => a + (p.mt || 0) + kdTg(p), 0),
           need = per + arr;
         return { per, arr, need, cov: need > 0 ? POOL / need : 99, ar: arr / Math.max(per, MBG_PAY) };
       };
