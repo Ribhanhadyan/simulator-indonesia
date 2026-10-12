@@ -1,5 +1,27 @@
       function manage(p) {
         return new Promise((res) => {
+          const progSec = (kota) => {
+            if (!kota.length || (!MBG_MAX && !KD_MAX)) return "";
+            return sec(
+              "🏛️ Program Pemerintah",
+              kota
+                .map((i) => {
+                  const t = T[i],
+                    o = own[i],
+                    gb = !o.m && (o.mb || 0) < MBG_MAX && p.cash >= MBG_COST,
+                    gs = o.mb > 0,
+                    kb = KDS.ann && !o.m && !o.kd,
+                    ks = o.kd && !o.kd.w;
+                  return (
+                    `<div class="mr"><b style="background:${t.g ? G[t.g][0] : "#ddd"};color:${t.g == "lb" || t.g == "yl" || !t.g ? "#111" : "#fff"}">${gtag(i)}${t.n} ${"🍱".repeat(o.mb || 0)}${o.kd ? "🏪" + (o.kd.w ? " (wajib)" : "") + (o.kd.sd || o.kd.hut || o.kd.t ? " · saldo " + sh(o.kd.sd) + " · piutang " + sh(o.kd.hut) + " · tunggak " + sh(o.kd.t) : "") : ""}</b>` +
+                    (MBG_MAX ? `<button data-a="g" data-i="${i}" ${gb ? "" : "disabled"}>+🍱 ${sh(MBG_COST)}</button><button data-a="v" data-i="${i}" ${gs ? "" : "disabled"}>−🍱 +${sh(MBG_COST / 2)}</button>` : "") +
+                    (KD_MAX ? `<button data-a="q" data-i="${i}" ${kb ? "" : "disabled"}>${KDS.ann ? "+🏪 Gratis" : "+🏪 Belum dibuka"}</button><button data-a="w" data-i="${i}" ${ks ? "" : "disabled"}>−🏪 Serahkan</button>` : "") +
+                    "</div>"
+                  );
+                })
+                .join(""),
+            );
+          };
           const draw = () => {
             const ids = Object.keys(own)
               .filter((i) => own[i].o == p.id)
@@ -17,14 +39,13 @@
                         hs = gi.filter((x) => x && x.o == p.id).map((x) => x.h);
                       const b = st && !o.m && o.h < 5 && p.cash >= hc && o.h <= Math.min(...hs),
                         s = st && o.h > 0 && o.h >= Math.max(...hs),
-                        m = !o.m && !o.mb && hs.every((h) => !h),
-                        gb = st && !o.m && (o.mb || 0) < MBG_MAX && p.cash >= MBG_COST,
-                        gs = st && o.mb > 0,
+                        m = !o.m && !o.mb && !o.kd && hs.every((h) => !h),
                         u = o.m && p.cash >= Math.ceil(t.p * 0.55);
-                      return `<div class="mr"><b style="background:${t.g ? G[t.g][0] : "#ddd"};color:${t.g == "lb" || t.g == "yl" || !t.g ? "#111" : "#fff"}">${gtag(i)}${t.n} ${o.h > 4 ? "🏨" : "🏠".repeat(o.h)}${"🍱".repeat(o.mb || 0)}${o.m ? " (digadai)" : ""}</b>${st ? `<button data-a="b" data-i="${i}" ${b ? "" : "disabled"}>+🏠 ${sh(hc)}</button><button data-a="s" data-i="${i}" ${s ? "" : "disabled"}>−🏠 +${sh(hc / 2)}</button><button data-a="g" data-i="${i}" ${gb ? "" : "disabled"}>+🍱 ${sh(MBG_COST)}</button><button data-a="v" data-i="${i}" ${gs ? "" : "disabled"}>−🍱 +${sh(MBG_COST / 2)}</button>` : ""}${o.m ? `<button data-a="u" data-i="${i}" ${u ? "" : "disabled"}>Tebus −${sh(t.p * 0.55)}</button>` : `<button data-a="m" data-i="${i}" ${m ? "" : "disabled"}>Gadai +${sh(t.p / 2)}</button>`}</div>`;
+                      return `<div class="mr"><b style="background:${t.g ? G[t.g][0] : "#ddd"};color:${t.g == "lb" || t.g == "yl" || !t.g ? "#111" : "#fff"}">${gtag(i)}${t.n} ${o.h > 4 ? "🏨" : "🏠".repeat(o.h)}${"🍱".repeat(o.mb || 0)}${o.kd ? "🏪" : ""}${o.m ? " (digadai)" : ""}</b>${st ? `<button data-a="b" data-i="${i}" ${b ? "" : "disabled"}>+🏠 ${sh(hc)}</button><button data-a="s" data-i="${i}" ${s ? "" : "disabled"}>−🏠 +${sh(hc / 2)}</button>` : ""}${o.m ? `<button data-a="u" data-i="${i}" ${u ? "" : "disabled"}>Tebus −${sh(t.p * 0.55)}</button>` : `<button data-a="m" data-i="${i}" ${m ? "" : "disabled"}>Gadai +${sh(t.p / 2)}</button>`}</div>`;
                     })
                     .join("")
                 : "<p>Belum punya aset.</p>") +
+              progSec(ids.filter((i) => T[i].t == "s")) +
               cardsSec(p) +
               '<div class="mb"><button data-a="x">Selesai</button></div>';
           };
@@ -59,6 +80,15 @@
             if (a == "v") {
               p.cash += MBG_COST / 2;
               o.mb--;
+            }
+            if (a == "q") {
+              o.kd = kdBaru(p);
+              say(`🏪 ${p.n} membangun Kopdes di ${t.n}${o.kd.w ? " (wajib)" : ""}`);
+            }
+            if (a == "w") {
+              POOL += o.kd.sd || 0;
+              o.kd = 0;
+              say(`🏪 ${p.n} menyerahkan Kopdes di ${t.n} ke negara`);
             }
             if (a == "s") {
               p.cash += hc / 2;
