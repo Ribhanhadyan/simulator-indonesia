@@ -131,7 +131,7 @@ function render() {
     e.style.boxShadow = o ? `inset 0 0 0 .45em ${o.o == NEG ? "#555" : P[o.o].c}` : "";
     e.toggleAttribute("data-st", !!o && o.o == NEG);
     e.style.opacity = o?.m ? 0.5 : 1;
-    if (t.g) e.querySelector(".bar").innerHTML = (o?.h > 4 ? '<b class="h H" title="Hotel"></b>' : '<b class="h" title="Rumah"></b>'.repeat(o?.h || 0)) + '<b class="h M" title="MBG"></b>'.repeat(o?.mb || 0) + (o?.kd ? '<b class="h KD" title="Kopdes Merah Putih"></b>' : "");
+    if (t.g) e.querySelector(".bar").innerHTML = (o?.h > 4 ? '<b class="h H" title="Hotel"></b>' : '<b class="h" title="Rumah"></b>'.repeat(o?.h || 0)) + '<b class="h M" title="MBG"></b>'.repeat(o?.mb || 0) + (o?.kd ? '<b class="h KD" title="Kopdes Merah Putih">KD</b>' : "");
     e.querySelector(".tk").innerHTML = P.filter((p) => !p.x && p.pos == i)
       .map((p) => `<span class="${p.id == cur ? "cur" : ""}">${p.k}</span>`)
       .join("");
