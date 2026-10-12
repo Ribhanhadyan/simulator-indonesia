@@ -7,6 +7,10 @@
    n   = sisa tenor cicilan
    g   = jumlah putaran tunggakan berturut-turut */
 const KDS = { ann: 0 };
+let KD_MAX = 0;
+const kdN = (p) =>
+    Object.keys(own).filter((i) => own[i].o == p.id && own[i].kd).length,
+  kdBaru = (p) => ({ w: kdN(p) ? 0 : 1, sd: 0, t: 0, hut: 0, n: 20, g: 0 });
 const KD_CIL = 35e4,
   KD_RAPAT = 7,
   KD_TENGGAT = 3,
