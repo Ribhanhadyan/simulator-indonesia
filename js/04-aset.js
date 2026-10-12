@@ -13,7 +13,7 @@
                     kb = KDS.ann && !o.m && !o.kd,
                     ks = o.kd && !o.kd.w;
                   return (
-                    `<div class="mr"><b style="background:${t.g ? G[t.g][0] : "#ddd"};color:${t.g == "lb" || t.g == "yl" || !t.g ? "#111" : "#fff"}">${gtag(i)}${t.n} ${"🍱".repeat(o.mb || 0)}${o.kd ? "🏪" + (o.kd.w ? " (wajib)" : "") + (o.kd.sd || o.kd.hut || o.kd.t ? " · saldo " + sh(o.kd.sd) + " · piutang " + sh(o.kd.hut) + " · tunggak " + sh(o.kd.t) : "") : ""}</b>` +
+                    `<div class="mr"><b style="background:${t.g ? G[t.g][0] : "#ddd"};color:${t.g == "lb" || t.g == "yl" || !t.g ? "#111" : "#fff"}">${gtag(i)}${t.n} ${"🍱".repeat(o.mb || 0)}${o.kd ? " · 🏪 KOPDES" + (o.kd.w ? " (wajib)" : "") + (o.kd.sd || o.kd.hut || o.kd.t ? " · saldo " + sh(o.kd.sd) + " · piutang " + sh(o.kd.hut) + " · tunggak " + sh(o.kd.t) : "") : ""}</b>` +
                     (MBG_MAX ? `<button data-a="g" data-i="${i}" ${gb ? "" : "disabled"}>+🍱 ${sh(MBG_COST)}</button><button data-a="v" data-i="${i}" ${gs ? "" : "disabled"}>−🍱 +${sh(MBG_COST / 2)}</button>` : "") +
                     (KD_MAX ? `<button data-a="q" data-i="${i}" ${kb ? "" : "disabled"}>${KDS.ann ? "+🏪 Gratis" : "+🏪 Belum dibuka"}</button><button data-a="w" data-i="${i}" ${ks ? "" : "disabled"}>−🏪 Serahkan</button>` : "") +
                     "</div>"
@@ -41,7 +41,7 @@
                         s = st && o.h > 0 && o.h >= Math.max(...hs),
                         m = !o.m && !o.mb && !o.kd && hs.every((h) => !h),
                         u = o.m && p.cash >= Math.ceil(t.p * 0.55);
-                      return `<div class="mr"><b style="background:${t.g ? G[t.g][0] : "#ddd"};color:${t.g == "lb" || t.g == "yl" || !t.g ? "#111" : "#fff"}">${gtag(i)}${t.n} ${o.h > 4 ? "🏨" : "🏠".repeat(o.h)}${"🍱".repeat(o.mb || 0)}${o.kd ? "🏪" : ""}${o.m ? " (digadai)" : ""}</b>${st ? `<button data-a="b" data-i="${i}" ${b ? "" : "disabled"}>+🏠 ${sh(hc)}</button><button data-a="s" data-i="${i}" ${s ? "" : "disabled"}>−🏠 +${sh(hc / 2)}</button>` : ""}${o.m ? `<button data-a="u" data-i="${i}" ${u ? "" : "disabled"}>Tebus −${sh(t.p * 0.55)}</button>` : `<button data-a="m" data-i="${i}" ${m ? "" : "disabled"}>Gadai +${sh(t.p / 2)}</button>`}</div>`;
+                      return `<div class="mr"><b style="background:${t.g ? G[t.g][0] : "#ddd"};color:${t.g == "lb" || t.g == "yl" || !t.g ? "#111" : "#fff"}">${gtag(i)}${t.n} ${o.h > 4 ? "🏨" : "🏠".repeat(o.h)}${"🍱".repeat(o.mb || 0)}${o.kd ? " · 🏪 KOPDES" : ""}${o.m ? " (digadai)" : ""}</b>${st ? `<button data-a="b" data-i="${i}" ${b ? "" : "disabled"}>+🏠 ${sh(hc)}</button><button data-a="s" data-i="${i}" ${s ? "" : "disabled"}>−🏠 +${sh(hc / 2)}</button>` : ""}${o.m ? `<button data-a="u" data-i="${i}" ${u ? "" : "disabled"}>Tebus −${sh(t.p * 0.55)}</button>` : `<button data-a="m" data-i="${i}" ${m ? "" : "disabled"}>Gadai +${sh(t.p / 2)}</button>`}</div>`;
                     })
                     .join("")
                 : "<p>Belum punya aset.</p>") +
