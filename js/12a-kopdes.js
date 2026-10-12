@@ -60,6 +60,12 @@ async function kopdesPutaran() {
   }
   /* 1. kewajiban membangun */
   for (const p of P.filter((x) => !x.x)) {
+    const ks = kdList(p);
+    if (ks.length) {
+      const w = ks.filter((i) => own[i].kd.w);
+      if (!w.length) own[ks[0]].kd.w = 1;
+      else w.slice(1).forEach((i) => (own[i].kd.w = 0));
+    }
     if (kdN(p)) {
       p.kdd = null;
       continue;
@@ -124,8 +130,10 @@ async function kopdesPutaran() {
       );
     if (await pay(p, tot, 0, 1)) {
       for (const [i, a] of due) {
-        own[i].kd.t -= a;
-        own[i].kd.hut += a;
+        const k = own[i] && own[i].o == p.id && own[i].kd;
+        if (!k) continue; /* Kopdes sudah diserahkan/berpindah saat pembayaran */
+        k.t -= a;
+        k.hut += a;
       }
       say(`🏪 ${p.n} menalangi tunggakan Kopdes ${fm(tot)} (piutang ke negara)`);
     }
@@ -138,7 +146,7 @@ function kopdesGaji(p) {
   if (!KD_MAX) return;
   for (const i of kdList(p)) {
     const k = own[i].kd;
-    if (k.sd <= 0) continue;
+    if (!k || k.sd <= 0) continue;
     let s = k.sd;
     k.sd = 0;
     const lunas = Math.min(s, k.t);
