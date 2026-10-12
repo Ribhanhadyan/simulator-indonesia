@@ -38,7 +38,7 @@
           const a = nAlv();
           return Math.max(
             0,
-            Math.min(100, Math.round(rnd * 1.6 + crS() * 6 + (POLS.length - 1) * 4 + a.filter((x) => x.jail >= 0).length * 5 + a.filter((x) => (x.kor || 0) > 0).length * 3 + Math.min(12, nneg() * 3) + FZ.L * 10 + NW.bump)),
+            Math.min(100, Math.round(rnd * 1.6 + crS() * 6 + (POLS.length - 1) * 4 + a.filter((x) => x.jail >= 0).length * 5 + a.filter((x) => (x.kor || 0) > 0).length * 3 + Math.min(12, nneg() * 3) + FZ.L * 10 + Math.min(10, Math.round(kdTgAll() / 5e5)) + NW.bump)),
           );
         },
         nPh = (c) => (c < 18 ? 0 : c < 38 ? 1 : c < 58 ? 2 : c < 80 ? 3 : 4),
