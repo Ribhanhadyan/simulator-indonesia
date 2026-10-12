@@ -159,7 +159,7 @@ async function land0(p, sum) {
       let r = Math.round((rent(i, sum) * R(p).rp * (t.t != "s" ? R(p).rs : 1) * (o.o == NEG ? fzRent() : R(P[o.o]).ri)) / 1e3) * 1e3;
       const r0 = r;
       r = cardRent(p, r);
-      const iur = o.kd ? Math.round((r0 * KD_IURAN) / 1e3) * 1e3 : 0;
+      const iur = o.kd && o.o != NEG ? Math.round((r0 * KD_IURAN) / 1e3) * 1e3 : 0;
       await ask(
         `<h3>Bayar Sewa</h3>${sec("Properti", rw(gtag(i) + t.n, ""))}${sec("Pemilik", rw(OW(o), ""))}${sec("Tagihan", rw("Sewa", fm(r0)) + (o.o == NEG && FZ.L >= 0.05 ? rw("🧮 Penyesuaian fiskal APBN", "sewa aset negara ×" + fx(fzRent())) : "") + (r < r0 ? rw("🛡️ Asuransi sewa", "−" + fm(r0 - r)) + rw("Kamu bayar", fm(r)) : "") + (iur ? rw("🏪 Iuran Kopdes (ditahan sampai pemilik lewat MULAI)", fm(iur)) : ""))}${o.o == NEG ? sec("Tujuan", '<p class="ct">Aset negara: sewa masuk Dana APBN</p>') : ""}`,
         [["Bayar", 1]],
