@@ -77,8 +77,8 @@
         run: async (c) => {
           const a = Math.min(POOL, c.a);
           POOL -= a;
-          c.p.cash += a;
           say(`🏛️ Bansos ${fm(a)} dari APBN untuk ${c.p.n}`);
+          await salur(c.p, a);
           render();
         },
       });
@@ -375,8 +375,8 @@
                     g = Math.min(POOL, nRd(POOL * 0.2));
                   if (p && g) {
                     POOL -= g;
-                    p.cash += g;
                     say(`🏛️ Bantuan sosial ${fm(g)} untuk ${p.n}`);
+                    await salur(p, g);
                     render();
                   }
                 }
