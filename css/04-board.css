@@ -107,6 +107,12 @@
 .h.M {
   background: #2f6bff;
 }
+.h.KD {
+  background: #f2c94c;
+  border-color: #7a5810;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px #fff6cf;
+}
 .in {
   flex: 1;
   display: flex;
