@@ -32,9 +32,23 @@
                 " per properti kota. Pemilik terima insentif <b>" +
                 fm(MBG_PAY) +
                 "</b> per unit tiap lewat atau mendarat di MULAI, dibayar dari <b>Dana APBN</b>. Jika kas APBN kurang, pemilik hanya menerima sisa kas dan kekurangannya jadi <b>tunggakan negara</b> yang dibayar lebih dulu saat kas terisi. Jual MBG dapat setengah harga.",
-              "Rumah dan MBG harus dijual dulu sebelum properti didagangkan atau digadai.",
+              "Rumah dan MBG harus dijual dulu sebelum properti didagangkan atau digadai. Properti ber-Kopdes tidak bisa didagangkan maupun digadai.",
             ]),
           ) +
+          (KD_MAX
+            ? S(
+                "🏪 Kopdes Merah Putih",
+                L([
+                  "Program nasional yang aktif sejak putaran " + KD_RAPAT + ". Tiap pemain pemilik properti kota wajib membangun <b>1 Kopdes</b> (Kopdes wajib) dalam " + KD_TENGGAT + " putaran. Jika lalai, negara menunjuk satu propertimu.",
+                  "Bangun lewat 🏠 Aset › Program Pemerintah. Membangun gratis; maks 1 Kopdes per petak. Kopdes tambahan bersifat sukarela, dan Kopdes wajib tidak bisa diserahkan.",
+                  "<b>Cicilan</b> ditanggung APBN lewat bank negara (" + fm(KD_CIL) + " per putaran, tenor 20 putaran). Jika kas APBN kurang, kekurangannya jadi <b>tunggakan negara</b>.",
+                  "Tunggakan yang melewati masa tenggang " + KD_GRACE + " putaran ditalangi pemilik dan tercatat sebagai <b>piutang ke negara</b>, dibayar saat kas APBN pulih.",
+                  "<b>Iuran</b> " + KD_IURAN * 100 + "% dari sewa dibayar penyewa sebagai iuran tambahan di properti ber-Kopdes, ditahan sebagai saldo. Saat pemilik lewat MULAI, saldo melunasi tunggakan lebih dulu, sisanya dibagi antara pemilik dan APBN.",
+                  "Bantuan negara bisa disalurkan lewat Kopdes pemain lain. Penyalur dapat komisi 10%, dan boleh menilap hingga 30% (menjadi jejak korupsi yang diincar OTT).",
+                  "<b>Properti ber-Kopdes tidak bisa didagangkan maupun digadai.</b> Kopdes tambahan bisa diserahkan dulu bila ingin menjual petaknya. Bangkrut atau disita negara membuat Kopdes ikut hilang.",
+                ]),
+              )
+            : "") +
           S(
             "🏦 Bank",
             L([
