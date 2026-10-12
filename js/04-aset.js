@@ -124,6 +124,7 @@
       };
       const gaji = (p) => {
         bayarGaji(p, " (lewat MULAI)");
+        kopdesGaji(p);
         if (p.sb) {
           const dv = p.sb * DIV();
           p.cash += dv;
@@ -132,7 +133,7 @@
         {
           const m = nmb(p),
             tg = p.mt || 0,
-            due = m * MBG_PAY + tg;
+            due = Math.round((m * MBG_PAY * pgM()) / 1e3) * 1e3 + tg;
           if (due > 0) {
             const bayar = Math.min(due, POOL),
               sisa = due - bayar;
