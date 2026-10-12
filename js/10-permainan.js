@@ -159,13 +159,18 @@ async function land0(p, sum) {
       let r = Math.round((rent(i, sum) * R(p).rp * (t.t != "s" ? R(p).rs : 1) * (o.o == NEG ? fzRent() : R(P[o.o]).ri)) / 1e3) * 1e3;
       const r0 = r;
       r = cardRent(p, r);
+      const iur = o.kd ? Math.round((r0 * KD_IURAN) / 1e3) * 1e3 : 0;
       await ask(
-        `<h3>Bayar Sewa</h3>${sec("Properti", rw(gtag(i) + t.n, ""))}${sec("Pemilik", rw(OW(o), ""))}${sec("Tagihan", rw("Sewa", fm(r0)) + (o.o == NEG && FZ.L >= 0.05 ? rw("🧮 Penyesuaian fiskal APBN", "sewa aset negara ×" + fx(fzRent())) : "") + (r < r0 ? rw("🛡️ Asuransi sewa", "−" + fm(r0 - r)) + rw("Kamu bayar", fm(r)) : ""))}${o.o == NEG ? sec("Tujuan", '<p class="ct">Aset negara: sewa masuk Dana APBN</p>') : ""}`,
+        `<h3>Bayar Sewa</h3>${sec("Properti", rw(gtag(i) + t.n, ""))}${sec("Pemilik", rw(OW(o), ""))}${sec("Tagihan", rw("Sewa", fm(r0)) + (o.o == NEG && FZ.L >= 0.05 ? rw("🧮 Penyesuaian fiskal APBN", "sewa aset negara ×" + fx(fzRent())) : "") + (r < r0 ? rw("🛡️ Asuransi sewa", "−" + fm(r0 - r)) + rw("Kamu bayar", fm(r)) : "") + (iur ? rw("🏪 Iuran Kopdes (ditahan sampai pemilik lewat MULAI)", fm(iur)) : ""))}${o.o == NEG ? sec("Tujuan", '<p class="ct">Aset negara: sewa masuk Dana APBN</p>') : ""}`,
         [["Bayar", 1]],
       );
       say(`${p.n} bayar sewa ${fm(r)} ke ${o.o == NEG ? "Negara (APBN)" : P[o.o].n}`);
       stat(o.o == NEG ? -1 : o.o, "rent", r);
       await pay(p, r, o.o == NEG ? 0 : P[o.o]);
+      if (iur && !p.x && o.kd && (await pay(p, iur, 0, 1))) {
+        if (o.kd) o.kd.sd += iur;
+        say(`🏪 ${p.n} membayar iuran Kopdes ${fm(iur)} (ditahan sampai ${P[o.o] ? P[o.o].n : "pemilik"} lewat MULAI)`);
+      }
     }
   } else if (t.t == "x") {
     let a = Math.round(((i == IP ? Math.max(t.p, Math.round(p.cash / 1e5) * 1e4) : t.p) * R(p).tax * (isP(p) ? 0 : 1) * crM() * fzTax()) / 1e3) * 1e3;
@@ -669,9 +674,11 @@ async function game() {
       PRES.used = 0;
       PRES.offer = null;
       if (PRES.biT && !--PRES.biT) PRES.bi = 1;
+      kdPresTick();
       if ((rnd - 1) % 5 == 0 && P.filter((x) => !x.x).length > 1) await election();
       if (ECO.d && !--ECO.d) ECO = BASE;
       if (rnd >= 2) await news();
+      if (KD_MAX) await kopdesPutaran();
       await fzUpdate();
       if (P.filter((x) => !x.x).length > 1) {
         await krisis();
