@@ -19,7 +19,7 @@ const SET = { cash: 15e6, mbg: 1, cr: 1, rl: 0, bs: 0, sp: 1 },
 let RESUME = null,
   END = 0;
 const BM = () => [1, 0.4, 2.2][SET.bs || 0],
-  nw = (p) => p.cash + ast(p) - p.loans.reduce((a, l) => a + l.pr, 0),
+  nw = (p) => p.cash + ast(p) + kdHut(p) - p.loans.reduce((a, l) => a + l.pr, 0),
   stat = (id, k, v) => {
     if (id < 0 || id >= NEG) return;
     const o = (ST[id] = ST[id] || {});
@@ -29,7 +29,7 @@ const sel = (id, lb, o, c) =>
   `<label class="ck" style="display:flex;justify-content:space-between;align-items:center;gap:8px">${lb}<select id="${id}">${o.map(([n, v]) => `<option value="${v}"${v == c ? " selected" : ""}>${n}</option>`).join("")}</select></label>`;
 function save() {
   try {
-    localStorage.setItem(SK, JSON.stringify({ v: 1, nn: NN, t: Date.now(), P, own, dk, cur, rnd, POOL, fz: FZ.L, ECO, DIR, ud, lv: LVL.indexOf(LV), LS, PRES, POLS, log, SET, ST, NW }));
+    localStorage.setItem(SK, JSON.stringify({ v: 1, nn: NN, t: Date.now(), P, own, dk, cur, rnd, POOL, fz: FZ.L, ECO, DIR, ud, lv: LVL.indexOf(LV), LS, PRES, POLS, log, SET, ST, NW, KDS }));
   } catch (e) {}
 }
 function clearSave() {
@@ -60,6 +60,7 @@ function restore(sv) {
   Object.assign(SET, sv.SET);
   MBG_MAX = SET.mbg ? 1 : 0;
   Object.assign(PRES, sv.PRES);
+  Object.assign(KDS, { ann: 0 }, sv.KDS || {});
   POLS.length = 0;
   sv.POLS.forEach((x) => POLS.push({ ...x, k: pin("#1a237e", "👮") }));
   log.length = 0;
