@@ -1,14 +1,38 @@
-const CACHE = "simulator-id-v1";
+const CACHE = "simulator-id-v2";
 const ASSETS = [
   "./",
   "index.html",
   "manifest.webmanifest",
   "icons/icon-192.png",
   "icons/icon-512.png",
-  ...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((n) => `css/${String(n).padStart(2, "0")}-${["tokens", "base", "layout", "board", "panel", "modal", "guide", "online", "mobile", "desktop", "market", "icons"][n - 1]}.css`),
-  ...["fiskal", "data-game", "tampilan", "aset", "berita", "bank-peran", "transaksi", "pengaturan", "market", "permainan", "interaksi", "panduan", "multiplayer", "ikon-emoji", "ux"].map(
-    (s, i) => `js/${String(i + 1).padStart(2, "0")}-${s}.js`,
-  ),
+  "css/01-tokens.css",
+  "css/02-base.css",
+  "css/03-layout.css",
+  "css/04-board.css",
+  "css/05-panel.css",
+  "css/06-modal.css",
+  "css/07-guide.css",
+  "css/08-online.css",
+  "css/09-mobile.css",
+  "css/10-desktop.css",
+  "css/11-market.css",
+  "css/12-icons.css",
+  "js/01-fiskal.js",
+  "js/02-data-game.js",
+  "js/03-tampilan.js",
+  "js/04-aset.js",
+  "js/05-berita.js",
+  "js/06-bank-peran.js",
+  "js/07-transaksi.js",
+  "js/08-pengaturan.js",
+  "js/09-market.js",
+  "js/10-permainan.js",
+  "js/11-interaksi.js",
+  "js/12-panduan.js",
+  "js/12a-kopdes.js",
+  "js/13-multiplayer.js",
+  "js/14-ikon-emoji.js",
+  "js/15-ux.js",
 ];
 
 self.addEventListener("install", (e) => {
