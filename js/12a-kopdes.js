@@ -336,11 +336,18 @@ async function programPres(p, bot) {
   toNeg = function (i) {
     const o = own[i];
     if (o && o.kd) POOL += o.kd.sd || 0;
-    return _toNeg.apply(this, arguments);
+    const r = _toNeg.apply(this, arguments);
+    if (o) o.kd = 0;
+    return r;
   };
   bankrupt = function (p) {
-    kdList(p).forEach((i) => (POOL += own[i].kd.sd || 0));
-    return _bk.apply(this, arguments);
+    const ids = kdList(p);
+    ids.forEach((i) => (POOL += own[i].kd.sd || 0));
+    const r = _bk.apply(this, arguments);
+    ids.forEach((i) => {
+      if (own[i]) own[i].kd = 0;
+    });
+    return r;
   };
   botManage = function (p) {
     _bm.apply(this, arguments);
