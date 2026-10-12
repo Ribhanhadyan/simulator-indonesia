@@ -38,12 +38,18 @@ function FX() {
     p.pc = p.cash;
   });
 }
+const PINEL = new Map(),
+  RMO = matchMedia("(prefers-reduced-motion:reduce)");
 function PINS() {
   FX();
   const L = P.filter((p) => !p.x)
     .map((p) => ({ o: p, pos: p.pos, cur: p.id == cur }))
     .concat(POLS.map((x) => ({ o: x, pos: x.pos, pol: 1 })));
-  $("#pins").innerHTML = L.map((e) => {
+  const host = $("#pins"),
+    sp = typeof SET != "undefined" ? SET.sp : 1,
+    ms = Math.max(40, Math.min(240, 150 * sp)),
+    live = new Set();
+  L.forEach((e) => {
     const p = e.o,
       i = e.pos,
       [r, c] = pos(i),
@@ -53,9 +59,39 @@ function PINS() {
       y = r == 1 ? 0 : r == 12 ? 100 : AX(r) * 100;
     const a = i == 0 ? 135 : i < 11 ? 180 : i == 11 ? 225 : i < 22 ? 270 : i == 22 ? 315 : i < 33 ? 360 : i == 33 ? 405 : 450;
     p.rot = p.rot === undefined ? a : p.rot + ((((a - p.rot) % 360) + 540) % 360) - 180;
-    const pl = r == 1 || r == 12 ? `left:calc(${x}% + ${d}*var(--u));top:${y}%` : `left:${x}%;top:calc(${y}% + ${d}*var(--u))`;
-    return `<div class="pw${e.cur ? " cur" : ""}${e.pol ? " pol" : ""}" style="${pl};transform:rotate(${p.rot}deg)">${p.k}</div>`;
-  }).join("");
+    let el = PINEL.get(p);
+    if (!el) {
+      el = document.createElement("div");
+      el.innerHTML = p.k;
+      host.appendChild(el);
+      PINEL.set(p, el);
+    }
+    live.add(p);
+    const gap = el._i === undefined ? 0 : Math.min((i - el._i + NN) % NN, (el._i - i + NN) % NN),
+      far = gap > 3;
+    el.style.transitionDuration = (far ? 420 : ms) + "ms";
+    el.style.transitionTimingFunction = far ? "cubic-bezier(.4,0,.2,1)" : "linear";
+    el.className = "pw" + (e.cur ? " cur" : "") + (e.pol ? " pol" : "");
+    if (r == 1 || r == 12) {
+      el.style.left = `calc(${x}% + ${d} * var(--u))`;
+      el.style.top = `${y}%`;
+    } else {
+      el.style.left = `${x}%`;
+      el.style.top = `calc(${y}% + ${d} * var(--u))`;
+    }
+    el.style.transform = `rotate(${p.rot}deg)`;
+    if (gap > 0 && !far && !RMO.matches) {
+      const s = el.firstElementChild;
+      if (s && s.animate) s.animate([{ transform: "translateY(0)" }, { transform: "translateY(-28%)" }, { transform: "translateY(0)" }], { duration: ms, easing: "ease-out" });
+    }
+    el._i = i;
+  });
+  PINEL.forEach((el, p) => {
+    if (!live.has(p)) {
+      el.remove();
+      PINEL.delete(p);
+    }
+  });
 }
 const pos = (i) => (i <= 11 ? [12, 12 - i] : i < 22 ? [23 - i, 1] : i <= 33 ? [1, i - 21] : [i - 32, 12]);
 const GL = { br: "A", lb: "B", pk: "C", or: "D", rd: "E", yl: "F", gr: "G", db: "H" },
