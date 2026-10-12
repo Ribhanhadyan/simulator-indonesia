@@ -59,6 +59,7 @@ function restore(sv) {
   LS = sv.LS;
   Object.assign(SET, sv.SET);
   MBG_MAX = SET.mbg ? 1 : 0;
+  KD_MAX = SET.kd ? 1 : 0;
   Object.assign(PRES, sv.PRES);
   Object.assign(KDS, { ann: 0 }, sv.KDS || {});
   POLS.length = 0;
