@@ -114,6 +114,15 @@ async function setupRules() {
           SET.mbg,
         ) +
         sel(
+          "s-kd",
+          "🏪 Kopdes",
+          [
+            ["Aktif", 1],
+            ["Nonaktif", 0],
+          ],
+          SET.kd,
+        ) +
+        sel(
           "s-cr",
           "📉 Krisis ekonomi",
           [
@@ -144,8 +153,9 @@ async function setupRules() {
     [["Lanjut", 1]],
   );
   const v = (i) => +mod.querySelector("#" + i).value;
-  Object.assign(SET, { cash: v("s-cash"), mbg: v("s-mbg"), cr: v("s-cr"), rl: v("s-rl"), bs: v("s-bs"), sp: v("s-sp") });
+  Object.assign(SET, { cash: v("s-cash"), mbg: v("s-mbg"), kd: v("s-kd"), cr: v("s-cr"), rl: v("s-rl"), bs: v("s-bs"), sp: v("s-sp") });
   MBG_MAX = SET.mbg ? 1 : 0;
+  KD_MAX = SET.kd ? 1 : 0;
 }
 async function summary(w) {
   const rk = [...P].sort((a, b) => a.x - b.x || nw(b) - nw(a));
