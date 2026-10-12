@@ -108,10 +108,21 @@
   background: #2f6bff;
 }
 .h.KD {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-width: 1.7em;
+  height: 1.35em;
+  padding: 0 2px;
+  color: #4b3500;
   background: #f2c94c;
   border-color: #7a5810;
-  border-radius: 50%;
+  border-radius: 4px;
   box-shadow: inset 0 0 0 1px #fff6cf;
+  font-size: .7em;
+  font-weight: 900;
+  line-height: 1;
 }
 .in {
   flex: 1;
