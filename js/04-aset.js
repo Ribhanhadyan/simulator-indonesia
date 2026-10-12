@@ -169,7 +169,7 @@
           return nb <= t.p * 0.95 && p.cash - nb >= 1e6 ? a : ok[1];
         }
         if (a[1] == "p" || a[1] == "r") return ok.find((b) => b[1] == "k") || (a[1] == "p" && p.cash > 6e6 ? a : ok.find((b) => b[1] == "r"));
-        if (a[1] == "m") return Object.keys(own).some((i) => own[i].o == p.id && (!own[i].m || own[i].h)) || cap(p) >= 1e6 ? a : ok.find((b) => b[1] == "b" || b[1] == "t");
+        if (a[1] == "m") return Object.keys(own).some((i) => own[i].o == p.id && ((!own[i].m && !own[i].kd) || own[i].h)) || cap(p) >= 1e6 ? a : ok.find((b) => b[1] == "b" || b[1] == "t");
         return a;
       }
       function liq(p, need) {
@@ -189,7 +189,7 @@
           }
         }
         for (const i of ids)
-          if (!own[i].m && p.cash < need && grp(i).every((j) => own[j]?.o != p.id || !own[j].h)) {
+          if (!own[i].m && !own[i].kd && p.cash < need && grp(i).every((j) => own[j]?.o != p.id || !own[j].h)) {
             p.cash += T[i].p / 2;
             own[i].m = 1;
           }
