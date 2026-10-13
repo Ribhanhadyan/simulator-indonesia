@@ -201,21 +201,42 @@
   /* ---------- Kecilkan kartu: lihat papan dulu tanpa menutup kartu ----------
            Overlay tetap "terbuka" (ov.hidden = false) supaya klik papan/tombol tetap terblokir dan
            pilihan kartu (Beli/Lelang, dst.) tetap menunggu; hanya tampilannya yang dikecilkan. */
-  const pill = document.createElement("button");
-  pill.id = "modmin";
-  pill.type = "button";
-  pill.hidden = true;
-  document.body.appendChild(pill);
+  const dock = document.createElement("div"),
+    pill = document.createElement("button"),
+    quick = document.createElement("button");
+  dock.id = "modmin";
+  dock.hidden = true;
+  pill.type = quick.type = "button";
+  pill.className = "mo";
+  quick.className = "ma";
+  quick.hidden = true;
+  dock.append(pill, quick);
+  document.body.appendChild(dock);
+  /* kartu yang hanya punya satu tombol (Selesai, OK, Lanjut, ...): tombolnya ikut tampil di bar kecil,
+     jadi tidak perlu membuka kartu lagi hanya untuk menutupnya */
+  const soleBtn = () => {
+    const bs = qa("#mod .mb button:not(:disabled)");
+    return qa("#mod .mb button").length === 1 && bs.length === 1 ? bs[0] : null;
+  };
+  const resetDrag = () => {
+    mdl.style.transition = mdl.style.transform = "";
+    ovl.style.opacity = "";
+  };
   const setMin = (on) => {
     if (on && ovl.hidden) return;
+    resetDrag();
     ovl.classList.toggle("min", on);
-    pill.hidden = !on;
+    dock.hidden = !on;
     if (on) {
-      const h = mdl.querySelector("h3");
-      pill.textContent = "Buka kartu" + (h ? " · " + h.textContent.trim() : "");
-      pill.focus({ preventScroll: true });
+      const h = mdl.querySelector("h3"),
+        sb = soleBtn();
+      pill.textContent = "Buka kartu" + (h && !sb ? " · " + h.textContent.trim() : "");
+      quick.hidden = !sb;
+      quick.textContent = sb ? sb.textContent.trim() : "";
+      (sb ? quick : pill).focus({ preventScroll: true });
     } else {
-      pill.textContent = "";
+      pill.textContent = quick.textContent = "";
+      quick.hidden = true;
       if (!ovl.hidden) {
         try {
           mdl.focus({ preventScroll: true });
@@ -224,6 +245,11 @@
     }
   };
   pill.addEventListener("click", () => setMin(false));
+  quick.addEventListener("click", () => {
+    const b = soleBtn();
+    setMin(false);
+    if (b) b.click();
+  });
   const addMin = (h) => {
     if (h.querySelector(".mn")) return;
     const b = document.createElement("button");
@@ -239,6 +265,99 @@
     h.classList.add("hmn");
     h.appendChild(b);
   };
+  /* ---------- Gestur: seret kartu ke bawah = kecilkan, seret bar ke atas = buka ---------- */
+  {
+    let y0 = 0, x0 = 0, t0 = 0, dy = 0, st = 0; /* st: 0 diam, 1 menunggu arah, 2 menyeret */
+    let swallow = 0;
+    document.addEventListener(
+      "click",
+      (e) => {
+        if (swallow && Date.now() - swallow < 400) {
+          e.stopPropagation();
+          e.preventDefault();
+        }
+        swallow = 0;
+      },
+      true,
+    );
+    const pt = (e) => (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || e;
+    const begin = (e) => {
+      if (ovl.hidden || ovl.classList.contains("min")) return;
+      if (e.target.closest && e.target.closest("input,select,textarea,.stp")) return;
+      /* tetap bisa menyeret dari mana saja saat isi kartu sudah di paling atas; bila isi sedang tergulir, hanya dari judul */
+      if (mdl.scrollTop > 0 && !(e.target.closest && e.target.closest("h3"))) return;
+      const p = pt(e);
+      y0 = p.clientY;
+      x0 = p.clientX;
+      t0 = Date.now();
+      dy = 0;
+      st = 1;
+    };
+    const move = (e) => {
+      if (!st) return;
+      const p = pt(e),
+        ddy = p.clientY - y0,
+        ddx = p.clientX - x0;
+      if (st === 1) {
+        if (Math.abs(ddx) > 12 || ddy < -8) return void (st = 0);
+        if (ddy < 10 || ddy < Math.abs(ddx) * 1.2) return;
+        st = 2;
+        mdl.style.transition = "none";
+      }
+      dy = Math.max(0, ddy);
+      if (e.cancelable) e.preventDefault();
+      mdl.style.transform = "translateY(" + dy + "px)";
+      ovl.style.opacity = String(Math.max(0.35, 1 - dy / 420));
+    };
+    const end = () => {
+      if (st === 2) {
+        swallow = Date.now();
+        const v = dy / Math.max(1, Date.now() - t0);
+        if (dy > 90 || (dy > 30 && v > 0.5)) {
+          mdl.style.transition = "transform 0.16s ease-out";
+          mdl.style.transform = "translateY(110%)";
+          const d = dy;
+          setTimeout(() => setMin(true), 140);
+          void d;
+        } else {
+          mdl.style.transition = "transform 0.18s var(--ease)";
+          mdl.style.transform = "";
+          ovl.style.opacity = "";
+          setTimeout(() => (mdl.style.transition = ""), 200);
+        }
+      }
+      st = 0;
+    };
+    mdl.addEventListener("touchstart", begin, { passive: true });
+    mdl.addEventListener("touchmove", move, { passive: false });
+    mdl.addEventListener("touchend", end);
+    mdl.addEventListener("touchcancel", end);
+    /* mouse / pena: seret lewat judul kartu */
+    mdl.addEventListener("pointerdown", (e) => {
+      if (e.pointerType === "touch" || e.button || !(e.target.closest && e.target.closest("h3")) || e.target.closest(".mn")) return;
+      begin(e);
+      if (st !== 1) return;
+      const mv = (ev) => move(ev),
+        up = () => {
+          removeEventListener("pointermove", mv);
+          removeEventListener("pointerup", up);
+          end();
+        };
+      addEventListener("pointermove", mv);
+      addEventListener("pointerup", up);
+    });
+    /* bar kecil: seret ke atas = buka kartu */
+    let by = 0, bt = 0;
+    dock.addEventListener("touchstart", (e) => ((by = pt(e).clientY), (bt = 1)), { passive: true });
+    dock.addEventListener("touchmove", (e) => {
+      if (bt && by - pt(e).clientY > 28) {
+        bt = 0;
+        swallow = Date.now();
+        setMin(false);
+      }
+    }, { passive: true });
+    dock.addEventListener("touchend", () => (bt = 0));
+  }
   /* kartu baru / kartu ditutup = kembali ke tampilan penuh */
   new MutationObserver(() => {
     if (ovl.classList.contains("min")) setMin(false);
@@ -293,6 +412,7 @@
     if (e.target !== ovl || ovl.classList.contains("min")) return;
     const bs = qa("#mod .mb button");
     if (bs.length === 1 && /^Tutup$/i.test(bs[0].textContent.trim())) bs[0].click();
+    else setMin(true);
   });
 
   /* ---------- Keyboard ---------- */
@@ -399,6 +519,7 @@
 
   /* ---------- Sinkronisasi tampilan setelah setiap render() ---------- */
   let prev = { cur: -1, pos: -1, cash: [] };
+  const stV = { nc: -1, up: 0, rise: 0, ch: 0 };
   function sync() {
     if (typeof P === "undefined" || !P.length || !P[cur]) return;
     const w = P[cur],
@@ -420,62 +541,29 @@
       pr = PRES.id >= 0 ? `${esc(P[PRES.id].n)} · periode ${PRES.t}/2` : "belum ada";
     const nc = nChaos(),
       nz = NPH[nPh(nc)];
-    set(q("#nh"), `<span>📰 ${nz[1]} Kacau ${nc}% · ${esc(ECO.n)}</span><em>Putaran ${rnd}${SET.rl ? "/" + SET.rl : ""}</em>`);
-    set(
-      q("#news"),
-      `<div class="nz">` +
-        `<div class="w"><b>Meter kekacauan · ${nz[1]} ${nz[0]}</b><span class="cbar"><i style="width:${nc}%;background:${nz[2]}"></i></span>${nc}%</div>` +
-        `<div class="w"><b>Berita terakhir</b>${esc(NW.last || "Belum ada berita.")}</div>` +
-        `<div class="w"><b>Ekonomi</b>${esc(ECO.n)}${ECO.d ? ` · ${ECO.d} putaran lagi` : ""}</div>` +
-        `<div><b>Dana APBN</b>${fm(POOL)}</div><div><b>Aset negara</b>${nneg()} properti</div>${FZ.L >= 0.05 ? '<div class="w"><b>🧮 Fiskal · ' + fzLabel(FZ.L)[0] + "</b>pajak ×" + fx(fzTax()) + ", sewa aset negara ×" + fx(fzRent()) + ", potongan Presiden ×" + fx(fzEff()) + "</div>" : ""}` +
-        `<div class="w"><b>Krisis · ${LV.i} ${LV.n}</b>${cr ? `Tahap ${cr} · sewa ×${fx(crM())}, gaji ×${fx(crG())}` : SET.cr ? `mulai putaran ${LV.st}` : "dimatikan"}${DIR < 0 ? " · 🔁 arah terbalik" : ""}</div>` +
-        `<div><b>Presiden 👑</b>${pr}</div><div><b>Pemilu 🗳️</b>setelah putaran ${Math.ceil(rnd / 5) * 5}</div>` +
-        `<div class="w"><b>Pion OTT 👮 (${POLS.length})</b>${POLS.map((x) => esc(T[x.pos].n)).join(", ")}</div></div>`,
-    );
-    /* petak tempat pemain giliran berada */
-    qa(".t.here").forEach((e) => e.classList.remove("here"));
-    if (!w.x) {
-      const t = q("#t" + w.pos);
-      if (t) t.classList.add("here");
-    }
-    /* kartu pemain aktif terlihat (strip horizontal di HP) */
-    if (prev.cur !== cur) {
-      const pl = q("#pl"),
-        c = pl.querySelector(".pc.on");
-      if (c && pl.scrollWidth > pl.clientWidth + 4) pl.scrollTo({ left: c.offsetLeft - (pl.clientWidth - c.offsetWidth) / 2, behavior: RM.matches ? "auto" : "smooth" });
-    }
-    /* kamera */
-    if (prev.cur !== cur || prev.pos !== w.pos) follow();
-    /* suara */
-    if (prev.cur >= 0) {
-      if (prev.cur !== cur) play("turn");
-      else if (prev.pos !== w.pos) play("step");
-      if (prev.cash.length === P.length) {
-        let up = 0,
-          dn = 0;
-        P.forEach((p, i) => {
-          const d = p.cash - prev.cash[i];
-          if (d >= 1e4) up++;
-          else if (d <= -1e4) dn++;
-        });
-        if (up) play("up");
-        else if (dn) play("dn");
+    /* stress level: naik terus = animasi panik; ringkasan menampilkan berita terakhir */
+    if (nc !== stV.nc) {
+      if (stV.nc >= 0) {
+        if (nc > stV.nc) (stV.up++, (stV.rise = 1));
+        else (stV.up = 0), (stV.rise = 0);
       }
+      stV.nc = nc;
+      stV.ch = 1;
     }
-    prev = { cur, pos: w.pos, cash: P.map((p) => p.cash) };
-  }
-  const _render = render;
-  render = function () {
-    const r = _render.apply(this, arguments);
-    try {
-      sync();
-    } catch (e) {
-      console.error("UX sync", e);
-    }
-    return r;
-  };
-
-  paintSnd();
-  paintZ();
-  metaTC();
-})();
+    {
+      const nh = q("#nh"),
+        nwEl = q("#newsw");
+      if (!nh._b) {
+        nh.innerHTML = '<span class="sg"></span><span class="nl"></span>';
+        nh._b = 1;
+      }
+      const sg = nh.querySelector(".sg"),
+        nl = nh.querySelector(".nl"),
+        ph = nPh(nc),
+        climb = stV.up >= 3 && ph >= 2;
+      set(sg, `<svg viewBox="0 0 44 44" aria-hidden="true"><circle class="bg" cx="22" cy="22" r="18"/><circle class="fg" cx="22" cy="22" r="18" stroke-dasharray="${((nc / 100) * 113.1).toFixed(1)} 113.1"/></svg><b>${nc}</b>${stV.rise && nc < 100 ? "<u>▲</u>" : ""}`);
+      sg.style.setProperty("--sc", nz[2]);
+      sg.className = `sg st${ph}${climb ? " climb" : ""}`;
+      sg.title = `Stress level ${nc}/100 · ${nz[0]}`;
+      if (stV.ch) {
+        st
