@@ -631,10 +631,13 @@ async function game() {
       .forEach((r, i) => P.push({ id: i, b: +r.querySelector("select").value, n: cleanName(r.querySelector("input").value) || "Pemain " + (i + 1), k: TK[i][0], c: TK[i][1], cash: SET.cash, pos: 0, jail: -1, cards: 0, x: 0, loans: [] }));
     say("Permainan dimulai! Tap petak untuk melihat harga sewa.");
     dice(1, 1);
+    rplReset();
+    rplSnap();
   } else {
     restore(RESUME);
     say("▶️ Permainan dilanjutkan dari putaran " + rnd);
     dice(1, 1);
+    if (!RPL.s.length) rplSnap();
   }
   while (!END && P.filter((x) => !x.x).length > 1) {
     const p = P[cur];
@@ -692,8 +695,10 @@ async function game() {
         if (P.filter((x) => !x.x).length > 1) await polisi();
       }
       render();
+      rplSnap();
     }
   }
+  rplSnap(1);
   const w = END || P.find((x) => !x.x);
   render();
   clearSave();
