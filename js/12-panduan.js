@@ -112,6 +112,7 @@
                 "Petak Market (setelah Stasiun Tugu) menjual 2-4 kartu acak tiap kunjungan. Uang pembelian masuk Dana APBN.",
                 "Satu kartu per jenis. Kartu aktif dipakai kapan saja lewat 🏠 Aset atau langsung di Market; kartu pasif terpakai otomatis.",
                 "Kartu khusus peran hanya muncul bila kamu sudah punya peran.",
+                "🎟️ <b>Lotre</b>: kartu gosok seharga Rp1.000.000. Gosok lapisan perak; tiga nominal sama berarti menang (Rp1,5 jt / Rp3 jt / Rp8 jt, peluang total 35%). Hadiah dibayar dari Dana APBN; bila kas kurang, sisanya jadi tunggakan negara.",
               ].concat(Object.values(CARD).map((c) => c.i + " <b>" + c.n + "</b> (" + sh(c.p) + (c.r !== undefined ? ", " + ROLES[c.r].n : "") + "): " + c.d)),
             ),
           ) +

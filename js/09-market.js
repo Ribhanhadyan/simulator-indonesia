@@ -2,6 +2,178 @@
    - Disimpan di p.inv (array id kartu) -> ikut save/restore & snapshot multiplayer (tampilan lewat DOM).
    - Uang pembelian masuk Dana APBN lewat pay() standar (presiden ambil 20% seperti setoran lain).
    - Kartu pasif (as/dp/bp) terpakai otomatis lewat hook di land0; kartu aktif dipakai dari Market atau tombol Aset. */
+      /* ===== Lotre: [peluang %, hadiah]. Nilai harapan = Rp870.000 untuk harga Rp1.000.000 ===== */
+      const LOTRE = [
+        [65, 0],
+        [22, 15e5],
+        [10, 3e6],
+        [3, 8e6],
+      ];
+      const lotreRoll = () => {
+        let r = Math.random() * 100;
+        for (const [w, z] of LOTRE) if ((r -= w) < 0) return z;
+        return 0;
+      };
+      /* hadiah dibayar Dana APBN; kas kurang = sisanya jadi tunggakan negara (dibayar saat lewat MULAI, sama seperti insentif MBG) */
+      const lotrePay = (p, prize) => {
+        if (!prize) return "zonk, tidak ada hadiah";
+        const g = Math.min(prize, POOL),
+          s = prize - g;
+        POOL -= g;
+        p.cash += g;
+        if (s > 0) p.mt = (p.mt || 0) + s;
+        return "menang " + fm(prize) + (s > 0 ? ` (Dana APBN hanya cukup ${fm(g)}, sisa ${fm(s)} jadi tunggakan negara)` : " dari Dana APBN");
+      };
+      const shortRp = (n) => (n >= 1e6 ? (n / 1e6).toString().replace(".", ",") + " jt" : n / 1e3 + " rb");
+      /* kartu gosok interaktif untuk pemain manusia. Hasil sudah diundi di awal; menggosok hanya membuka lapisan perak.
+         Mengembalikan hadiah (0 = zonk) atau null bila dibatalkan sebelum mulai menggosok. */
+      function lotreScratch(p) {
+        const prize = lotreRoll(),
+          wins = LOTRE.filter(([w, z]) => z).map(([w, z]) => z),
+          /* menang: 3 kotak sama; zonk: 3 nominal berbeda (tidak ada pasangan) */
+          cells = prize ? [prize, prize, prize] : shuf(wins.slice());
+        return new Promise((resolve) => {
+          mod.onclick = null;
+          mod.innerHTML =
+            `<h3>🎟️ Lotre</h3><div class="sub">${p.n}</div>` +
+            `<div class="lt-card"><div class="lt-top">KARTU GOSOK NUSANTARA</div><div class="lt-hint">Tiga nominal sama = menang</div>` +
+            `<div class="lt-area"><div class="lt-cells">${cells.map((z) => `<div class="lt-cell"><span>★</span><b>${shortRp(z)}</b></div>`).join("")}</div>` +
+            `<canvas class="lt-cv" width="320" height="120" aria-label="Lapisan perak, gosok untuk membuka"></canvas></div></div>` +
+            `<p class="ct lt-msg">Gosok lapisan perak dengan jari atau mouse.</p>` +
+            `<div class="mb"><button data-c="x" class="lt-cancel">Batal</button><button data-c="r" class="lt-open">Buka langsung</button></div>`;
+          ov.hidden = false;
+          const card = mod.querySelector(".lt-card"),
+            cv = mod.querySelector(".lt-cv"),
+            ctx = cv.getContext("2d", { willReadFrequently: true }),
+            msg = mod.querySelector(".lt-msg"),
+            bar = mod.querySelector(".mb"),
+            W = cv.width,
+            H = cv.height;
+          /* lapisan perak berpola */
+          const gr = ctx.createLinearGradient(0, 0, W, H);
+          gr.addColorStop(0, "#c9ced6");
+          gr.addColorStop(0.45, "#f1f3f6");
+          gr.addColorStop(0.7, "#b4bbc6");
+          gr.addColorStop(1, "#dde1e7");
+          ctx.fillStyle = gr;
+          ctx.fillRect(0, 0, W, H);
+          ctx.strokeStyle = "rgba(90,100,115,.18)";
+          ctx.lineWidth = 1;
+          for (let x = -H; x < W; x += 9) {
+            ctx.beginPath();
+            ctx.moveTo(x, H);
+            ctx.lineTo(x + H, 0);
+            ctx.stroke();
+          }
+          ctx.fillStyle = "rgba(70,80,95,.55)";
+          ctx.font = "700 20px Oswald, Arial Narrow, sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText("GOSOK DI SINI", W / 2, H / 2);
+          ctx.globalCompositeOperation = "destination-out";
+          ctx.strokeStyle = "#000"; /* destination-out: alpha goresan = seberapa banyak yang terhapus */
+          let down = false,
+            started = false,
+            done = false,
+            last = null,
+            lastCheck = 0;
+          const pos = (e) => {
+            const r = cv.getBoundingClientRect();
+            return [((e.clientX - r.left) * W) / r.width, ((e.clientY - r.top) * H) / r.height];
+          };
+          const cleared = () => {
+            const d = ctx.getImageData(0, 0, W, H).data;
+            let n = 0,
+              t = 0;
+            for (let i = 3; i < d.length; i += 4 * 16) {
+              t++;
+              if (d[i] < 40) n++;
+            }
+            return n / t;
+          };
+          const finish = (auto) => {
+            if (done) return;
+            done = true;
+            cv.classList.add("gone");
+            bar.innerHTML = "";
+            const note = prize ? `Menang ${fm(prize)}!` : "Zonk. Belum beruntung.";
+            card.classList.add(prize ? "win" : "lose");
+            msg.innerHTML = prize ? `<b>🎉 ${note}</b>` : `<b>${note}</b>`;
+            if (prize && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+              for (let i = 0; i < 22; i++) {
+                const s = document.createElement("i");
+                s.className = "lt-conf";
+                s.textContent = ["🎉", "✨", "💰", "🎊"][i % 4];
+                s.style.cssText = `left:${10 + Math.random() * 80}%;--dx:${(Math.random() * 120 - 60) | 0}px;--d:${(0.9 + Math.random() * 0.9).toFixed(2)}s;--dl:${(Math.random() * 0.25).toFixed(2)}s`;
+                card.appendChild(s);
+              }
+            }
+            if (navigator.vibrate) navigator.vibrate(prize ? [60, 40, 90] : 30);
+            setTimeout(() => {
+              bar.innerHTML = `<button data-c="t" class="pri">${prize ? "Ambil Hadiah" : "Tutup"}</button>`;
+              bar.querySelector("button").focus();
+            }, auto ? 450 : 150);
+          };
+          const stroke = (a, b) => {
+            ctx.lineWidth = 36;
+            ctx.lineCap = ctx.lineJoin = "round";
+            ctx.beginPath();
+            ctx.moveTo(a[0], a[1]);
+            ctx.lineTo(b[0], b[1]);
+            ctx.stroke();
+          };
+          const begin = () => {
+            if (started) return;
+            started = true;
+            const c = bar.querySelector(".lt-cancel");
+            if (c) c.remove();
+            msg.textContent = "Terus gosok…";
+          };
+          cv.addEventListener("pointerdown", (e) => {
+            if (done) return;
+            e.preventDefault();
+            cv.setPointerCapture(e.pointerId);
+            down = true;
+            begin();
+            last = pos(e);
+            stroke(last, last);
+          });
+          cv.addEventListener("pointermove", (e) => {
+            if (!down || done) return;
+            const c = pos(e);
+            stroke(last, c);
+            last = c;
+            const now = performance.now();
+            if (now - lastCheck > 120) {
+              lastCheck = now;
+              if (cleared() > 0.55) finish(true);
+            }
+          });
+          const up = () => {
+            if (!down) return;
+            down = false;
+            if (!done && cleared() > 0.55) finish(true);
+          };
+          cv.addEventListener("pointerup", up);
+          cv.addEventListener("pointercancel", up);
+          mod.onclick = (e) => {
+            const b = e.target.closest("button");
+            if (!b || b.disabled || !b.dataset.c) return;
+            if (b.dataset.c == "x" && !started) {
+              mod.onclick = null;
+              ov.hidden = true;
+              resolve(null);
+            } else if (b.dataset.c == "r") {
+              begin();
+              finish(false);
+            } else if (b.dataset.c == "t") {
+              mod.onclick = null;
+              ov.hidden = true;
+              resolve(prize);
+            }
+          };
+        });
+      }
       const CARD = {
         /* ---------- kartu umum ---------- */
         dd: {
@@ -30,16 +202,17 @@
           },
         },
         dp: { n: "Diskon Properti", i: "🏷️", p: 7e5, d: "Otomatis memotong 30% harga beli properti berikutnya yang kamu beli di petak." },
+        /* id "pu" dipertahankan agar simpanan lama tetap terbaca; isinya kini Lotre gosok */
         pu: {
-          n: "Paket Uang",
-          i: "💰",
-          p: 16e5,
-          d: "Pakai kapan saja: terima Rp2.100.000 tunai.",
+          n: "Lotre",
+          i: "🎟️",
+          p: 1e6,
+          d: "Pakai: gosok kartunya. Menang " + LOTRE.reduce((a, [w, z]) => a + (z ? w : 0), 0) + "% (" + LOTRE.filter(([w, z]) => z).map(([w, z]) => fm(z)).join(" / ") + "), hadiah dibayar Dana APBN.",
           use: 1,
-          fx: (p) => {
-            p.cash += 21e5;
-            return "menerima Rp2.100.000";
-          },
+          pick: (p) => lotreScratch(p),
+          bpick: () => lotreRoll(),
+          bbuy: () => Math.random() < 0.5 / BM(),
+          fx: (p, prize) => lotrePay(p, prize || 0),
           bot: (p) => 1,
         },
         bp: { n: "Bebas Pajak", i: "🧾", p: 8e5, d: "Otomatis membebaskan satu tagihan Pajak Penghasilan atau Pajak Barang Mewah." },
@@ -426,7 +599,7 @@
             got = [];
           for (const k of offer.slice().sort((a, b) => (CARD[b].r !== undefined) - (CARD[a].r !== undefined) || CARD[a].p - CARD[b].p)) {
             const c = CARD[k];
-            if (got.length >= 2 || hasC(p, k) || p.cash - c.p < res || (c.use && c.can && !c.can(p) && !c.pick)) continue;
+            if (got.length >= 2 || hasC(p, k) || p.cash - c.p < res || (c.use && c.can && !c.can(p) && !c.pick) || (c.bbuy && !c.bbuy(p))) continue;
             if (!(await pay(p, c.p))) return;
             if (c.instant) {
               const t = c.fx(p);
