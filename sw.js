@@ -1,4 +1,4 @@
-const CACHE = "simulator-id-v4";
+const CACHE = "simulator-id-v6";
 const ASSETS = [
   "./",
   "index.html",
@@ -33,6 +33,7 @@ const ASSETS = [
   "js/13-multiplayer.js",
   "js/14-ikon-emoji.js",
   "js/15-ux.js",
+  "js/16-replay.js",
 ];
 
 self.addEventListener("install", (e) => {
