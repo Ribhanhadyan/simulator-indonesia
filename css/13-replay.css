@@ -1,0 +1,233 @@
+/* ---------- 13. Replay cepat + titik balik ---------- */
+#rpl {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: rgba(8, 14, 10, 0.72);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  animation: fadeIn 0.18s ease-out;
+}
+#rpl .rp-box {
+  width: min(100%, 520px);
+  max-height: 96dvh;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: var(--surface);
+  color: var(--tx);
+  border: 3px solid var(--edge);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  font-family: var(--font-b);
+  padding-bottom: 12px;
+}
+#rpl .rp-h {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--brand);
+  color: #fff;
+  font-weight: 700;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+#rpl .rp-h b {
+  flex: 1;
+  font-family: var(--font-d);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+#rpl .rp-r {
+  font-size: 12px;
+  opacity: 0.92;
+}
+#rpl .rp-x {
+  width: 36px;
+  height: 36px;
+  min-height: 0;
+  padding: 0;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+}
+#rpl .rp-ch {
+  padding: 10px 10px 0;
+}
+#rpl .rp-ch svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+#rpl .gl {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+#rpl .ax {
+  fill: var(--mut);
+  font-size: 9px;
+}
+#rpl .ph {
+  stroke: var(--tx);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 3;
+  opacity: 0.55;
+}
+#rpl .tpm {
+  animation: modIn 0.3s var(--ease);
+}
+#rpl .rp-lg {
+  display: grid;
+  gap: 4px;
+  padding: 6px 14px;
+}
+#rpl .rp-l {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+#rpl .rp-l.off {
+  opacity: 0.55;
+}
+#rpl .rp-l i,
+#rpl .rp-th i {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--edge);
+}
+#rpl .rp-l span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#rpl .rp-l b {
+  font-variant-numeric: tabular-nums;
+}
+#rpl .rp-tp {
+  margin: 8px 12px 0;
+  padding: 12px;
+  border: 3px solid var(--edge);
+  border-radius: 14px;
+  background: var(--surface2);
+  box-shadow: 0 6px 0 -2px var(--edge);
+  animation: modIn 0.24s var(--ease);
+}
+#rpl .rp-tp[hidden] {
+  display: none;
+}
+#rpl .rp-th {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 15px;
+}
+#rpl .rp-th b {
+  flex: 1;
+  font-family: var(--font-d);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+#rpl .rp-th span {
+  font-size: 12px;
+  color: var(--mut);
+}
+#rpl .rp-ev {
+  padding: 6px 10px;
+  margin-top: 4px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  background: var(--surface);
+  border-left: 5px solid var(--mut);
+}
+#rpl .rp-ev.bad {
+  border-left-color: var(--bad);
+}
+#rpl .rp-ev.ok {
+  border-left-color: var(--ok);
+}
+#rpl .rp-ln {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-size: 12.5px;
+  color: var(--mut);
+}
+#rpl .rp-ac {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+#rpl .rp-ac button {
+  flex: 1;
+  min-height: 46px;
+  border: 3px solid var(--edge);
+  border-radius: 12px;
+  font: 700 15px var(--font-d);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  background: var(--surface);
+  color: var(--tx);
+}
+#rpl .rp-ac .rp-go {
+  flex: 2;
+  background: var(--brand);
+  color: #fff;
+}
+#rpl .rp-ct {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 4px;
+}
+#rpl .rp-ct[hidden],
+#rpl .rp-sc[hidden] {
+  display: none;
+}
+#rpl .rp-b {
+  min-width: 48px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 3px solid var(--edge);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--tx);
+  font: 700 15px var(--font-d);
+  cursor: pointer;
+}
+#rpl .rp-play {
+  background: var(--brand);
+  color: #fff;
+  min-width: 56px;
+}
+#rpl .rp-ck {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-size: 12.5px;
+}
+#rpl .rp-sc {
+  display: block;
+  width: calc(100% - 24px);
+  margin: 6px 12px 0;
+}
+#rpl .rp-em {
+  padding: 24px 14px;
+  text-align: center;
+  color: var(--mut);
+}
