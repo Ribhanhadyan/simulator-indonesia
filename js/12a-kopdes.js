@@ -19,7 +19,10 @@ const KD_CIL = 35e4,
   KD_TG_W = 0.25,
   KD_TG_X = 0.5,
   KD_OWN = 0.6;
-Object.assign(PRES, { pg: null, pgT: 0, pen: -1, penT: 0, pk: 0, pkT: 0, pj: -9 });
+Object.assign(PRES, { pg: null, pgT: 0, pen: -1, penT: 0, pk: 0, pkT: 0, pj: -9, rj: -9 });
+/* Redam Situasi: stress level turun lewat dorongan berita (meluruh 15% per putaran, batas bawah -15) */
+const RED = { min: 38, cost: 1e6, cd: 3, bump: 12, bot: 58 };
+const redOk = (p) => nChaos() >= RED.min && rnd - PRES.rj >= RED.cd && p.cash >= RED.cost;
 
 const kdList = (p) =>
     Object.keys(own)
@@ -255,7 +258,7 @@ async function salur(rec, a) {
 }
 
 /* ---------- keputusan Presiden: Program Pemerintah ---------- */
-const progOk = () => (MBG_MAX && P.some((x) => !x.x && nmb(x) > 0)) || (KD_MAX && P.some((x) => !x.x && kdN(x) > 0));
+const progOk = () => (MBG_MAX && P.some((x) => !x.x && nmb(x) > 0)) || (KD_MAX && P.some((x) => !x.x && kdN(x) > 0)) || nChaos() >= RED.min;
 async function programPres(p, bot) {
   const alive = P.filter((x) => !x.x),
     adaKd = KD_MAX && alive.some((x) => kdN(x) > 0),
@@ -266,26 +269,46 @@ async function programPres(p, bot) {
       pen: adaKd,
       pk: !miskin && rnd - PRES.pj >= 2 && !PRES.pk,
       audit: alive.some((x) => x !== p),
+      redam: redOk(p),
     };
   let k;
-  if (bot) k = FZ.L >= 0.35 && ok.efisiensi ? "efisiensi" : ok.audit && alive.some((x) => x !== p && (x.kor || 0) > 0) ? "audit" : ok.cepat && FZ.L < 0.2 ? "cepat" : ok.efisiensi ? "efisiensi" : ok.pen ? "pen" : null;
+  if (bot) k = ok.redam && nChaos() >= RED.bot ? "redam" : FZ.L >= 0.35 && ok.efisiensi ? "efisiensi" : ok.audit && alive.some((x) => x !== p && (x.kor || 0) > 0) ? "audit" : ok.cepat && FZ.L < 0.2 ? "cepat" : ok.efisiensi ? "efisiensi" : ok.pen ? "pen" : null;
   else
     k = await ask(
       `<h3>🏛️ Program Pemerintah</h3><div class="sub">${p.n} · 1× per putaran</div>` +
         sec("Anggaran program", rw("📈 Percepat", "MBG ×1,5, bagi hasil pemilik Kopdes ×1,5 (3 putaran)") + rw("✂️ Efisiensi", "insentif MBG dan cicilan Kopdes −50% (3 putaran)")) +
         sec("Bantuan negara", rw("📍 Tunjuk penyalur", "bantuan lewat Kopdes pilihanmu") + rw("✂️ Pangkas bantuan", "penerima hanya dapat 50% (jika kasnya ≥ Rp1 jt)")) +
-        sec("Pengawasan", rw("🔎 Audit", "jejak korupsi didenda; yang bersih dapat ganti nama baik")),
+        sec("Pengawasan", rw("🔎 Audit", "jejak korupsi didenda; yang bersih dapat ganti nama baik")) +
+        sec("Ketenangan", rw("🕊️ Redam situasi", "stress −" + RED.bump + " (meluruh bertahap) · biaya " + fm(RED.cost) + " dari kasmu · jeda " + RED.cd + " putaran · aktif saat stress ≥ " + RED.min)),
       [
         ["📈 Percepat", "cepat", !ok.cepat],
         ["✂️ Efisiensi", "efisiensi", !ok.efisiensi],
         ["📍 Tunjuk penyalur", "pen", !ok.pen],
         ["✂️ Pangkas bantuan", "pk", !ok.pk],
         ["🔎 Audit", "audit", !ok.audit],
+        ["🕊️ Redam situasi", "redam", !ok.redam],
         ["Batal", null],
       ],
       p,
     );
   if (!k) return false;
+  if (k == "redam") {
+    const s0 = nChaos();
+    p.cash -= RED.cost;
+    POOL += RED.cost;
+    NW.bump = Math.max(-15, NW.bump - RED.bump);
+    PRES.rj = rnd;
+    const s1 = nChaos();
+    say(`🕊️ Presiden ${p.n} meredam situasi: stress level ${s0} ➜ ${s1}`);
+    render();
+    if (!bot)
+      await nt(
+        `<h3>🕊️ Situasi Diredam</h3><div class="sub">${p.n}</div>` +
+          sec("Stress level", rw(s0 + " ➜ " + s1, s1 < s0 ? "turun " + (s0 - s1) : "tertahan")) +
+          sec("Catatan", '<p class="ct">Biaya ' + fm(RED.cost) + " dari kasmu masuk Dana APBN. Efeknya meluruh sekitar 15% tiap putaran, dan bisa dipakai lagi setelah " + RED.cd + " putaran.</p>"),
+      );
+    return true;
+  }
   if (k == "cepat" || k == "efisiensi") {
     PRES.pg = k;
     PRES.pgT = 3;

@@ -371,10 +371,11 @@ async function kebijakan(p, bot) {
     ok = (k) => (k == "amnesti" ? jailed().length > 0 : k == "psn" ? P.some((x) => !x.x && x !== p && mine(x).length > 0) : true);
   let k;
   const prog = progOk();
-  if (bot) k = ["pajak", "bunga", "bansos", "amnesti", "psn"].find((x) => ofr.some((o) => o[0] == x && ok(x))) || (prog ? "prog" : null);
+  if (bot && prog && redOk(p) && nChaos() >= RED.bot) k = "prog";
+  else if (bot) k = ["pajak", "bunga", "bansos", "amnesti", "psn"].find((x) => ofr.some((o) => o[0] == x && ok(x))) || (prog ? "prog" : null);
   else
     k = await ask(
-      `<h3>👑 Kebijakan Presiden</h3><div class="sub">${p.n} · 1× per putaran</div>${ofr.map((x) => sec(x[1], '<p class="ct">' + x[2] + "</p>")).join("")}${prog ? sec("🏛️ Program Pemerintah", '<p class="ct">Atur program MBG dan Kopdes: percepat, efisiensi, tunjuk penyalur bantuan, pangkas bantuan, atau audit.</p>') : ""}`,
+      `<h3>👑 Kebijakan Presiden</h3><div class="sub">${p.n} · 1× per putaran</div>${ofr.map((x) => sec(x[1], '<p class="ct">' + x[2] + "</p>")).join("")}${prog ? sec("🏛️ Program Pemerintah", '<p class="ct">Atur program MBG dan Kopdes: percepat, efisiensi, tunjuk penyalur bantuan, pangkas bantuan, audit, atau redam situasi saat stress tinggi.</p>') : ""}`,
       ofr.map((x) => [x[1], x[0], !ok(x[0])]).concat(prog ? [["🏛️ Program Pemerintah", "prog"]] : [], [["Batal", null]]),
       p,
     );

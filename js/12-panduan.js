@@ -94,6 +94,7 @@
               "Pemilih yang memilih pemenang dapat bonus Rp200.000 dari APBN.",
               "<b>Pasif</b>: gaji MULAI ×1,5 dan kebal pajak; kebal OTT dan tilang; ambil 20% dari setiap setoran ke Dana Bansos.",
               "<b>Kebijakan</b> (tombol 👑, 1× per putaran, pilih 1 dari 3 yang diundi): " + KB.map((x) => x[1] + " (" + x[2] + ")").join("; ") + ".",
+              "<b>🕊️ Redam situasi</b> (di Program Pemerintah): menurunkan stress level " + RED.bump + " poin dengan biaya " + fm(RED.cost) + " dari kas Presiden (masuk Dana APBN). Efeknya meluruh sekitar 15% tiap putaran, bisa dipakai lagi setelah " + RED.cd + " putaran, dan hanya aktif saat stress ≥ " + RED.min + ".",
             ]),
           ) +
           S(
@@ -170,5 +171,4 @@
             b.textContent = "🔄 Game Baru";
           }, 3500);
         };
-                  }
-                    
+      }
