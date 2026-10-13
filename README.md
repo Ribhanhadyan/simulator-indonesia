@@ -34,7 +34,7 @@ Nuansa Indonesia hadir lewat:
 
 ### 🎯 Papan & Properti
 - **44 petak**: 8 grup warna (A–H), 2 stasiun kereta, utilitas (PLN, PDAM), dan petak khusus
-- **Petak khusus**: Kesempatan, Dana Umum, Karier & Peran, Tambang Emas, KORUPSI, Penjara, Lelang, Market, BUMN, Bandara, Pajak Penghasilan, dan Pajak Barang Mewah
+- **Petak khusus**: Kesempatan, Dana Umum, Karier & Peran, Tambang Emas, KORUPSI, Penjara, Lelang, Kios Gelap (dulu Market), BUMN, Bandara, Pajak Penghasilan, dan Pajak Barang Mewah
 - **Rumah & hotel**: bangun merata dalam satu grup warna, kapan saja lewat tombol 🏠 Aset
 - **Gadai 50% dan tebus 55%**, lelang, dan dagang antar pemain
 - **🍱 MBG**: unit khusus pada properti kota. Insentifnya dibayar dari Dana APBN, dan kekurangan kas menjadi tunggakan negara
@@ -42,7 +42,7 @@ Nuansa Indonesia hadir lewat:
 
 ### 💰 Ekonomi & Fiskal
 - **PPh 21** atas gaji MULAI dengan tarif progresif UU HPP (dikurangi PTKP)
-- **Dana APBN** menampung pajak, denda, dan pembelian di Market
+- **Dana APBN** menampung pajak dan denda. Belanja di Kios Gelap masuk **Kas Bandar**, bukan APBN
 - **🧮 Fiskal otomatis (logika fuzzy)**: tingkat pengetatan dihitung dari kas APBN dan tunggakan negara, lalu menaikkan pajak (maks ×1,6) dan sewa aset negara (maks ×1,4)
 - **Bank**: plafon pinjaman Rp5 juta + 50% nilai properti, tenor 5 giliran (bunga 4%) atau 10 giliran (3%), bunga mengikuti berita, peran, dan kebijakan presiden
 - **📰 Berita nasional** yang menyesuaikan kondisi permainan, dengan tingkat kekacauan 0–100% dalam lima fase
@@ -61,9 +61,13 @@ Nuansa Indonesia hadir lewat:
 - **Pembelian paksa (PSN)** dan **penyitaan** mengubah properti menjadi **aset negara** 🏛️. Sewanya masuk Dana APBN, bukan ke pemain
 - **Kartu Kesempatan & Dana Umum** berisi lebih dari 100 peristiwa khas Indonesia
 
-### 🛒 Market & Kartu Kemampuan
-- Petak Market menjual 2–4 kartu acak tiap kunjungan, seperti Dadu Ganda, Asuransi Sewa, Kunci Bebas Penjara, Diskon Properti, Paket Uang, Bebas Pajak, Kebal Hukum, dan Kupon Kesempatan
-- Kartu khusus peran (misalnya Sabotase, Amplop DPR, KPR Subsidi, Doa Bersama) hanya muncul bila kamu sudah punya peran
+### 🕶️ Kios Gelap (Market yang Dikelola Bandar)
+- Petak Market (tipe `mk` tetap, agar simpanan lama terbaca) kini bernama **Kios Gelap** dan dikelola **Bandar** (NPC). Buka setelah peran dibagikan (putaran 3). Uang belanja masuk **Kas Bandar**
+- Tiap kunjungan menjual 4–5 barang dalam lima rak: **Lotre Receh** (selalu ada, Rp250.000), kartu abu-abu (Dadu Ganda, Asuransi Sewa, Diskon Properti, Bebas Pajak, Kupon Kesempatan), barang terlarang (Kunci Bebas Penjara, Kebal Hukum, Sabotase; menambah jejak korupsi 30% dari harga), kartu khusus peran, dan barang baru (Uang Tutup Mulut, Cuci Uang, Informan OTT, Bocoran Berita)
+- **Satire**: Bandar membaca kebiasaan belimu. Pemain naik tier *Tamu → Langganan → Pecandu* dan peluang lotre bergeser dari umpan ke panen. Yang dipajang hanya tabel Langganan (balik ±87%); tabel sesungguhnya tersembunyi per pemain
+- Bandar punya dinamika sendiri: setoran ke oknum, kupon pancing balik, razia saat kas menggemuk (>150% modal), mode kepepet saat kas menipis (<25%), tiga akhir konfrontasi (negara menang, Bandar menang, perang oknum), dan reboot dengan modal kecil setelah 8 putaran
+- Pilihan pemain: pemburu umpan, pelapor, antek Bandar, Presiden (terima upeti atau tindak Bandar), atau disiplin tidak membeli
+- Ringkasan akhir menampilkan total belanja lotre dan total hadiah lotre tiap pemain
 
 ### ⚙️ Pengaturan & UX
 - **2–4 pemain**, tiap slot bisa **Manusia** atau **Bot** (hot-seat di satu perangkat)
@@ -133,7 +137,7 @@ js/          logika, dimuat berurutan 01 → 15
 | 08-online | panel Online (multiplayer) |
 | 09-mobile | aturan layar HP (<760px) |
 | 10-desktop | aturan desktop dan tablet landscape |
-| 11-market | kartu kemampuan Market |
+| 11-market | gaya Kios Gelap (kartu & lotre) |
 | 12-icons | gaya ikon SVG |
 
 </details>
@@ -151,13 +155,15 @@ js/          logika, dimuat berurutan 01 → 15
 | 06-bank-peran | bank/pinjaman, peran, korupsi, polisi, tambang |
 | 07-transaksi | trade, cicilan, pembayaran, bangkrut, level & krisis |
 | 08-pengaturan | aturan awal, simpan/muat, tema, `boot()` |
-| 09-market | Market: kartu kemampuan |
+| 09-market | Kios Gelap: rak, kartu kemampuan, lotre |
 | 10-permainan | lelang, pergerakan, pendaratan, pemilu, kebijakan presiden, giliran |
 | 11-interaksi | klik papan dan tombol aksi |
 | 12-panduan | buku panduan |
 | 13-multiplayer | fitur Online (dimatikan, lihat `MP_ENABLED`) |
 | 14-ikon-emoji | konversi emoji menjadi ikon SVG |
 | 15-ux | tema, suara, keyboard, zoom, aksesibilitas |
+| 16-replay | replay cepat dan titik balik |
+| 17-bandar | Bandar: state, tier pelanggan, tick akhir putaran, arc razia |
 
 </details>
 
