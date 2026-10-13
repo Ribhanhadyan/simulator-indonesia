@@ -468,4 +468,18 @@
         await nt(
           `<h3>📰 Berita Nasional</h3><div class="sub">Putaran ${rnd} · ${Z[1]} ${Z[0]}</div>` +
             (seri ? sec("Seri · " + seri.d.t + cx.jl, rw("Bagian", seri.s + 1 + " dari " + seri.d.st.length)) : "") +
-            sec("Utama", '<p class="ct">' + 
+            sec("Utama", '<p class="ct">' + hx + "</p>") +
+            fx +
+            sec("Stress level", rw(bar + " " + c + "%", ph != old ? NPH[old][1] + " ➜ " + Z[1] : Z[1] + " " + Z[0])),
+        );
+        say("📰 " + nPl(hx));
+        if (h.ev != null) await nApply(EV[h.ev]);
+        else if (h.run) await h.run(cx);
+        NW.bump = Math.max(-15, Math.min(30, NW.bump + (h.b || 0)));
+        NW.cd = NCD[ph];
+        NW.ph = ph;
+        NW.last = nPl(hx);
+        NW.hist = NW.hist.concat([h.id]).slice(-10);
+        render();
+      }
+      /* ================= BERITA NASIONAL v2 (akhir) ================= */
