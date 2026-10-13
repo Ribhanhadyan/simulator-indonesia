@@ -5,8 +5,9 @@ const GT = { 39: "IKN Nusantara", 32: "Raja Ampat", 26: "Bali", 0: "Mulai" };
   }),
 );
 let DIR = 1,
-  ud = [];
-const SET = { cash: 15e6, mbg: 1, cr: 1, rl: 0, bs: 0, sp: 1 },
+  ud = [],
+  TURN = []; /* urutan giliran = daftar id pemain; cur tetap id pemain (indeks P) */
+const SET = { cash: 15e6, mbg: 1, cr: 1, rl: 0, bs: 0, sp: 1, sh: 1 },
   ST = {},
   SK = "monopoli-id-save",
   BOTN = ["Seimbang", "Agresif", "Konservatif"],
@@ -31,7 +32,7 @@ const sel = (id, lb, o, c) =>
     `<label class="ck tg"><span class="lb"><b>${lb}</b>${hint ? `<small>${hint}</small>` : ""}</span><input type="checkbox" class="sw" id="${id}" role="switch"${on ? " checked" : ""}></label>`;
 function save() {
   try {
-    localStorage.setItem(SK, JSON.stringify({ v: 1, nn: NN, t: Date.now(), P, own, dk, cur, rnd, POOL, fz: FZ.L, ECO, DIR, ud, lv: LVL.indexOf(LV), LS, PRES, POLS, log, SET, ST, NW, KDS, rpl: RPL }));
+    localStorage.setItem(SK, JSON.stringify({ v: 1, nn: NN, t: Date.now(), P, own, dk, cur, TURN, rnd, POOL, fz: FZ.L, ECO, DIR, ud, lv: LVL.indexOf(LV), LS, PRES, POLS, log, SET, ST, NW, KDS, rpl: RPL }));
   } catch (e) {}
 }
 function clearSave() {
@@ -50,6 +51,7 @@ function restore(sv) {
   dk.c = sv.dk.c;
   dk.k = sv.dk.k;
   cur = sv.cur;
+  TURN = Array.isArray(sv.TURN) && sv.TURN.length == P.length && P.every((x) => sv.TURN.includes(x.id)) ? sv.TURN.slice() : P.map((x) => x.id);
   rnd = sv.rnd;
   POOL = sv.POOL;
   FZ.L = sv.fz || 0;
@@ -111,6 +113,7 @@ async function setupRules() {
         tog("s-mbg", "🍱 MBG", "Insentif pemilik properti dari Dana APBN", SET.mbg !== 0) +
         tog("s-kd", "🏪 Kopdes", "Wajib bangun 1, cicilan ditanggung APBN", SET.kd !== 0) +
         tog("s-cr", "📉 Krisis ekonomi", "Pajak dan sewa naik bertahap", SET.cr !== 0) +
+        tog("s-sh", "🔀 Kocok urutan main", "Urutan giliran diundi di awal permainan", SET.sh !== 0) +
         sel(
           "s-rl",
           "⏰ Batas putaran",
@@ -134,7 +137,7 @@ async function setupRules() {
   );
   const v = (i) => +mod.querySelector("#" + i).value;
   const on = (i) => (mod.querySelector("#" + i).checked ? 1 : 0);
-  Object.assign(SET, { cash: v("s-cash"), mbg: on("s-mbg"), kd: on("s-kd"), cr: on("s-cr"), rl: v("s-rl"), bs: v("s-bs"), sp: v("s-sp") });
+  Object.assign(SET, { cash: v("s-cash"), mbg: on("s-mbg"), kd: on("s-kd"), cr: on("s-cr"), sh: on("s-sh"), rl: v("s-rl"), bs: v("s-bs"), sp: v("s-sp") });
   MBG_MAX = SET.mbg ? 1 : 0;
   KD_MAX = SET.kd ? 1 : 0;
 }

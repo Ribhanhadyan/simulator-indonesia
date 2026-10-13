@@ -14,6 +14,7 @@
               "Pajak dan denda masuk <b>Dana APBN</b>. Petak <b>KORUPSI</b>: pilih korupsi (gelapkan total dadu × " + BANSOS_PCT + "% isi kas, tapi jadi buruan OTT) atau tidak (tidak terjadi apa-apa).",
               "Penjara: bayar denda Rp500.000, lempar kembar (maks 3 percobaan), atau pakai kartu bebas.",
               "Menang: pemain terakhir yang tidak bangkrut.",
+              "🔀 <b>Urutan main</b> diundi dengan animasi sekali di awal permainan (bisa dimatikan di Pengaturan Aturan), lalu tetap sama sepanjang permainan.",
               "Tips: ketuk petak untuk lihat harga sewa; ketuk kotak warna di kartu pemain untuk melihat aset.",
             ]),
             1,

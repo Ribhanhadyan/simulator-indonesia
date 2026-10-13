@@ -198,6 +198,71 @@ async function land0(p, sum) {
     jail(p);
   }
 }
+/* ===== Kocok urutan main: undian urutan giliran di awal permainan, dengan animasi =====
+   P tidak diubah (id pemain = indeks P dipakai di banyak tempat); yang diacak hanya TURN. Setelah selesai cur = pemain pertama. */
+async function shuffleTurn(first) {
+  const act = P.filter((x) => !x.x),
+    gone = P.filter((x) => x.x);
+  if (act.length < 2) return;
+  const start = TURN.map((id) => P[id]).filter((x) => !x.x),
+    fin = shuf(act.slice()),
+    n = act.length,
+    rh = 54,
+    ms = (a) => Math.round(a * SET.sp);
+  mod.onclick = null;
+  mod.innerHTML =
+    `<h3>🔀 Kocok Urutan Main</h3><div class="sub">${first ? "Permainan baru" : "Putaran " + rnd}</div>` +
+    `<div class="sf-box" style="height:${n * rh}px">${start.map((x, i) => `<div class="sf-row" data-id="${x.id}" style="top:${i * rh}px;border-color:${x.c}"><i class="sf-n">?</i><span class="sf-t">${x.k}</span><b>${x.n}${x.b ? " 🤖" : ""}</b><em></em></div>`).join("")}</div>` +
+    `<p class="ct sf-msg">Mengocok urutan…</p><div class="mb sf-bar"></div>`;
+  ov.hidden = false;
+  const box = mod.querySelector(".sf-box"),
+    msg = mod.querySelector(".sf-msg"),
+    bar = mod.querySelector(".sf-bar"),
+    row = {};
+  mod.querySelectorAll(".sf-row").forEach((e) => (row[e.dataset.id] = e));
+  const place = (o) => o.forEach((x, i) => (row[x.id].style.top = i * rh + "px"));
+  box.classList.add("going");
+  const steps = 9;
+  for (let s = 0; s < steps; s++) {
+    let o = shuf(act.slice());
+    if (s == steps - 1) o = fin;
+    else if (s && o.every((x, i) => x === fin[i])) o.reverse();
+    const d = 170 + s * 50;
+    box.style.setProperty("--t", ms(d * 0.9) + "ms");
+    place(o);
+    await sleep(d);
+  }
+  box.classList.remove("going");
+  box.classList.add("done");
+  for (let i = 0; i < n; i++) {
+    const r = row[fin[i].id];
+    r.querySelector(".sf-n").textContent = i + 1;
+    r.classList.add("set");
+    r.style.animationDelay = ms(i * 110) + "ms";
+    if (!i) {
+      r.classList.add("first");
+      r.querySelector("em").textContent = "🏁 jalan pertama";
+    }
+  }
+  await sleep(110 * n + 250);
+  msg.innerHTML = `<b>${fin[0].n}</b> jalan pertama.`;
+  TURN = fin.map((x) => x.id).concat(gone.map((x) => x.id));
+  cur = TURN[0];
+  say(`🔀 Urutan main diundi: ${fin.map((x) => x.n).join(" → ")}`);
+  render();
+  if (act.some((x) => !x.b)) {
+    await new Promise((res) => {
+      bar.innerHTML = '<button data-c="t" class="pri">Lanjut</button>';
+      bar.querySelector("button").focus();
+      mod.onclick = (e) => {
+        const b = e.target.closest("button");
+        if (b && b.dataset.c == "t") res();
+      };
+    });
+  } else await sleep(1100);
+  mod.onclick = null;
+  ov.hidden = true;
+}
 const nt = (h, w) => ask(h, [["OK", 1]], w && w.b ? w : P.find((x) => !x.b && !x.x) || { b: 1, n: "Sistem" });
 const yn = (b, h, yes, okb) =>
   b.b
@@ -634,6 +699,9 @@ async function game() {
     dice(1, 1);
     rplReset();
     rplSnap();
+    TURN = P.map((x) => x.id);
+    cur = 0;
+    if (SET.sh !== 0) await shuffleTurn(1);
   } else {
     restore(RESUME);
     say("▶️ Permainan dilanjutkan dari putaran " + rnd);
@@ -673,8 +741,9 @@ async function game() {
       p.xt = 0;
       continue;
     }
-    cur = (cur + DIR + P.length) % P.length;
-    if (!cur) {
+    const np = (TURN.indexOf(cur) + DIR + TURN.length) % TURN.length;
+    cur = TURN[np];
+    if (!np) {
       rnd++;
       if (SET.rl && rnd > SET.rl) {
         say(`⏰ Batas ${SET.rl} putaran tercapai`);
