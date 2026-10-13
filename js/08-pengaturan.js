@@ -29,7 +29,7 @@ const sel = (id, lb, o, c) =>
   `<label class="ck" style="display:flex;justify-content:space-between;align-items:center;gap:8px">${lb}<select id="${id}">${o.map(([n, v]) => `<option value="${v}"${v == c ? " selected" : ""}>${n}</option>`).join("")}</select></label>`;
 function save() {
   try {
-    localStorage.setItem(SK, JSON.stringify({ v: 1, nn: NN, t: Date.now(), P, own, dk, cur, rnd, POOL, fz: FZ.L, ECO, DIR, ud, lv: LVL.indexOf(LV), LS, PRES, POLS, log, SET, ST, NW, KDS }));
+    localStorage.setItem(SK, JSON.stringify({ v: 1, nn: NN, t: Date.now(), P, own, dk, cur, rnd, POOL, fz: FZ.L, ECO, DIR, ud, lv: LVL.indexOf(LV), LS, PRES, POLS, log, SET, ST, NW, KDS, rpl: RPL }));
   } catch (e) {}
 }
 function clearSave() {
@@ -62,6 +62,8 @@ function restore(sv) {
   KD_MAX = SET.kd ? 1 : 0;
   Object.assign(PRES, sv.PRES);
   Object.assign(KDS, { ann: 0 }, sv.KDS || {});
+  RPL = sv.rpl && Array.isArray(sv.rpl.s) ? sv.rpl : { s: [] };
+  RPLB = [];
   POLS.length = 0;
   sv.POLS.forEach((x) => POLS.push({ ...x, k: pin("#1a237e", "👮") }));
   log.length = 0;
@@ -176,11 +178,15 @@ async function summary(w) {
       );
     })
     .join("");
-  await ask(
+  const c = await ask(
     `<h3>🏆 ${w.n} Menang!</h3><div class="sub">${END ? "Terkaya setelah " + SET.rl + " putaran" : "Pemain terakhir bertahan"} · putaran ${rnd}</div>${body}${sec("Negara", rw("Dana APBN", fm(POOL)) + rw("Aset negara", nneg() + " properti"))}`,
-    [["Main Lagi", 1]],
+    [["Main Lagi", 1], ["🎞️ Replay Cepat", 2]],
     {},
   );
+  if (c == 2) {
+    await rplOpen();
+    return summary(w);
+  }
 }
 {
   const TH = ["auto", "light", "dark"],
