@@ -63,7 +63,7 @@
             L(
               [
                 "Berita hanya terbit jika berdampak pada permainan; jedanya makin pendek seiring meningkatnya tingkat kekacauan.",
-                "Tingkat kekacauan (0–100%) dipengaruhi putaran, tahap krisis, pion OTT, pemain di penjara, jejak korupsi, aset negara, dan pengetatan fiskal.",
+                "<b>Stress level</b> (0–100) tampil sebagai lingkaran di ringkasan Situasi negara, di samping berita terakhir. Makin tinggi, lingkarannya berdenyut makin cepat, dan bila terus naik berturut-turut ia bergetar panik. Nilainya dipengaruhi putaran, tahap krisis, pion OTT, pemain di penjara, jejak korupsi, aset negara, dan pengetatan fiskal.",
                 "Lima fase: Stabil, Mulai memanas, Panas, Gawat, Krisis berat. Berita menyesuaikan kondisi permainan (pemain terkaya/termiskin, monopoli warna, kas APBN, presiden, penjara, utang).",
                 "Ada tiga seri bersambung (kasus rekening, Tol Langit, demonstrasi) yang dapat terulang di fase Gawat. Efek ekonomi berlaku 3 putaran atau satu kali. Contoh dasar:",
               ].concat(EV.map((e) => e.n)),
@@ -170,4 +170,5 @@
             b.textContent = "🔄 Game Baru";
           }, 3500);
         };
-      }
+                  }
+                    
