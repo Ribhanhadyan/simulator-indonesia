@@ -26,7 +26,9 @@ const BM = () => [1, 0.4, 2.2][SET.bs || 0],
     o[k] = (o[k] || 0) + v;
   };
 const sel = (id, lb, o, c) =>
-  `<label class="ck" style="display:flex;justify-content:space-between;align-items:center;gap:8px">${lb}<select id="${id}">${o.map(([n, v]) => `<option value="${v}"${v == c ? " selected" : ""}>${n}</option>`).join("")}</select></label>`;
+    `<label class="ck"><span class="lb"><b>${lb}</b></span><select id="${id}">${o.map(([n, v]) => `<option value="${v}"${v == c ? " selected" : ""}>${n}</option>`).join("")}</select></label>`,
+  tog = (id, lb, hint, on) =>
+    `<label class="ck tg"><span class="lb"><b>${lb}</b>${hint ? `<small>${hint}</small>` : ""}</span><input type="checkbox" class="sw" id="${id}" role="switch"${on ? " checked" : ""}></label>`;
 function save() {
   try {
     localStorage.setItem(SK, JSON.stringify({ v: 1, nn: NN, t: Date.now(), P, own, dk, cur, rnd, POOL, fz: FZ.L, ECO, DIR, ud, lv: LVL.indexOf(LV), LS, PRES, POLS, log, SET, ST, NW, KDS, rpl: RPL }));
@@ -106,33 +108,9 @@ async function setupRules() {
         ],
         SET.cash,
       ) +
-        sel(
-          "s-mbg",
-          "🍱 MBG",
-          [
-            ["Aktif", 1],
-            ["Nonaktif", 0],
-          ],
-          SET.mbg,
-        ) +
-        sel(
-          "s-kd",
-          "🏪 Kopdes",
-          [
-            ["Aktif", 1],
-            ["Nonaktif", 0],
-          ],
-          SET.kd,
-        ) +
-        sel(
-          "s-cr",
-          "📉 Krisis ekonomi",
-          [
-            ["Aktif", 1],
-            ["Nonaktif", 0],
-          ],
-          SET.cr,
-        ) +
+        tog("s-mbg", "🍱 MBG", "Insentif pemilik properti dari Dana APBN", SET.mbg !== 0) +
+        tog("s-kd", "🏪 Kopdes", "Wajib bangun 1, cicilan ditanggung APBN", SET.kd !== 0) +
+        tog("s-cr", "📉 Krisis ekonomi", "Pajak dan sewa naik bertahap", SET.cr !== 0) +
         sel(
           "s-rl",
           "⏰ Batas putaran",
@@ -155,7 +133,8 @@ async function setupRules() {
     [["Lanjut", 1]],
   );
   const v = (i) => +mod.querySelector("#" + i).value;
-  Object.assign(SET, { cash: v("s-cash"), mbg: v("s-mbg"), kd: v("s-kd"), cr: v("s-cr"), rl: v("s-rl"), bs: v("s-bs"), sp: v("s-sp") });
+  const on = (i) => (mod.querySelector("#" + i).checked ? 1 : 0);
+  Object.assign(SET, { cash: v("s-cash"), mbg: on("s-mbg"), kd: on("s-kd"), cr: on("s-cr"), rl: v("s-rl"), bs: v("s-bs"), sp: v("s-sp") });
   MBG_MAX = SET.mbg ? 1 : 0;
   KD_MAX = SET.kd ? 1 : 0;
 }
@@ -214,7 +193,7 @@ async function summary(w) {
 $("#stg").onclick = async () => {
   if (!(ov.hidden && P[cur] && !P[cur].b)) return;
   await ask(
-    `<h3>⚙️ Pengaturan</h3>${sec("Tampilan", sel("s-sp", "⏱️ Kecepatan animasi", SPD, SET.sp))}${sec("Aturan permainan", rw("Uang awal", fm(SET.cash)) + rw("MBG", SET.mbg ? "Aktif" : "Nonaktif") + rw("Krisis ekonomi", SET.cr ? "Aktif" : "Nonaktif") + rw("Batas putaran", SET.rl ? SET.rl + " putaran" : "Tanpa batas") + rw("Gaya bot", BOTN[SET.bs]))}${sec("Simpanan", "<p>Permainan tersimpan otomatis di awal setiap giliran. Tutup halaman, lalu buka lagi untuk melanjutkan.</p>")}`,
+    `<h3>⚙️ Pengaturan</h3>${sec("Tampilan", sel("s-sp", "⏱️ Kecepatan animasi", SPD, SET.sp))}${sec("Aturan permainan", rw("Uang awal", fm(SET.cash)) + rw("MBG", SET.mbg ? "Aktif" : "Nonaktif") + rw("Kopdes", SET.kd ? "Aktif" : "Nonaktif") + rw("Krisis ekonomi", SET.cr ? "Aktif" : "Nonaktif") + rw("Batas putaran", SET.rl ? SET.rl + " putaran" : "Tanpa batas") + rw("Gaya bot", BOTN[SET.bs]))}${sec("Simpanan", "<p>Permainan tersimpan otomatis di awal setiap giliran. Tutup halaman, lalu buka lagi untuk melanjutkan.</p>")}`,
     [["Selesai", 1]],
     {},
   );
