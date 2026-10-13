@@ -8,6 +8,7 @@ const cleanName = (s) =>
 const dice = (a, b) => ($("#dice").innerHTML = [a, b].map((v) => `<div class="die">${[...Array(9)].map((_, k) => `<i class="${PIP[v].includes(k) ? "p" : ""}"></i>`).join("")}</div>`).join(""));
 const say = (t) => {
   log.unshift(t);
+  if (typeof RPLB !== "undefined" && RPLB.length < 200) RPLB.push(t);
   log.length = Math.min(log.length, 40);
   $("#log").innerHTML = log.map((x) => `<div>${x}</div>`).join("");
   $("#now").textContent = t;
