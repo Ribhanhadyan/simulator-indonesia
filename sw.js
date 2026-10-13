@@ -1,4 +1,4 @@
-const CACHE = "simulator-id-v6";
+const CACHE = "simulator-id-v7";
 const ASSETS = [
   "./",
   "index.html",
