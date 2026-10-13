@@ -566,4 +566,73 @@
       sg.className = `sg st${ph}${climb ? " climb" : ""}`;
       sg.title = `Stress level ${nc}/100 · ${nz[0]}`;
       if (stV.ch) {
-        st
+        stV.ch = 0;
+        sg.classList.remove("rise");
+        void sg.offsetWidth;
+        if (stV.rise) sg.classList.add("rise");
+      } else if (stV.rise && sg._r !== 1) sg.classList.add("rise");
+      sg._r = stV.rise;
+      nwEl.dataset.st = ph;
+      nwEl.classList.toggle("climb", climb);
+      const hl = NW.last || "Belum ada berita. Situasi masih tenang.";
+      set(nl, `<small style="color:${nz[2]}">Putaran ${rnd}${SET.rl ? "/" + SET.rl : ""} · ${nz[0]}</small><span class="nt">📰 ${esc(hl)}</span>`);
+      nh.setAttribute("aria-label", `Stress level ${nc} dari 100, ${nz[0]}. Berita terakhir: ${hl}`);
+    }
+    set(
+      q("#news"),
+      `<div class="nz">` +
+        `<div class="w"><b>Stress level</b><span class="cbar"><i style="width:${nc}%;background:${nz[2]}"></i></span>${nc} · ${nz[0]}</div>` +
+        `<div class="w"><b>Berita terakhir</b>${esc(NW.last || "Belum ada berita.")}</div>` +
+        `<div class="w"><b>Ekonomi</b>${esc(ECO.n)}${ECO.d ? ` · ${ECO.d} putaran lagi` : ""}</div>` +
+        `<div><b>Dana APBN</b>${fm(POOL)}</div><div><b>Aset negara</b>${nneg()} properti</div>${FZ.L >= 0.05 ? '<div class="w"><b>🧮 Fiskal · ' + fzLabel(FZ.L)[0] + "</b>pajak ×" + fx(fzTax()) + ", sewa aset negara ×" + fx(fzRent()) + ", potongan Presiden ×" + fx(fzEff()) + "</div>" : ""}` +
+        `<div class="w"><b>Krisis · ${LV.i} ${LV.n}</b>${cr ? `Tahap ${cr} · sewa ×${fx(crM())}, gaji ×${fx(crG())}` : SET.cr ? `mulai putaran ${LV.st}` : "dimatikan"}${DIR < 0 ? " · 🔁 arah terbalik" : ""}</div>` +
+        `<div><b>Presiden 👑</b>${pr}</div><div><b>Pemilu 🗳️</b>setelah putaran ${Math.ceil(rnd / 5) * 5}</div>` +
+        `<div class="w"><b>Pion OTT 👮 (${POLS.length})</b>${POLS.map((x) => esc(T[x.pos].n)).join(", ")}</div></div>`,
+    );
+    /* petak tempat pemain giliran berada */
+    qa(".t.here").forEach((e) => e.classList.remove("here"));
+    if (!w.x) {
+      const t = q("#t" + w.pos);
+      if (t) t.classList.add("here");
+    }
+    /* kartu pemain aktif terlihat (strip horizontal di HP) */
+    if (prev.cur !== cur) {
+      const pl = q("#pl"),
+        c = pl.querySelector(".pc.on");
+      if (c && pl.scrollWidth > pl.clientWidth + 4) pl.scrollTo({ left: c.offsetLeft - (pl.clientWidth - c.offsetWidth) / 2, behavior: RM.matches ? "auto" : "smooth" });
+    }
+    /* kamera */
+    if (prev.cur !== cur || prev.pos !== w.pos) follow();
+    /* suara */
+    if (prev.cur >= 0) {
+      if (prev.cur !== cur) play("turn");
+      else if (prev.pos !== w.pos) play("step");
+      if (prev.cash.length === P.length) {
+        let up = 0,
+          dn = 0;
+        P.forEach((p, i) => {
+          const d = p.cash - prev.cash[i];
+          if (d >= 1e4) up++;
+          else if (d <= -1e4) dn++;
+        });
+        if (up) play("up");
+        else if (dn) play("dn");
+      }
+    }
+    prev = { cur, pos: w.pos, cash: P.map((p) => p.cash) };
+  }
+  const _render = render;
+  render = function () {
+    const r = _render.apply(this, arguments);
+    try {
+      sync();
+    } catch (e) {
+      console.error("UX sync", e);
+    }
+    return r;
+  };
+
+  paintSnd();
+  paintZ();
+  metaTC();
+})();
