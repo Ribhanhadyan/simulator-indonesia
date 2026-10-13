@@ -58,7 +58,7 @@
         { t: "x", n: "Pajak Barang Mewah", p: 100 * K, i: "💎" },
         S("IKN Nusantara", 400, "db", 50, 200, 600, 1400, 1700, 2000),
       ];
-      const NEWT = { Lelang: { t: "la", n: "Lelang", i: "🔨" }, Market: { t: "mk", n: "Market", i: "🛒" }, BUMN: { t: "bu", n: "BUMN", i: "🏭", p: 2e6 }, Bandara: { t: "ap", n: "Bandara", i: "✈️" } };
+      const NEWT = { Lelang: { t: "la", n: "Lelang", i: "🔨" }, Market: { t: "mk", n: "Kios Gelap", i: "🕶️" }, BUMN: { t: "bu", n: "BUMN", i: "🏭", p: 2e6 }, Bandara: { t: "ap", n: "Bandara", i: "✈️" } };
       const SEQ =
         "Mulai|Medan|Dana Umum|Palembang|Pajak Penghasilan|Stasiun Gambir|Lelang|Pontianak|Kesempatan|Banjarmasin|Makassar|Penjara|Manado|PLN|Ambon|Jayapura|Dana Umum|BUMN|Malang|Kesempatan|Semarang|Surabaya|KORUPSI|Bandung|Kesempatan|Yogyakarta|Solo|Stasiun Tugu|Market|Bali|Lombok|PDAM|Labuan Bajo|Karier & Peran|Borobudur|Raja Ampat|Dana Umum|Komodo|Kesempatan|Bandara|Tambang Emas|Jakarta|Pajak Barang Mewah|IKN Nusantara".split(
           "|",

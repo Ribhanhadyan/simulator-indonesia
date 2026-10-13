@@ -443,7 +443,7 @@
             NW.arc = null;
           }
         } else if (NW.cd <= 0) {
-          const m = nMain(ph);
+          const m = bdBocor() || nMain(ph); /* bdBocor: berita yang sudah diintip lewat Bocoran Berita */
           if (m) {
             h = m;
             cx = m.cx;

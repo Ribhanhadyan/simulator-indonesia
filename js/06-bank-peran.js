@@ -202,14 +202,33 @@
           return;
         }
         const amt = Math.max(1e6, Math.round((p.cash * 0.15) / 1e5) * 1e5);
-        const c = await ask(
-          `<h3>👮 OTT Polisi!</h3><div class="sub">${p.n}</div>${sec("Situasi", '<p class="ct">Pion OTT berada di petak yang sama denganmu dan mengendus jejak korupsimu (' + fm(p.kor) + ").</p>")}${sec("Pilihan", rw("Bayar suap", fm(amt)) + rw("Masuk penjara", (isPol(p) ? "Gaji tetap cair" : "Tanpa gaji") + ", uang pengganti " + fm(Math.min(p.cash, p.kor))))}`,
-          [
+        /* Uang Tutup Mulut (Kios Gelap): pilihan negosiasi, 2 dadu +2 bonus, total >= 9 lolos. Kartu hangus setelah dicoba. */
+        let c;
+        for (;;) {
+          const bt = [
             ["Suap " + fm(amt), "s", p.cash < amt],
             ["Masuk Penjara", "j"],
-          ],
-          p,
-        );
+          ];
+          if (hasC(p, "tm")) bt.push(["🤐 Negosiasi (Uang Tutup Mulut)", "n"]);
+          c = await ask(
+            `<h3>👮 OTT Polisi!</h3><div class="sub">${p.n}</div>${sec("Situasi", '<p class="ct">Pion OTT berada di petak yang sama denganmu dan mengendus jejak korupsimu (' + fm(p.kor) + ").</p>")}${sec("Pilihan", rw("Bayar suap", fm(amt)) + rw("Masuk penjara", (isPol(p) ? "Gaji tetap cair" : "Tanpa gaji") + ", uang pengganti " + fm(Math.min(p.cash, p.kor))) + (hasC(p, "tm") ? rw("Negosiasi", "2 dadu +2, butuh total 9+") : ""))}`,
+            bt,
+            p,
+          );
+          if (c != "n") break;
+          dropC(p, "tm");
+          const a = (1 + Math.random() * 6) | 0,
+            b = (1 + Math.random() * 6) | 0;
+          dice(a, b);
+          say(`🤐 ${p.n} negosiasi dengan OTT: ${a} + ${b} + 2 = ${a + b + 2}`);
+          if (a + b + 2 >= 9) {
+            say(`🤐 Negosiasi berhasil, ${p.n} dilepas OTT`);
+            render();
+            return;
+          }
+          say(`🤐 Negosiasi gagal, uang tutup mulut hangus`);
+          render();
+        }
         if (c == "s") {
           await pay(p, amt, 0, 1);
           say(`👮 ${p.n} menyuap OTT ${fm(amt)}`);

@@ -695,6 +695,7 @@ async function game() {
     mod
       .querySelectorAll(".sr")
       .forEach((r, i) => P.push({ id: i, b: +r.querySelector("select").value, n: cleanName(r.querySelector("input").value) || "Pemain " + (i + 1), k: TK[i][0], c: TK[i][1], cash: SET.cash, pos: 0, jail: -1, cards: 0, x: 0, loans: [] }));
+    bandarReset();
     say("Permainan dimulai! Tap petak untuk melihat harga sewa.");
     dice(1, 1);
     rplReset();
@@ -763,6 +764,7 @@ async function game() {
       if (P.filter((x) => !x.x).length > 1) {
         await krisis();
         if (P.filter((x) => !x.x).length > 1) await polisi();
+        if (P.filter((x) => !x.x).length > 1) await bandarTick();
       }
       render();
       rplSnap();

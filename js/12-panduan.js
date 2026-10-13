@@ -107,14 +107,20 @@
             ]),
           ) +
           S(
-            "🛒 Market & kartu kemampuan",
+            "🕶️ Kios Gelap (dulu Market)",
             L(
               [
-                "Petak Market (setelah Stasiun Tugu) menjual 2-4 kartu acak tiap kunjungan. Uang pembelian masuk Dana APBN.",
-                "Satu kartu per jenis. Kartu aktif dipakai kapan saja lewat 🏠 Aset atau langsung di Market; kartu pasif terpakai otomatis.",
-                "Kartu khusus peran hanya muncul bila kamu sudah punya peran.",
-                "🎟️ <b>Lotre</b>: kartu gosok seharga Rp1.000.000. Gosok lapisan perak; tiga nominal sama berarti menang (Rp1,5 jt / Rp3 jt / Rp8 jt, peluang total 35%). Hadiah dibayar dari Dana APBN; bila kas kurang, sisanya jadi tunggakan negara.",
-              ].concat(Object.values(CARD).map((c) => c.i + " <b>" + c.n + "</b> (" + sh(c.p) + (c.r !== undefined ? ", " + ROLES[c.r].n : "") + "): " + c.d)),
+                "Petak Market kini dikelola <b>Bandar</b> (NPC) dan bernama <b>Kios Gelap</b>. Buka setelah peran dibagikan (putaran 3). Tiap kunjungan menjual 4-5 barang; uang masuk <b>Kas Bandar</b>, bukan Dana APBN.",
+                "<b>Rak 1</b> Lotre Receh (Rp250.000, selalu ada). <b>Rak 2</b> kartu abu-abu (Dadu Ganda, Asuransi Sewa, Diskon Properti, Bebas Pajak, Kupon Kesempatan). <b>Rak 3</b> barang terlarang (Kunci Bebas Penjara, Kebal Hukum, Sabotase): tiap beli menambah jejak korupsi 30% dari harga dan membuatmu diincar pion OTT. <b>Rak 4</b> kartu khusus peranmu. <b>Rak 5</b> barang baru Bandar.",
+                "🎟️ <b>Lotre Receh</b>: gosok lapisan perak; tiga nominal sama berarti menang (×1,5 / ×3 / ×8 harga tiket). Yang dipajang: peluang menang 35%, rata-rata balik 87%. <b>Bandar menyesuaikan peluang menurut kebiasaan belimu.</b> Pemain baru (Tamu) diberi umpan manis, pelanggan tetap (Langganan) mendapat peluang yang dipajang, dan pelanggan berat (Pecandu) mendapat peluang paling ketat. Pemain jeli bisa mengakali (beli beberapa kali lalu berhenti), yang lengah yang rugi.",
+                "Harga naik mengikuti fase kekacauan. Saat <b>razia</b> Bandar tiarap: harga +20%, promo hilang, maks 1 kartu dan 1 lotre per pemain per putaran. Bila kas Bandar menggemuk (>150% modal) razia akan datang lewat berita; bila kas menipis (<25% modal) Bandar kepepet dan semua pemain dapat peluang terketat. Bandar yang tumbang akan buka lagi dengan modal kecil setelah sekitar 8 putaran.",
+                "Pilihan lain di Kios: <b>Lapor ke aparat</b> (imbalan APBN, berisiko dibalas), <b>jadi antek Bandar</b> (komisi, jejak korupsi naik). Presiden bisa menerima upeti atau menindak Bandar saat konfrontasi.",
+                "Satu kartu per jenis. Kartu aktif dipakai kapan saja lewat 🏠 Aset atau langsung di Kios; kartu pasif terpakai otomatis. Kartu khusus peran hanya muncul bila kamu sudah punya peran.",
+              ].concat(
+                Object.values(CARD)
+                  .filter((c) => c.rak !== 0)
+                  .map((c) => c.i + " <b>" + c.n + "</b> (" + (c.hd ? "30% jejak, min " : "") + sh(c.p) + (c.r !== undefined ? ", " + ROLES[c.r].n : "") + "): " + c.d),
+              ),
             ),
           ) +
           S(

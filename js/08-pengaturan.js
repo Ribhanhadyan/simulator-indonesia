@@ -32,7 +32,7 @@ const sel = (id, lb, o, c) =>
     `<label class="ck tg"><span class="lb"><b>${lb}</b>${hint ? `<small>${hint}</small>` : ""}</span><input type="checkbox" class="sw" id="${id}" role="switch"${on ? " checked" : ""}></label>`;
 function save() {
   try {
-    localStorage.setItem(SK, JSON.stringify({ v: 1, nn: NN, t: Date.now(), P, own, dk, cur, TURN, rnd, POOL, fz: FZ.L, ECO, DIR, ud, lv: LVL.indexOf(LV), LS, PRES, POLS, log, SET, ST, NW, KDS, rpl: RPL }));
+    localStorage.setItem(SK, JSON.stringify({ v: 1, nn: NN, t: Date.now(), P, own, dk, cur, TURN, rnd, POOL, fz: FZ.L, ECO, DIR, ud, lv: LVL.indexOf(LV), LS, PRES, POLS, log, SET, ST, NW, KDS, rpl: RPL, bd: bandar }));
   } catch (e) {}
 }
 function clearSave() {
@@ -66,6 +66,7 @@ function restore(sv) {
   KD_MAX = SET.kd ? 1 : 0;
   Object.assign(PRES, sv.PRES);
   Object.assign(KDS, { ann: 0 }, sv.KDS || {});
+  bandarLoad(sv.bd); /* simpanan lama tanpa bd: Bandar baru, statistik pemain diisi default */
   RPL = sv.rpl && Array.isArray(sv.rpl.s) ? sv.rpl : { s: [] };
   RPLB = [];
   POLS.length = 0;
@@ -156,6 +157,8 @@ async function summary(w) {
           rw("Sewa diterima", fm(s.rent || 0)) +
           rw("Masuk penjara", (s.jail || 0) + "×") +
           rw("Kartu diambil", s.cards || 0) +
+          rw("Total belanja lotre", fm(s.lotBelanja || 0)) +
+          rw("Total hadiah lotre diterima", fm(s.lotHadiah || 0)) +
           rw("Aset disita/dibeli negara", (s.taken || 0) + "×"),
       );
     })

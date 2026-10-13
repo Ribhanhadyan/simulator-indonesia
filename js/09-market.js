@@ -1,41 +1,37 @@
-      /* ===== [F1] MARKET: kartu kemampuan (umum + khusus peran) =====
+      /* ===== [F1] KIOS GELAP (dulu Market): kartu kemampuan + lotre, dikelola Bandar (lihat 17-bandar.js) =====
    - Disimpan di p.inv (array id kartu) -> ikut save/restore & snapshot multiplayer (tampilan lewat DOM).
-   - Uang pembelian masuk Dana APBN lewat pay() standar (presiden ambil 20% seperti setoran lain).
-   - Kartu pasif (as/dp/bp) terpakai otomatis lewat hook di land0; kartu aktif dipakai dari Market atau tombol Aset. */
-      /* ===== Lotre: [peluang %, hadiah]. Nilai harapan = Rp870.000 untuk harga Rp1.000.000 ===== */
-      const LOTRE = [
-        [65, 0],
-        [22, 15e5],
-        [10, 3e6],
-        [3, 8e6],
-      ];
-      const lotreRoll = () => {
+   - Uang pembelian masuk Kas Bandar (bandar.kas), bukan Dana APBN. Presiden tidak mengambil bagian.
+   - Kartu pasif (as/dp/bp/tm) terpakai otomatis lewat hook; kartu aktif dipakai dari Kios atau tombol Aset.
+   - Rak: 1 Lotre Receh (selalu), 2 Abu-abu, 3 Terlarang (+jejak korupsi), 4 Pesanan peran, 5 Barang baru. */
+      /* Lotre: pengali hadiah terhadap harga tiket. Peluang sesungguhnya diambil dari tabel tier (BD_TABEL di 17-bandar.js). */
+      const LOTRE_X = [0, 1.5, 3, 8];
+      /* kembali berupa PENGALI (0 = zonk) menurut tier pemain p, mode tiarap, dan kepepet */
+      const lotreRoll = (p) => {
+        const t = bdTabel(p);
         let r = Math.random() * 100;
-        for (const [w, z] of LOTRE) if ((r -= w) < 0) return z;
+        for (let i = 0; i < 4; i++) if ((r -= t[i]) < 0) return LOTRE_X[i];
         return 0;
       };
-      /* hadiah dibayar Dana APBN; kas kurang = sisanya jadi tunggakan negara (dibayar saat lewat MULAI, sama seperti insentif MBG) */
+      /* hadiah dibayar dari Kas Bandar; bila kas kurang pemain hanya menerima sisa kas (Bandar lalu bisa tumbang) */
       const lotrePay = (p, prize) => {
         if (!prize) return "zonk, tidak ada hadiah";
-        const g = Math.min(prize, POOL),
-          s = prize - g;
-        POOL -= g;
+        const g = bdBayar(prize);
         p.cash += g;
-        if (s > 0) p.mt = (p.mt || 0) + s;
-        return "menang " + fm(prize) + (s > 0 ? ` (Dana APBN hanya cukup ${fm(g)}, sisa ${fm(s)} jadi tunggakan negara)` : " dari Dana APBN");
+        stat(p.id, "lotHadiah", g);
+        return "menang " + fm(prize) + (g < prize ? ` (Kas Bandar hanya cukup ${fm(g)})` : " dari Kas Bandar");
       };
       const shortRp = (n) => (n >= 1e6 ? (n / 1e6).toString().replace(".", ",") + " jt" : n / 1e3 + " rb");
       /* kartu gosok interaktif untuk pemain manusia. Hasil sudah diundi di awal; menggosok hanya membuka lapisan perak.
          Mengembalikan hadiah (0 = zonk) atau null bila dibatalkan sebelum mulai menggosok. */
-      function lotreScratch(p) {
-        const prize = lotreRoll(),
-          wins = LOTRE.filter(([w, z]) => z).map(([w, z]) => z),
+      function lotreScratch(p, price) {
+        const prize = Math.round(lotreRoll(p) * price),
+          wins = LOTRE_X.filter((x) => x).map((x) => Math.round(x * price)),
           /* menang: 3 kotak sama; zonk: 3 nominal berbeda (tidak ada pasangan) */
           cells = prize ? [prize, prize, prize] : shuf(wins.slice());
         return new Promise((resolve) => {
           mod.onclick = null;
           mod.innerHTML =
-            `<h3>🎟️ Lotre</h3><div class="sub">${p.n}</div>` +
+            `<h3>🎟️ Lotre Receh</h3><div class="sub">${p.n} · tiket ${fm(price)}</div>` +
             `<div class="lt-card"><div class="lt-top">KARTU GOSOK NUSANTARA</div><div class="lt-hint">Tiga nominal sama = menang</div>` +
             `<div class="lt-area"><div class="lt-cells">${cells.map((z) => `<div class="lt-cell"><span>★</span><b>${shortRp(z)}</b></div>`).join("")}</div>` +
             `<canvas class="lt-cv" width="320" height="120" aria-label="Lapisan perak, gosok untuk membuka"></canvas></div></div>` +
@@ -177,6 +173,7 @@
       const CARD = {
         /* ---------- kartu umum ---------- */
         dd: {
+          rak: 2,
           n: "Dadu Ganda",
           i: "🎲",
           p: 9e5,
@@ -189,8 +186,9 @@
           },
           bot: (p) => Math.random() < 0.5,
         },
-        as: { n: "Asuransi Sewa", i: "🛡️", p: 12e5, d: "Otomatis menanggung sewa berikutnya yang kamu bayar (maks Rp2.500.000)." },
+        as: { rak: 2, n: "Asuransi Sewa", i: "🛡️", p: 12e5, d: "Otomatis menanggung sewa berikutnya yang kamu bayar (maks Rp2.500.000)." },
         kb: {
+          rak: 3,
           n: "Kunci Bebas Penjara",
           i: "🔑",
           p: 1e6,
@@ -201,22 +199,35 @@
             return "mendapat 1 kartu bebas penjara";
           },
         },
-        dp: { n: "Diskon Properti", i: "🏷️", p: 7e5, d: "Otomatis memotong 30% harga beli properti berikutnya yang kamu beli di petak." },
-        /* id "pu" dipertahankan agar simpanan lama tetap terbaca; isinya kini Lotre gosok */
+        dp: { rak: 2, n: "Diskon Properti", i: "🏷️", p: 7e5, d: "Otomatis memotong 30% harga beli properti berikutnya yang kamu beli di petak." },
+        /* ---------- Rak 1: Lotre Receh (selalu ada, dibeli langsung dan digosok saat itu juga, tidak masuk kantong) ---------- */
+        lr: {
+          rak: 1,
+          lotre: 1,
+          n: "Lotre Receh",
+          i: "🎟️",
+          p: 25e4,
+          d: "Gosok sekarang juga. Tiga nominal sama berarti menang. Hadiah dibayar Kas Bandar.",
+          pick: (p, h) => lotreScratch(p, h),
+          bpick: (p) => lotreRoll(p),
+          bbuy: () => Math.random() < 0.5 / BM(),
+        },
+        /* id "pu" dipertahankan agar simpanan lama tetap terbaca; kini tidak dijual lagi (rak 0). Sisa tiket lama tetap bisa digosok (tiket Rp1.000.000), hadiah dari Kas Bandar. */
         pu: {
-          n: "Lotre",
+          rak: 0,
+          n: "Lotre (tiket lama)",
           i: "🎟️",
           p: 1e6,
-          d: "Pakai: gosok kartunya. Menang " + LOTRE.reduce((a, [w, z]) => a + (z ? w : 0), 0) + "% (" + LOTRE.filter(([w, z]) => z).map(([w, z]) => fm(z)).join(" / ") + "), hadiah dibayar Dana APBN.",
+          d: "Pakai: gosok kartunya (tiket lama Rp1.000.000, peluang mengikuti kebiasaan belimu). Hadiah dibayar Kas Bandar.",
           use: 1,
-          pick: (p) => lotreScratch(p),
-          bpick: () => lotreRoll(),
-          bbuy: () => Math.random() < 0.5 / BM(),
+          pick: (p) => lotreScratch(p, 1e6),
+          bpick: (p) => Math.round(lotreRoll(p) * 1e6),
           fx: (p, prize) => lotrePay(p, prize || 0),
           bot: (p) => 1,
         },
-        bp: { n: "Bebas Pajak", i: "🧾", p: 8e5, d: "Otomatis membebaskan satu tagihan Pajak Penghasilan atau Pajak Barang Mewah." },
+        bp: { rak: 2, n: "Bebas Pajak", i: "🧾", p: 8e5, d: "Otomatis membebaskan satu tagihan Pajak Penghasilan atau Pajak Barang Mewah." },
         im: {
+          rak: 3,
           n: "Kebal Hukum",
           i: "⚖️",
           p: 18e5,
@@ -230,6 +241,7 @@
           bot: (p) => 1,
         },
         kr: {
+          rak: 2,
           n: "Kupon Kesempatan",
           i: "🍀",
           p: 7e5,
@@ -242,6 +254,7 @@
           bot: (p) => p.cash > 5e6,
         },
         sk: {
+          rak: 3,
           n: "Sabotase",
           i: "🕳️",
           p: 22e5,
@@ -266,6 +279,54 @@
             P[id].sk = 1;
             return P[id].n + " kehilangan giliran berikutnya";
           },
+        },
+        /* ---------- Rak 5: barang baru Bandar ---------- */
+        tm: {
+          rak: 5,
+          n: "Uang Tutup Mulut",
+          i: "🤐",
+          p: 1e6,
+          d: "Otomatis: saat OTT menangkapmu, muncul pilihan negosiasi (2 dadu +2 bonus, total 9 atau lebih berarti lolos). Hangus setelah dicoba.",
+          bbuy: (p) => (p.kor || 0) > 0 && Math.random() < 0.6,
+        },
+        cu: {
+          rak: 5,
+          n: "Cuci Uang",
+          i: "🧼",
+          p: 1e6,
+          hd: (p) => Math.max(1e6, Math.round((0.3 * (p.kor || 0)) / 1e4) * 1e4),
+          d: "Langsung: hapus seluruh jejak korupsimu. Harga 30% dari jejak (min Rp1.000.000). 20% kemungkinan gagal dan jejakmu jadi 2×. Maks 1× per pemain per game.",
+          instant: 1,
+          fx: (p) => {
+            const k = p.kor || 0;
+            if (Math.random() < 0.2) {
+              p.kor = k * 2;
+              return "GAGAL! pencucian ketahuan, jejak korupsi jadi " + fm(p.kor);
+            }
+            p.kor = 0;
+            return "jejak korupsi " + fm(k) + " bersih";
+          },
+          bbuy: (p) => (p.kor || 0) >= 15e5 && Math.random() < 0.6,
+        },
+        io: {
+          rak: 5,
+          n: "Informan OTT",
+          i: "🕵️",
+          p: 6e5,
+          d: "Langsung: lihat posisi semua pion OTT dan daftar pemain yang berjejak korupsi.",
+          instant: 1,
+          fx: (p) => bdInformanTeks(),
+          bbuy: () => false,
+        },
+        bb: {
+          rak: 5,
+          n: "Bocoran Berita",
+          i: "📰",
+          p: 8e5,
+          d: "Langsung: intip berita nasional putaran depan sebelum terbit, supaya bisa menyesuaikan pinjaman dan belanja.",
+          instant: 1,
+          fx: (p) => bdBocoranTeks(),
+          bbuy: () => false,
         },
         /* ---------- kartu khusus peran: indeks r = indeks di ROLES ---------- */
         r0: {
@@ -556,28 +617,87 @@
       function cardBuy(p, price) {
         return hasC(p, "dp") ? Math.round((price * 0.7) / 1e3) * 1e3 : price;
       }
-      /* penawaran Market: 2-4 kartu; kartu peran hanya bila pemain sudah punya peran */
+      /* penawaran Kios Gelap (4-5 barang): Lotre Receh selalu ada (rak 1); 1-2 barang rak 2/3; 1 barang rak 5; kartu peran (rak 4) bila sudah punya peran.
+         Tanpa peran, rak 2/3 diambil 2 barang supaya rak tetap berisi 4. */
       function marketOffer(p) {
-        const um = shuf(Object.keys(CARD).filter((k) => CARD[k].r === undefined)),
-          rc = p.role !== undefined ? Object.keys(CARD).find((k) => CARD[k].r === p.role) : null,
-          n = 2 + ((Math.random() * 3) | 0),
-          o = [];
-        if (rc && Math.random() < 0.75) o.push(rc);
-        for (const k of um) {
-          if (o.length >= n) break;
-          o.push(k);
-        }
+        const ks = Object.keys(CARD),
+          rc = p.role !== undefined ? ks.find((k) => CARD[k].r === p.role) : null,
+          pool = shuf(ks.filter((k) => (CARD[k].rak == 2 || CARD[k].rak == 3) && !(CARD[k].use && hasC(p, k)) && !(!CARD[k].instant && hasC(p, k)))),
+          r5 = shuf(ks.filter((k) => CARD[k].rak == 5 && !hasC(p, k) && (k != "cu" || ((p.kor || 0) > 0 && !p.cuciUangDipakai)))),
+          n = rc ? 1 + (Math.random() < 0.5 ? 1 : 0) : 2,
+          o = ["lr"].concat(pool.slice(0, n));
+        if (r5.length) o.push(r5[0]);
+        if (rc && !hasC(p, rc)) o.push(rc);
         return o;
       }
+      /* alasan barang tidak bisa dibeli ("" = bisa) */
+      function kiosOk(p, k) {
+        const c = CARD[k],
+          h = bdHarga(p, k).h;
+        if (!c.lotre && !c.instant && hasC(p, k)) return "Sudah dimiliki";
+        if (k == "cu" && (p.cuciUangDipakai || !(p.kor > 0))) return p.cuciUangDipakai ? "Sudah dipakai" : "Tak ada jejak";
+        if (bandar.tiarap && (c.lotre ? p.rkL : p.rkK) === rnd) return "Batas razia";
+        if (p.cash < h) return "Uang kurang";
+        return "";
+      }
+      const kiosPeluang = () => {
+        const t = BD_TABEL.langganan;
+        return "Peluang menang " + (100 - t[0]) + "% · hadiah ×1,5 / ×3 / ×8 harga tiket · rata-rata balik " + Math.round(t[1] * 1.5 + t[2] * 3 + t[3] * 8) + "%";
+      };
       const cardRow = (k, p) => {
         const c = CARD[k],
-          hv = hasC(p, k),
-          no = hv || p.cash < c.p;
+          hg = bdHarga(p, k),
+          why = kiosOk(p, k),
+          rak = c.lotre ? "Rak 1 · Wajib" : c.r !== undefined ? "Rak 4 · Pesanan peran" : ["", "", "Rak 2 · Abu-abu", "Rak 3 · Terlarang ⚠️", "", "Rak 5 · Barang baru"][c.rak] || "";
         return sec(
           `${c.i} ${c.n}${c.r !== undefined ? " · khusus " + ROLES[c.r].n : ""}`,
-          `<p class="ct">${c.d}</p><div class="cb"><span>${fm(c.p)}</span><button class="pri" data-c="b${k}" ${no ? "disabled" : ""}>${hv ? "Sudah dimiliki" : p.cash < c.p ? "Uang kurang" : "Beli"}</button></div>`,
+          `<p class="ct"><small>${rak}</small><br>${c.d}${c.lotre ? "<br><i>" + kiosPeluang() + "</i>" : ""}${c.rak == 3 ? "<br><i>Jejak korupsi +30% harga, diincar pion OTT.</i>" : ""}</p><div class="cb"><span>${hg.h < hg.tetap ? "<s>" + fm(hg.tetap) + "</s> " : ""}${fm(hg.h)}${hg.lb ? " <small>(" + hg.lb + ")</small>" : ""}</span><button class="pri" data-c="b${k}" ${why ? "disabled" : ""}>${why || "Beli"}</button></div>`,
         );
       };
+      /* satu pembelian (manusia atau bot). Mengembalikan {t: teks} bila berhasil, null bila dibatalkan, false bila pemain bangkrut. */
+      async function kiosBeli(p, k, bot) {
+        const c = CARD[k],
+          hg = bdHarga(p, k),
+          h = hg.h;
+        let prize = 0;
+        if (c.lotre) {
+          /* manusia: gosok dulu, tiket baru dibayar setelah selesai (Batal sebelum menggosok = tidak ada yang berubah) */
+          prize = bot ? Math.round(c.bpick(p) * h) : await c.pick(p, h);
+          if (prize == null) return null;
+        }
+        if (!(await pay(p, h, 0, 1))) return false;
+        bdTerima(h);
+        bdStat(p);
+        if (hg.kupon) p.kupon = 0;
+        if (c.lotre) {
+          p.rkL = rnd;
+          bdCatat(p, 1, !prize);
+          stat(p.id, "lotBelanja", h);
+          const t = lotrePay(p, prize);
+          say(`🎟️ ${p.n} membeli Lotre Receh (${fm(h)}): ${t}`);
+          render();
+          return { t: "Lotre Receh: " + t };
+        }
+        p.rkK = rnd;
+        bdCatat(p, 0);
+        let t;
+        if (c.rak == 3) {
+          const add = Math.round((0.3 * h) / 1e3) * 1e3;
+          p.kor = (p.kor || 0) + add;
+          say(`🕵️ ${p.n} membeli barang terlarang: jejak korupsi +${fm(add)}`);
+        }
+        if (k == "cu") p.cuciUangDipakai = true;
+        if (c.instant) {
+          t = c.i + " " + c.n + ": " + c.fx(p);
+          say(bot ? `${c.i} ${p.n} memakai ${c.n}` : `${c.i} ${p.n}: ${c.n} dipakai`);
+        } else {
+          addC(p, k);
+          t = "Membeli " + c.i + " " + c.n;
+          say(`🛒 ${p.n} membeli ${c.n} (${fm(h)})`);
+        }
+        render();
+        return { t, intel: k == "io" || k == "bb" ? t : "" };
+      }
       /* jendela modal sendiri (tombol di dalam konten), pola sama dengan manage(): klik didelegasikan lewat mod.onclick */
       const mkAsk = (html) =>
         new Promise((res) => {
@@ -591,36 +711,82 @@
             res(b.dataset.c);
           };
         });
+      /* Pelapor: lapor ke aparat, imbalan dari APBN tapi berisiko dibalas Bandar */
+      async function kiosLapor(p) {
+        const f = Math.max(0.2, Math.min(0.8, 0.3 + 0.3 * Math.max(0, bandar.kas / bandar.modalAwal - 0.5) + (bandar.tiarap ? 0.2 : 0)));
+        p.laporR = rnd;
+        if (Math.random() < f) {
+          const g = Math.min(POOL, 15e5),
+            sita = bdBayar(Math.round(bandar.kas * 0.08));
+          POOL -= g;
+          p.cash += g;
+          p.pelapor = 1;
+          NW.bump += 3;
+          if (bandar.kas > 1.2 * bandar.modalAwal) bandar.cd = Math.min(bandar.cd, 0);
+          say(`📣 ${p.n} melapor ke aparat: imbalan ${fm(g)} dari APBN, kas Bandar tergerus ${fm(sita)}`);
+          return "Laporanmu diterima. Imbalan " + fm(g) + " dari APBN.";
+        }
+        const d = Math.min(p.cash, 8e5);
+        p.cash -= d;
+        bdTerima(d);
+        say(`📣 ${p.n} melapor, tapi dibalas Bandar: ${fm(d)} melayang`);
+        return "Laporanmu bocor ke oknum. Bandar membalas dan kamu kehilangan " + fm(d) + ".";
+      }
+      /* Antek Bandar: ambil komisi dari Kas Bandar, jejak korupsi naik */
+      function kiosAntek(p) {
+        const g = Math.min(15e5, Math.round((bandar.kas * 0.05) / 1e5) * 1e5);
+        bdBayar(g);
+        p.cash += g;
+        p.kor = (p.kor || 0) + Math.round(g * 1.5);
+        p.antekR = rnd;
+        say(`🤫 ${p.n} jadi antek Bandar: komisi ${fm(g)}, jejak korupsi +${fm(Math.round(g * 1.5))}`);
+        return "Komisi " + fm(g) + " diterima. Jejak korupsimu naik " + fm(Math.round(g * 1.5)) + ".";
+      }
       async function market(p) {
+        bdStat(p);
+        if (!bdBuka()) {
+          const tt = bandar.rebootSetelah != null ? "Kios Gelap sedang tutup. Kabarnya buka lagi sekitar putaran " + bandar.rebootSetelah + "." : "Kios Gelap baru buka setelah peran dibagikan (putaran 3).";
+          say(`🕶️ ${p.n} mampir ke Kios Gelap, tapi tutup`);
+          if (!p.b) await ask(`<h3>🕶️ Kios Gelap</h3><div class="sub">${p.n}</div><p class="ct">${tt}</p>`, [["OK", 1]], p);
+          return;
+        }
         const offer = marketOffer(p);
-        say(`🛒 ${p.n} masuk Market`);
+        let bought = false;
+        say(`🕶️ ${p.n} masuk Kios Gelap`);
         if (p.b) {
           const res = 3e6 * BM(),
             got = [];
-          for (const k of offer.slice().sort((a, b) => (CARD[b].r !== undefined) - (CARD[a].r !== undefined) || CARD[a].p - CARD[b].p)) {
-            const c = CARD[k];
-            if (got.length >= 2 || hasC(p, k) || p.cash - c.p < res || (c.use && c.can && !c.can(p) && !c.pick) || (c.bbuy && !c.bbuy(p))) continue;
-            if (!(await pay(p, c.p))) return;
-            if (c.instant) {
-              const t = c.fx(p);
-              say(`${c.i} ${p.n}: ${t}`);
-            } else addC(p, k);
+          let cnt = 0;
+          for (const k of offer.slice().sort((a, b) => (CARD[b].r !== undefined) - (CARD[a].r !== undefined) || bdHarga(p, a).h - bdHarga(p, b).h)) {
+            const c = CARD[k],
+              h = bdHarga(p, k).h;
+            if ((!c.lotre && cnt >= 2) || kiosOk(p, k) || p.cash - h < res || (c.use && c.can && !c.can(p) && !c.pick) || (c.bbuy && !c.bbuy(p))) continue;
+            const r = await kiosBeli(p, k, 1);
+            if (!r) return;
+            bought = true;
+            if (!c.lotre) cnt++;
             got.push(c.i + " " + c.n);
           }
+          bdKunjungan(p, bought);
           if (got.length) {
-            say(`🛒 ${p.n} membeli ${got.join(", ")}`);
-            await nt(`<h3>🛒 Market</h3><div class="sub">${p.n}</div>${sec("Membeli", got.map((g) => rw(g, "")).join(""))}`);
+            say(`🕶️ ${p.n} membeli ${got.join(", ")}`);
+            await nt(`<h3>🕶️ Kios Gelap</h3><div class="sub">${p.n}</div>${sec("Membeli", got.map((g) => rw(g, "")).join(""))}`);
           }
           render();
           return;
         }
         let note = "";
+        const intel = [];
         for (;;) {
-          const inv = p.inv || [];
+          const inv = p.inv || [],
+            lapor = rnd - (p.laporR === undefined ? -9 : p.laporR) >= 4,
+            antek = p.antekR !== rnd && bandar.kas >= 2e6;
           const c = await mkAsk(
-            `<h3>🛒 Market Kartu Kemampuan</h3><div class="sub">${p.n} · uang ${fm(p.cash)}</div>` +
+            `<h3>🕶️ Kios Gelap</h3><div class="sub">${p.n} · uang ${fm(p.cash)}</div>` +
+              (bandar.tiarap ? sec("🚨 Razia", '<p class="ct">Bandar sedang tiarap: harga +20%, tanpa promo, maks 1 kartu dan 1 lotre per pemain per putaran.</p>') : "") +
               (note ? sec("Barusan", '<p class="ct">' + note + "</p>") : "") +
-              sec("Dijual hari ini", offer.length ? offer.map((k) => cardRow(k, p)).join("") : '<p class="ct">Stok habis. Datang lagi nanti.</p>') +
+              (intel.length ? sec("Intel", intel.map((t) => '<p class="ct">' + t + "</p>").join("")) : "") +
+              sec("Dijual hari ini", offer.map((k) => cardRow(k, p)).join("")) +
               (inv.length
                 ? sec(
                     "Kartu milikmu",
@@ -632,35 +798,45 @@
                       .join(""),
                   )
                 : "") +
-              sec("Catatan", '<p class="ct">Uang pembelian masuk Dana APBN. Satu kartu per jenis. Kartu juga bisa dipakai lewat tombol 🏠 Aset.</p>') +
+              sec(
+                "Lapak belakang",
+                `<div class="rw ci"><span><div>📣 <b>Lapor ke aparat</b></div><small>Imbalan dari APBN bila laporan diterima. Bila bocor, Bandar membalas.</small></span><button data-c="pl" ${lapor ? "" : "disabled"}>Lapor</button></div>` +
+                  `<div class="rw ci"><span><div>🤫 <b>Jadi antek Bandar</b></div><small>Komisi dari Kas Bandar, tapi jejak korupsimu naik. Sekali per putaran.</small></span><button data-c="an" ${antek ? "" : "disabled"}>Ambil</button></div>`,
+              ) +
+              sec("Catatan", '<p class="ct">Uang masuk Kas Bandar. Bandar menyesuaikan peluang menurut kebiasaan belimu. Satu kartu per jenis. Kartu juga bisa dipakai lewat tombol 🏠 Aset.</p>') +
               '<div class="mb"><button data-c="x">Selesai</button></div>',
           );
           if (c == "x") {
             ov.hidden = true;
             break;
           }
+          if (c == "pl" || c == "an") {
+            note = c == "pl" ? await kiosLapor(p) : kiosAntek(p);
+            render();
+            continue;
+          }
           const k = c.slice(1),
             cd = CARD[k];
           if (c[0] == "b") {
-            if (!(await pay(p, cd.p))) {
+            const r = await kiosBeli(p, k, 0);
+            if (r === false) {
               ov.hidden = true;
+              bdKunjungan(p, bought);
               return;
             }
-            offer.splice(offer.indexOf(k), 1);
-            if (cd.instant) {
-              note = cd.i + " " + cd.n + ": " + cd.fx(p);
-              say(`${cd.i} ${p.n}: ${note}`);
-            } else {
-              addC(p, k);
-              note = "Membeli " + cd.i + " " + cd.n;
-              say(`🛒 ${p.n} membeli ${cd.n} (${fm(cd.p)})`);
+            if (r === null) note = "Dibatalkan";
+            else {
+              bought = true;
+              if (!cd.lotre) offer.splice(offer.indexOf(k), 1);
+              note = r.t;
+              if (r.intel) intel.push(r.intel);
             }
-            render();
           } else {
             const ok = await cardUse(p, k);
             note = ok ? "Memakai " + cd.i + " " + cd.n : "Dibatalkan";
           }
         }
+        bdKunjungan(p, bought);
       }
       /* kartu aktif milik bot dipakai di akhir giliran (dipanggil bersama botManage) */
       function botCards(p) {
