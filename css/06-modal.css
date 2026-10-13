@@ -409,3 +409,97 @@
   border-top: 3px solid currentColor;
   transform: rotate(45deg);
 }
+
+/* ===== Kocok urutan main ===== */
+.sf-box {
+  position: relative;
+  margin: 6px 12px 10px;
+}
+.sf-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  background: var(--card, #fffdf5);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.12);
+  transition: top var(--t, 0.3s) cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+.sf-box.going .sf-row {
+  animation: sf-wob 0.18s ease-in-out infinite alternate;
+}
+.sf-box.going .sf-row:nth-child(even) {
+  animation-direction: alternate-reverse;
+}
+.sf-n {
+  flex: 0 0 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--mut);
+  color: #fff;
+  font: 700 14px var(--font-d);
+  font-style: normal;
+}
+.sf-t {
+  display: inline-flex;
+  width: 28px;
+}
+.sf-row b {
+  flex: 1;
+  text-align: left;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sf-row em {
+  font: 600 11px var(--font-d);
+  font-style: normal;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ok);
+}
+.sf-row.set {
+  animation: sf-pop 0.45s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+.sf-row.set .sf-n {
+  background: var(--brand);
+}
+.sf-row.first {
+  background: #fff3c4;
+  color: #3a2200;
+}
+@keyframes sf-wob {
+  from {
+    transform: rotate(-1.2deg) scale(1);
+  }
+  to {
+    transform: rotate(1.2deg) scale(1.02);
+  }
+}
+@keyframes sf-pop {
+  0% {
+    transform: scale(0.9);
+  }
+  60% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sf-row,
+  .sf-box.going .sf-row,
+  .sf-row.set {
+    animation: none;
+    transition: none;
+  }
+}
