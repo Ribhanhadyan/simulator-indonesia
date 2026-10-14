@@ -43,6 +43,7 @@ const CORE = [
   "js/17-bandar.js",
   "js/18-sambung-aset.js",
   "js/19-stabil.js",
+  "js/20-developer.js",
 ];
 /* aset gambar: dicache saat instalasi (best-effort) agar efek visual tetap muncul saat offline */
 const IMAGES = [
