@@ -184,3 +184,14 @@ js/          logika, dimuat berurutan 01 → 15
 
 - Ikon: [Game Icon Pack](https://nieobie.itch.io/free-icons) oleh Nieobie (CC0)
 - Dukung pengembang: [☕ Trakteer](https://trakteer.id/wi2qdwl5mqp5bjjqumjl/tip)
+
+
+---
+
+## ⚡ Catatan Performa & Stabilitas
+
+- **Muat ulang / "Main Lagi" cepat**: `sw.js` memakai strategi *cache dulu, perbarui di latar belakang* (sebelumnya semua file menunggu jaringan). Naikkan `CACHE` di `sw.js` setiap kali merilis versi baru.
+- **Font Google tidak lagi memblokir tampilan** (dimuat non-blocking, ada fallback sistem).
+- `render()` dan `say()` hanya menulis DOM bila isinya berubah; konverter emoji → ikon memproses mutasi per frame.
+- **Mode efek otomatis ringan** di perangkat lemah (RAM/CPU kecil atau hemat data): tanpa canvas partikel, blend-mode layar penuh, dan blur.
+- `js/19-stabil.js`: galat beruntun memunculkan bilah "Muat ulang" (progres tetap tersimpan), dan animasi CSS dijeda saat tab di latar belakang.

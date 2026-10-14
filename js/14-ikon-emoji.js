@@ -130,19 +130,32 @@
     if (last < s.length) f.appendChild(document.createTextNode(s.slice(last)));
     p.replaceChild(f, t);
   };
+  const NON_ASCII = /[^\x00-\x7F]/;
   const scan = (n) => {
     if (n.nodeType === 3) return conv(n);
-    if (n.nodeType !== 1 || n.closest("svg")) return;
+    if (n.nodeType !== 1 || n.closest("svg") || !NON_ASCII.test(n.textContent)) return;
     const w = document.createTreeWalker(n, NodeFilter.SHOW_TEXT),
       a = [];
     while (w.nextNode()) a.push(w.currentNode);
     a.forEach(conv);
   };
   scan(document.body);
+  /* mutasi dikumpulkan lalu diproses sekali per frame (masih sebelum paint, jadi tidak ada kedipan emoji) */
+  let q = new Set(),
+    raf = 0;
+  const flush = () => {
+    raf = 0;
+    const items = q;
+    q = new Set();
+    items.forEach((n) => {
+      if (n.isConnected) scan(n);
+    });
+  };
   new MutationObserver((ms) => {
     for (const m of ms) {
-      if (m.type === "characterData") conv(m.target);
-      else m.addedNodes.forEach(scan);
+      if (m.type === "characterData") q.add(m.target);
+      else m.addedNodes.forEach((n) => q.add(n));
     }
+    if (!raf) raf = requestAnimationFrame(flush);
   }).observe(document.body, { childList: true, subtree: true, characterData: true });
 })();

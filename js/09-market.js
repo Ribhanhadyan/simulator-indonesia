@@ -94,6 +94,7 @@
             bar.innerHTML = "";
             const note = prize ? `Menang ${fm(prize)}!` : "Zonk. Belum beruntung.";
             card.classList.add(prize ? "win" : "lose");
+            if (window.SimFX) SimFX.kartuBuka(card, prize > 0);
             msg.innerHTML = prize ? `<b>🎉 ${note}</b>` : `<b>${note}</b>`;
             if (prize && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
               for (let i = 0; i < 22; i++) {

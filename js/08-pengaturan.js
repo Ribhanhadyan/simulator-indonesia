@@ -73,6 +73,7 @@ function restore(sv) {
   sv.POLS.forEach((x) => POLS.push({ ...x, k: pin("#1a237e", "👮") }));
   log.length = 0;
   sv.log.forEach((x) => log.push(x));
+  $("#log").innerHTML = log.map((x) => `<div>${x}</div>`).join("");
   for (const k in ST) delete ST[k];
   Object.assign(ST, sv.ST);
   render();

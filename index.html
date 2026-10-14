@@ -37,7 +37,8 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" /></noscript>
     <link rel="stylesheet" href="css/01-tokens.css" />
     <link rel="stylesheet" href="css/02-base.css" />
     <link rel="stylesheet" href="css/03-layout.css" />
@@ -51,6 +52,7 @@
     <link rel="stylesheet" href="css/11-market.css" />
     <link rel="stylesheet" href="css/12-icons.css" />
     <link rel="stylesheet" href="css/13-replay.css" />
+    <link rel="stylesheet" href="assets-visual.css" />
   </head>
   <body>
     <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position: absolute" aria-hidden="true" focusable="false">
@@ -517,5 +519,12 @@
     <script src="js/15-ux.js"></script>
     <script src="js/16-replay.js"></script>
     <script src="js/17-bandar.js"></script>
+    <script src="assets-visual.js"></script>
+    <script src="js/18-sambung-aset.js"></script>
+    <script src="js/19-stabil.js"></script>
+    <script>
+      initKiosGelapFX();
+      SimFX.autoPantau();
+    </script>
   </body>
 </html>

@@ -1,0 +1,164 @@
+/* ===== assets-visual.css — paket aset visual Simulator Indonesia =====
+   Taruh bersama folder png/. Semua animasi hormati prefers-reduced-motion + FX_LEVEL. */
+:root{--c-gold:#cda64c;--c-money:#6a8c54;--c-alarm:#e22c20;--c-news:#2caaff;--c-ink:#1a1410;--c-conc:#807d77;--c-paper:#e0d0a8}
+
+/* ---- ikon (img/div) ---- */
+.fx-ico{display:inline-block;width:1em;height:1em;background:center/contain no-repeat}
+.fx-ico.properti{background-image:url(png/tiles/properti.png)}.fx-ico.pajak{background-image:url(png/tiles/pajak.png)}
+.fx-ico.kesempatan{background-image:url(png/tiles/kesempatan.png)}.fx-ico.penjara{background-image:url(png/tiles/penjara.png)}
+.fx-ico.bebas{background-image:url(png/tiles/bebas.png)}.fx-ico.mk{background-image:url(png/tiles/mk.png)}
+.fx-ico.berita{background-image:url(png/tiles/berita.png)}.fx-ico.ott{background-image:url(png/tiles/ott.png)}
+.fx-ico.start{background-image:url(png/tiles/start.png)}.fx-ico.bandar{background-image:url(png/tiles/bandar.png)}
+.fx-ico.lotre{background-image:url(png/ikon/lotre.png)}.fx-ico.cuciuang{background-image:url(png/ikon/cuciuang.png)}
+.fx-ico.informan{background-image:url(png/ikon/informan.png)}.fx-ico.bocoran{background-image:url(png/ikon/bocoran.png)}
+.fx-ico.tutupmulut{background-image:url(png/ikon/tutupmulut.png)}.fx-ico.amplop{background-image:url(png/ikon/amplop-tangan.png)}
+
+/* ---- pion & karakter ---- */
+.fx-pion{width:32px;height:40px;background:center bottom/contain no-repeat}
+.fx-pion.p1{background-image:url(png/pion/pion-1.png)}.fx-pion.p2{background-image:url(png/pion/pion-2.png)}
+.fx-pion.p3{background-image:url(png/pion/pion-3.png)}.fx-pion.p4{background-image:url(png/pion/pion-4.png)}
+.fx-pion.p5{background-image:url(png/pion/pion-5.png)}.fx-pion.p6{background-image:url(png/pion/pion-6.png)}
+.fx-pion.ott{background-image:url(png/pion/pion-ott.png);position:relative}
+.fx-pion.ott::before{content:"";position:absolute;inset:-40%;background:url(png/fx/glow-merah.png) center/100% 100%;z-index:-1;opacity:0;transition:opacity .4s}
+.fx-pion.ott.dekat::before{opacity:1;animation:ott-aura 1s ease-in-out infinite}
+@keyframes ott-aura{50%{transform:scale(1.25);opacity:.55}}
+.fx-bandar{position:relative;aspect-ratio:320/200;background:url(png/karakter/bandar.png) center/100% 100% no-repeat}
+.fx-bandar::after{content:"";position:absolute;inset:0;background:url(png/karakter/bandar-mata.png) center/100% 100%;opacity:.25;transition:opacity .3s}
+.fx-bandar.panen::after{opacity:1;animation:bd-mata .6s ease-in-out infinite alternate}
+@keyframes bd-mata{to{opacity:.55;filter:brightness(1.4)}}
+.fx-oknum{width:60px;aspect-ratio:80/96;background:url(png/karakter/oknum-sheet.png) 0 0/300% 100% no-repeat}
+.fx-oknum.main{animation:oknum-3f 1.2s steps(1) infinite}
+@keyframes oknum-3f{0%{background-position:0 0}34%{background-position:50% 0}67%{background-position:100% 0}}
+
+/* ---- petak: glow mendarat, kilat razia, denyut emas ---- */
+.t.fx-glow{position:relative}
+.t.fx-glow::after,.t.fx-razia-kilat::after,.t.fx-denyut::after{content:"";position:absolute;inset:-25%;pointer-events:none;z-index:3;background:center/100% 100% no-repeat}
+.t.fx-glow::after{background-image:url(png/fx/glow-putih.png);animation:petak-glow 1s ease-out 1}
+.t.fx-razia-kilat::after{background-image:url(png/fx/glow-merah.png);animation:petak-kilat .5s steps(2) 3}
+.t.fx-denyut::after{background-image:url(png/fx/glow-emas.png);animation:petak-denyut .9s ease-out 2}
+@keyframes petak-glow{0%{opacity:.9;transform:scale(.6)}100%{opacity:0;transform:scale(1.4)}}
+@keyframes petak-kilat{0%{opacity:1}100%{opacity:0}}
+@keyframes petak-denyut{0%{opacity:.9;transform:scale(.7)}100%{opacity:0;transform:scale(1.3)}}
+.t.mk{--aura:url(png/fx/glow-emas.png)}
+.t.mk.mk-nyala::before{content:"";position:absolute;inset:-20%;background:var(--aura) center/100% 100%;pointer-events:none;animation:mk-lampu 1.4s ease-out 1 both;z-index:2}
+@keyframes mk-lampu{0%{opacity:0}15%{opacity:.9}25%{opacity:.2}40%{opacity:1}100%{opacity:.55}}
+
+/* ---- lapisan layar penuh (diisi JS ke #fx-root) ---- */
+#fx-root{position:fixed;inset:0;pointer-events:none;z-index:900;overflow:hidden}
+#fx-root>div,#fx-root>canvas{position:absolute;inset:0;opacity:0;transition:opacity .6s}
+#fx-root .on{opacity:1}
+#fx-root .fx-vignette.on{opacity:.45}
+#fx-root .fx-abu.on{opacity:.2}
+#fx-root .fx-kaca.on{opacity:.55}
+.fx-vignette{background:url(png/fx/vignette.png) center/100% 100%}
+.fx-abu{background:url(png/fx/abu-a.png),url(png/fx/abu-b.png);animation:abu-jatuh 24s linear infinite}
+@keyframes abu-jatuh{to{background-position:30px 256px,-20px 384px}}
+.fx-retak{background:url(png/fx/retak-layar.png) 0 0/min(40vw,40vh) no-repeat,url(png/fx/retak-layar.png) 100% 100%/min(40vw,40vh) no-repeat}
+#fx-root .fx-retak.on{opacity:.7}
+.fx-kaca{background:url(png/fx/kaca-retak.png) center/min(100vw,100vh) no-repeat}
+.fx-sirene-m{background:url(png/fx/sirene-merah.png) center/100% 100%}
+.fx-sirene-b{background:url(png/fx/sirene-biru.png) center/100% 100%}
+.fx-sirene-m.on{animation:sirene 3s ease-in-out infinite}
+.fx-sirene-b.on{animation:sirene 3s ease-in-out infinite 1.5s}
+@keyframes sirene{0%,100%{opacity:.05}50%{opacity:.38}}
+.fx-scan{background:url(png/fx/scanline.png);mix-blend-mode:multiply}
+.fx-scan.on{animation:scan-gerak 6s linear infinite}
+@keyframes scan-gerak{to{background-position:0 64px}}
+.fx-grain{background:url(png/fx/grain.png);opacity:.5!important;mix-blend-mode:overlay}
+
+/* ---- razia: semua redup, kecuali Lotre Receh ---- */
+body.fx-razia #board,body.fx-razia .fx-dim{filter:brightness(.78) saturate(.75);transition:filter 1.2s ease}
+body.fx-razia .fx-lotre{filter:none!important;position:relative;z-index:901;box-shadow:0 0 14px 2px rgba(244,214,128,.4);animation:lotre-pintu 3s ease-in-out infinite}
+@keyframes lotre-pintu{50%{box-shadow:0 0 20px 4px rgba(244,214,128,.55)}}
+/* ---- ambient Kas Bandar > 150% ---- */
+/* animasi filter pada <body> membuat modal/overlay position:fixed ikut bergeser, jadi kedip dipasang di papan saja */
+body.fx-bandar-tinggi:not(.fx-razia) #board{animation:lampu-kedip 9s ease-in-out infinite}
+@keyframes lampu-kedip{0%,100%{filter:none}50%{filter:brightness(.93)}}
+body.fx-bandar-tinggi .fx-spark path{stroke:var(--c-alarm)}
+
+/* ---- kartu ---- */
+.fx-kartu{position:relative;width:120px;aspect-ratio:120/170;perspective:700px}
+.fx-kartu>.in{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .7s var(--ease,cubic-bezier(.2,.8,.2,1))}
+.fx-kartu.buka>.in{transform:rotateY(180deg)}
+.fx-kartu .depan,.fx-kartu .belakang{position:absolute;inset:0;backface-visibility:hidden;background:center/100% 100% no-repeat}
+.fx-kartu .depan{transform:rotateY(180deg)}
+.fx-kartu .belakang{background-image:url(png/fx/foil-emas.png);background-size:64px;background-color:var(--c-ink)}
+.fk-rak1{background-image:url(png/kartu/frame-rak1.png)}.fk-rak2{background-image:url(png/kartu/frame-rak2.png)}
+.fk-rak3{background-image:url(png/kartu/frame-rak3.png)}.fk-rak4{background-image:url(png/kartu/frame-rak4.png)}
+.fk-rak5{background-image:url(png/kartu/frame-rak5.png)}.fk-peran{background-image:url(png/kartu/frame-peran.png)}
+.fk-kemampuan{background-image:url(png/kartu/frame-kemampuan.png)}
+.fx-kartu.jackpot::after{content:"";position:absolute;inset:0;background:url(png/fx/foil-kilau.png) center/250% 100%;mix-blend-mode:screen;animation:foil-sapu 1.4s ease-in-out 3;pointer-events:none}
+@keyframes foil-sapu{from{background-position:130% 0}to{background-position:-30% 0}}
+.fx-kartu.hangus .depan{animation:kartu-pudar 1.6s steps(4) forwards}
+.fx-kartu.hangus::before{content:"";position:absolute;inset:0;z-index:2;background:url(png/fx/hangus-sheet.png) 0 0/400% 100%;animation:kartu-bakar 1.6s steps(1) forwards}
+@keyframes kartu-bakar{0%{background-position:0 0}25%{background-position:33.33% 0}50%{background-position:66.66% 0}75%,100%{background-position:100% 0}}
+@keyframes kartu-pudar{to{opacity:.0;filter:brightness(.2) sepia(1)}}
+.fx-jejak{position:absolute;inset:0;pointer-events:none;background:url(png/fx/jejak-jalur.png) center bottom/100% auto no-repeat;opacity:.7}
+
+/* ---- berita & skandal ---- */
+/* Banner berjalan: dipasang DI DALAM papan (area tengah), tidak pernah menutupi header/menu/dock dan tidak menangkap klik.
+   Saat mati: visibility:hidden supaya tidak ada elemen tak terlihat yang menghalangi tombol. */
+.fx-breaking{position:fixed;left:0;right:0;bottom:calc(172px + env(safe-area-inset-bottom,0px));height:26px;z-index:20;overflow:hidden;pointer-events:none;visibility:hidden;background:url(png/fx/pita-merah.png) 0 0/auto 100% repeat-x;color:#fff;font:700 12px/26px var(--font-d,Impact),sans-serif;letter-spacing:.06em;text-transform:uppercase;opacity:0;transition:opacity .5s ease,visibility 0s linear .5s}
+#board>.fx-breaking{position:absolute;left:13.5%;right:13.5%;top:13.5%;bottom:auto;height:22px;line-height:22px;font-size:10px;z-index:8;border-radius:3px;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.fx-breaking.on{opacity:1;visibility:visible;transition:opacity .5s ease}
+.fx-breaking span{display:inline-block;white-space:nowrap;padding-left:14px;animation:marquee 16s linear infinite;text-shadow:0 1px 0 rgba(0,0,0,.6)}
+@keyframes marquee{to{transform:translateX(-100%)}}
+.fx-skandal{pointer-events:none;position:fixed;left:50%;top:40%;z-index:951;width:min(86vw,520px);transform:translate(-50%,8px);opacity:0;background:var(--c-paper);color:var(--c-ink);border:2px solid var(--c-ink);border-radius:4px;padding:10px 18px;font:700 clamp(15px,3vw,22px) var(--font-d,Impact),sans-serif;text-align:center;text-transform:uppercase;letter-spacing:.04em;box-shadow:0 8px 24px rgba(0,0,0,.3);transition:opacity .6s ease,transform .6s ease}
+.fx-skandal.on{transform:translate(-50%,0);opacity:1}
+/* transisi gulungan koran */
+.fx-wipe{position:fixed;inset:0;z-index:960;pointer-events:none;background:url(png/latar/koran-tile.png) 0 0/256px;transform:translateY(100%);box-shadow:0 -24px 30px -8px rgba(0,0,0,.6)}
+.fx-wipe.go{animation:wipe-naik .9s cubic-bezier(.6,0,.3,1) forwards}
+@keyframes wipe-naik{0%{transform:translateY(100%)}45%,55%{transform:translateY(0)}100%{transform:translateY(-100%)}}
+
+/* ---- uang & ekonomi ---- */
+.fx-uang{position:fixed;left:0;top:0;width:44px;height:22px;z-index:940;background:url(png/uang/uang-lusuh.png) center/100% 100%;pointer-events:none;will-change:transform}
+.fx-peti{width:64px;aspect-ratio:80/64;background:url(png/uang/peti-tutup.png) center/100% 100% no-repeat}
+.fx-peti.buka{background-image:url(png/uang/peti-buka.png)}
+.fx-peti.denyut{animation:peti-denyut .45s ease-out 2}
+@keyframes peti-denyut{40%{transform:scale(1.18)}}
+.fx-bendera{width:56px;aspect-ratio:128/82;background:url(png/uang/bendera-sheet.png) 0 0/400% 100%;animation:bendera 0.8s steps(1) infinite}
+@keyframes bendera{0%{background-position:0 0}25%{background-position:33.33% 0}50%{background-position:66.66% 0}75%{background-position:100% 0}}
+.fx-spark{width:100%;height:36px;display:block}.fx-spark path{fill:none;stroke:var(--c-money);stroke-width:2;vector-effect:non-scaling-stroke}
+.fx-spark.naik path{animation:spark-denyut .8s ease-in-out infinite alternate}
+@keyframes spark-denyut{to{stroke-width:3.4;filter:drop-shadow(0 0 3px currentColor)}}
+
+/* ---- latar ---- */
+.fx-bg-papan{background:url(png/latar/kertas-papan.png) 0 0/256px}
+.fx-bg-papan.gelap{background-image:url(png/latar/kertas-gelap.png)}
+.fx-bg-meja{background:url(png/latar/meja-modal.png) center/cover}
+.fx-debu{background:url(png/latar/debu.png);animation:debu-naik 40s linear infinite}
+@keyframes debu-naik{to{background-position:-80px -256px}}
+.fx-emblem{width:96px;height:96px;background:center/contain no-repeat}
+.fx-emblem.negara{background-image:url(png/ui/emblem-negara.png)}.fx-emblem.bandar{background-image:url(png/ui/emblem-bandar.png)}.fx-emblem.oknum{background-image:url(png/ui/emblem-oknum.png)}
+.fx-hasil{pointer-events:none;position:fixed;inset:0;z-index:970;display:grid;place-items:center;text-align:center;color:#fff;opacity:0;transition:opacity .8s}
+.fx-hasil.on{opacity:1;pointer-events:auto}
+.fx-hasil.negara{background:radial-gradient(circle,#7a1c18,#2a0c0a)}
+.fx-hasil.bandar{background:radial-gradient(circle,#3a2a10,#0a0705)}
+.fx-hasil.oknum{background:radial-gradient(circle,#4a1810,#0d0605)}
+.fx-hasil .fx-emblem{width:160px;height:160px;margin:0 auto 12px;animation:emblem-muncul 1s cubic-bezier(.3,1.5,.5,1)}
+@keyframes emblem-muncul{from{transform:scale(.2) rotate(-30deg);opacity:0}}
+
+/* ---- matikan animasi: reduced-motion & FX_LEVEL=low ---- */
+@media (prefers-reduced-motion:reduce){
+  .fx-abu,.fx-scan.on,.fx-debu,.fx-bendera,.fx-sirene-m.on,.fx-sirene-b.on,.fx-pion.ott.dekat::before,.fx-bandar.panen::after,.fx-oknum.main,body.fx-bandar-tinggi #board,body.fx-razia .fx-lotre,.fx-kartu.jackpot::after,.fx-breaking span,.fx-spark.naik path{animation:none!important}
+  .fx-kartu>.in,.fx-wipe{transition:none!important}.fx-wipe.go{animation:none!important}}
+html[data-fx="low"] .fx-abu,html[data-fx="low"] .fx-scan,html[data-fx="low"] .fx-debu,html[data-fx="low"] .fx-grain,html[data-fx="low"] .fx-retak{display:none}
+html[data-fx="low"] [class*="fx-"],html[data-fx="low"] [class*="fx-"]::before,html[data-fx="low"] [class*="fx-"]::after{animation-iteration-count:1!important}
+
+/* ---- sambungan ke game (18-sambung-aset.js) ---- */
+.in i u.fx-ico{text-decoration:none}
+.fx-ico.fx-tile{width:1.7em;height:1.7em}
+.pw .fx-pion{width:100%;height:100%;display:block;background-position:center bottom;background-size:contain}
+.pw.cur .fx-pion{animation:bob 1s ease-in-out infinite;filter:drop-shadow(0 0 5px var(--gold,#cda64c))}
+
+/* ---- kartu gosok Lotre Receh (09-market.js): kilau foil saat menang ---- */
+.lt-card{position:relative}
+.lt-card.jackpot::after{content:"";position:absolute;inset:0;background:url(png/fx/foil-kilau.png) center/250% 100%;mix-blend-mode:screen;animation:foil-sapu 1.4s ease-in-out 3;pointer-events:none}
+@media (prefers-reduced-motion:reduce){.lt-card.jackpot::after{animation:none!important}}
+
+/* ===== Mode ringan: tanpa blur/backdrop-filter dan tanpa blend-mode layar penuh (GPU hemat) ===== */
+html[data-fx="low"] *{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html[data-fx="low"] .fx-scan,html[data-fx="low"] .fx-grain{display:none!important}
+/* tab di latar belakang: jeda semua animasi CSS (dipasang oleh js/19-stabil.js) */
+html.tab-bg *,html.tab-bg *::before,html.tab-bg *::after{animation-play-state:paused!important}
+@media (prefers-reduced-motion:reduce){.fx-abu,.fx-debu,.fx-scan.on{animation:none!important}}
