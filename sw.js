@@ -1,4 +1,4 @@
-const CACHE = "simulator-id-v16";
+const CACHE = "simulator-id-v17";
 /* file inti: gagal satu tidak membatalkan instalasi (dulu cache.addAll gagal total bila ada 1 file hilang) */
 const CORE = [
   "./",
