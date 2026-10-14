@@ -6,11 +6,21 @@ const cleanName = (s) =>
     .trim()
     .slice(0, 12);
 const dice = (a, b) => ($("#dice").innerHTML = [a, b].map((v) => `<div class="die">${[...Array(9)].map((_, k) => `<i class="${PIP[v].includes(k) ? "p" : ""}"></i>`).join("")}</div>`).join(""));
+/* tulis innerHTML hanya bila berubah: menghindari layout ulang dan pemindaian emoji yang sia-sia */
+const setH = (el, h) => {
+  if (el._h === h) return;
+  el._h = h;
+  el.innerHTML = h;
+};
 const say = (t) => {
   log.unshift(t);
   if (typeof RPLB !== "undefined" && RPLB.length < 200) RPLB.push(t);
   log.length = Math.min(log.length, 40);
-  $("#log").innerHTML = log.map((x) => `<div>${x}</div>`).join("");
+  const L = $("#log"),
+    d = document.createElement("div");
+  d.innerHTML = t;
+  L.insertBefore(d, L.firstChild);
+  while (L.childElementCount > 40) L.lastElementChild.remove();
   $("#now").textContent = t;
 };
 const pin = (c, n) =>
@@ -132,10 +142,13 @@ function render() {
     e.style.boxShadow = o ? `inset 0 0 0 .45em ${o.o == NEG ? "#555" : P[o.o].c}` : "";
     e.toggleAttribute("data-st", !!o && o.o == NEG);
     e.style.opacity = o?.m ? 0.5 : 1;
-    if (t.g) e.querySelector(".bar").innerHTML = (o?.h > 4 ? '<b class="h H" title="Hotel"></b>' : '<b class="h" title="Rumah"></b>'.repeat(o?.h || 0)) + '<b class="h M" title="MBG"></b>'.repeat(o?.mb || 0) + (o?.kd ? '<b class="h KD" title="Kopdes Merah Putih">KD</b>' : "");
-    e.querySelector(".tk").innerHTML = P.filter((p) => !p.x && p.pos == i)
-      .map((p) => `<span class="${p.id == cur ? "cur" : ""}">${p.k}</span>`)
-      .join("");
+    if (t.g) setH(e.querySelector(".bar"), (o?.h > 4 ? '<b class="h H" title="Hotel"></b>' : '<b class="h" title="Rumah"></b>'.repeat(o?.h || 0)) + '<b class="h M" title="MBG"></b>'.repeat(o?.mb || 0) + (o?.kd ? '<b class="h KD" title="Kopdes Merah Putih">KD</b>' : ""));
+    setH(
+      e.querySelector(".tk"),
+      P.filter((p) => !p.x && p.pos == i)
+        .map((p) => `<span class="${p.id == cur ? "cur" : ""}">${p.k}</span>`)
+        .join(""),
+    );
   });
   PINS();
   {
@@ -149,7 +162,7 @@ function render() {
     kb.style.display = PRES.id >= 0 ? "" : "none";
     kb.disabled = !(isP(P[cur]) && !PRES.used && !P[cur].b);
   }
-  $("#pl").innerHTML = P.map(
+  setH($("#pl"), P.map(
     (p, k) =>
       `<div class="pc${k == cur ? " on" : ""}${p.x ? " out" : ""}" style="border-color:${p.c}"><div><span>${p.k}</span> <b>${p.n}</b>${p.id == PRES.id ? " 👑" : ""}${p.cards ? " 🔑×" + p.cards : ""}${p.jail >= 0 ? " ⛓️" : ""}</div><div class="rl">${R(p).i} ${R(p).n}</div>${nmb(p) || p.mt ? `<div class="rl mbt">🍱 MBG ×${nmb(p)} · insentif ${fm(nmb(p) * MBG_PAY)} (dari APBN) tiap lewat MULAI${p.mt ? " · ⚠️ tunggakan " + fm(p.mt) : ""}</div>` : ""}${p.kor > 0 ? `<div class="rl">🕵️ Jejak korupsi ${fm(p.kor)} · diincar OTT</div>` : ""}${p.imun || p.gk ? `<div class="rl">${p.imun ? "⚖️ kebal hukum 1× " : ""}${p.gk ? "🩺 berobat gratis 1×" : ""}</div>` : ""}${cardChip(p)}${kdChip(p)}${p.sb ? `<div class="rl">🏭 Saham BUMN ×${p.sb} · dividen ${fm(p.sb * DIV())} tiap lewat MULAI</div>` : ""}<div class="cash">${fm(p.cash)}</div>${p.loans.length ? `<div class="dbt">🏦 Utang ${fm(p.loans.reduce((a, l) => a + l.pr, 0))} · jatuh tempo ${Math.min(...p.loans.map((l) => l.n))} giliran</div>` : ""}<div class="ch">${Object.keys(
         own,
@@ -157,7 +170,7 @@ function render() {
         .filter((i) => own[i].o == k)
         .map((i) => `<s data-i="${i}" style="background:${T[i].g ? G[T[i].g][0] : "#333"};opacity:${own[i].m ? 0.35 : 1};color:${T[i].g ? "#111" : "#fff"}">${gl(T[i])}</s>`)
         .join("")}</div></div>`,
-  ).join("");
+  ).join(""));
 }
 const rw = (a, b) => `<div class="rw"><span>${a}</span><b>${b}</b></div>`,
   sec = (h, b) => `<div class="sec"><h4>${h}</h4>${b}</div>`;

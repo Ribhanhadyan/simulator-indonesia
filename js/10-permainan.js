@@ -188,7 +188,13 @@ async function land0(p, sum) {
   } else if (t.t == "c" || t.t == "k") await draw(p, t.t, sum);
   else if (t.t == "rp") await getRole(p);
   else if (t.t == "la") await lelang(p);
-  else if (t.t == "mk") await market(p);
+  else if (t.t == "mk") {
+    if (window.SimFX) {
+      SimFX.mkLampu(i);
+      SimFX.petak(i, "glow");
+    }
+    await market(p);
+  }
   else if (t.t == "bu") await bumn(p);
   else if (t.t == "ap") await bandara(p);
   else if (t.t == "gm") await tambang(p);
@@ -775,5 +781,5 @@ async function game() {
   render();
   clearSave();
   await summary(w);
-  location.reload();
+  location.replace(location.pathname + location.search);
 }
