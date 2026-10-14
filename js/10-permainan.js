@@ -511,9 +511,22 @@ async function assignRoles() {
   say("🎭 Dua putaran pertama selesai: peran dibagikan ke semua pemain");
   for (const q of al) if (!q.x) await getRole(q);
 }
+/* ambil kartu teratas; lewati kartu "Maju ke Kios Gelap" selagi kios tutup */
+function bukaKartu(d) {
+  for (let n = 0; n < d.length; n++) {
+    const c = d.shift();
+    let tutup = false;
+    try {
+      tutup = c[1] == "g" && T[c[2]]?.t == "mk" && !bdBuka();
+    } catch (e) {}
+    if (!tutup) return c;
+    d.push(c);
+  }
+  return d.shift();
+}
 async function draw(p, ty, sum) {
   const d = dk[ty],
-    c = d.shift(),
+    c = bukaKartu(d),
     [tx, a, v, w] = c,
     nom = kartuNom(p, c),
     dt = kartuTeks(p, c);

@@ -1,7 +1,7 @@
 const GT = { 39: "IKN Nusantara", 32: "Raja Ampat", 26: "Bali", 0: "Mulai" };
 [CH, CC].forEach((d) =>
   d.forEach((c) => {
-    if (c[1] == "g") c[2] = T.findIndex((t) => t.n == GT[c[2]]);
+    if (c[1] == "g") c[2] = T.findIndex((t) => t.n == (typeof c[2] == "string" ? c[2] : GT[c[2]]));
   }),
 );
 let DIR = 1,

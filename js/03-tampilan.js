@@ -136,6 +136,12 @@ function rent0(i, sum) {
   return t.t == "r" ? 25 * K * 2 ** (n - 1) : sum * K * (n > 1 ? 10 : 4);
 }
 function render() {
+  try {
+    const em = $("#t" + T.findIndex((t) => t.t == "mk")),
+      buka = bdBuka();
+    em.classList.toggle("tutup", !buka);
+    em.title = buka ? "" : "Kios Gelap tutup (buka setelah peran dibagikan, putaran 3)";
+  } catch (e) {} /* bdBuka belum siap saat render pertama */
   T.forEach((t, i) => {
     const e = $("#t" + i),
       o = own[i];
