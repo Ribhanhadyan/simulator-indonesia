@@ -515,12 +515,17 @@ async function draw(p, ty, sum) {
   const d = dk[ty],
     c = d.shift(),
     [tx, a, v, w] = c;
+  /* teks kartu disesuaikan dengan pengali peran supaya sama dengan Efek & uang yang benar-benar dibayar (tx asli tetap dipakai untuk logika) */
+  const dt =
+    a == "m"
+      ? tx.replace(/Rp[\d.]+/, fm(Math.round((Math.abs(v) * K * (v > 0 ? R(p).cg : cm(p, tx))) / 1e3) * 1e3))
+      : tx;
   await ask(
-    `<h3 style="background:${ty == "c" ? "#f7941d" : "#4aa8d8"}">${ty == "c" ? "Kesempatan" : "Dana Umum"}</h3><div class="sub">${ty == "c" ? "Peristiwa nasional & kejutan" : "Kebutuhan & keberuntungan sehari-hari"}</div>${sec("Isi Kartu", '<p class="ct">' + tx + "</p>")}${sec("Efek", '<p class="ef">' + EFF(p, c) + "</p>")}`,
+    `<h3 style="background:${ty == "c" ? "#f7941d" : "#4aa8d8"}">${ty == "c" ? "Kesempatan" : "Dana Umum"}</h3><div class="sub">${ty == "c" ? "Peristiwa nasional & kejutan" : "Kebutuhan & keberuntungan sehari-hari"}</div>${sec("Isi Kartu", '<p class="ct">' + dt + "</p>")}${sec("Efek", '<p class="ef">' + EFF(p, c) + "</p>")}`,
     [["OK", 1]],
   );
   if (a != "f") d.push(c);
-  say(`${p.n}: ${tx}`);
+  say(`${p.n}: ${dt}`);
   stat(p.id, "cards", 1);
   if (a == "m") {
     if (v > 0) {
