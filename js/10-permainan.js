@@ -514,12 +514,9 @@ async function assignRoles() {
 async function draw(p, ty, sum) {
   const d = dk[ty],
     c = d.shift(),
-    [tx, a, v, w] = c;
-  /* teks kartu disesuaikan dengan pengali peran supaya sama dengan Efek & uang yang benar-benar dibayar (tx asli tetap dipakai untuk logika) */
-  const dt =
-    a == "m"
-      ? tx.replace(/Rp[\d.]+/, fm(Math.round((Math.abs(v) * K * (v > 0 ? R(p).cg : cm(p, tx))) / 1e3) * 1e3))
-      : tx;
+    [tx, a, v, w] = c,
+    nom = kartuNom(p, c),
+    dt = kartuTeks(p, c);
   await ask(
     `<h3 style="background:${ty == "c" ? "#f7941d" : "#4aa8d8"}">${ty == "c" ? "Kesempatan" : "Dana Umum"}</h3><div class="sub">${ty == "c" ? "Peristiwa nasional & kejutan" : "Kebutuhan & keberuntungan sehari-hari"}</div>${sec("Isi Kartu", '<p class="ct">' + dt + "</p>")}${sec("Efek", '<p class="ef">' + EFF(p, c) + "</p>")}`,
     [["OK", 1]],
@@ -529,13 +526,13 @@ async function draw(p, ty, sum) {
   stat(p.id, "cards", 1);
   if (a == "m") {
     if (v > 0) {
-      p.cash += Math.round((v * K * R(p).cg) / 1e3) * 1e3;
+      p.cash += nom.amt;
       render();
     } else {
-      if (p.gk && /dokter|sakit|vaksin|kesehatan|BPJS|kecelakaan/i.test(tx)) {
+      if (nom.free) {
         p.gk = 0;
         say(`🩺 ${p.n} berobat gratis berkat konsultasi`);
-      } else await pay(p, Math.round((-v * K * cm(p, tx)) / 1e3) * 1e3);
+      } else await pay(p, nom.amt);
     }
   } else if (a == "e") {
     for (const q of P.filter((x) => !x.x && x != p)) await pay(q, v * K, p);

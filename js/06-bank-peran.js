@@ -124,7 +124,21 @@
       ];
       IX.forEach(([i, t]) => (ROLES[i].d += " · ⚡ " + t));
       const R = (p) => ROLES[p.role] || RL0;
-      const cm = (p, t) => R(p).cl * (/dokter|sakit|vaksin|kesehatan|BPJS|kecelakaan/i.test(t) ? R(p).ck : 1) * (/sekolah|kuliah/i.test(t) ? R(p).cs : 1);
+      const RX_SEHAT = /dokter|sakit|vaksin|kesehatan|BPJS|kecelakaan/i;
+      const cm = (p, t) => R(p).cl * (RX_SEHAT.test(t) ? R(p).ck : 1) * (/sekolah|kuliah/i.test(t) ? R(p).cs : 1);
+      /* SATU-SATUNYA tempat menghitung nominal kartu uang ("m"): dipakai teks kartu, baris Efek, log, dan pembayaran */
+      const kartuNom = (p, c) => {
+        const [tx, a, v] = c;
+        if (a != "m") return null;
+        const neg = v < 0,
+          free = neg && !!p.gk && RX_SEHAT.test(tx),
+          amt = free ? 0 : Math.round((Math.abs(v) * K * (neg ? cm(p, tx) : R(p).cg)) / 1e3) * 1e3;
+        return { amt, neg, free };
+      };
+      const kartuTeks = (p, c) => {
+        const n = kartuNom(p, c);
+        return n ? c[0].replace(/Rp[\d.]+/, fm(n.amt)) : c[0];
+      };
       async function getRole(p) {
         const pool = ROLES.map((r, i) => i).filter((i) => i !== p.role),
           k = pool[(Math.random() * pool.length) | 0];

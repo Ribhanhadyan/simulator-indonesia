@@ -102,10 +102,11 @@
         ["Kartu Bebas dari Penjara (disimpan)", "f"],
         ["Korupsi terdeteksi: masuk penjara dan aset hasil korupsi disita negara", "c"],
         ["Bebas bersyarat: keluar penjara gratis", "f"],
-        ["Kunjungan kerja ke IKN: maju ke IKN Nusantara", "g", 39],
+        ["Kunjungan kerja ke IKN: maju ke IKN Nusantara", "g", "IKN Nusantara"],
         ["Maju ke MULAI. Terima gaji", "g", 0],
-        ["Maju ke Raja Ampat", "g", 32],
-        ["Maju ke Bali", "g", 26],
+        ["Maju ke Raja Ampat", "g", "Raja Ampat"],
+        ["Maju ke Bali", "g", "Bali"],
+        ["Maju ke Kios Gelap", "g", "Kios Gelap"],
         ["Mundur 3 petak", "b"],
         ["Dapat proyek pemerintah: terima Rp1.500.000", "m", 150],
         ["Menang tender: terima Rp2.000.000", "m", 200],
@@ -197,6 +198,15 @@
         ["Cek kesehatan: bayar Rp150.000", "m", -15],
         ["Pembebasan lahan jalan tol: negara membeli paksa 1 propertimu (ganti rugi 1,25×)", "z"],
       ];
+      /* tujuan kartu "Maju ke ..." ditulis dengan nama petak lalu dicari posisinya di papan (angka tetap dulu salah sejak papan bertambah petak) */
+      [CH, CC].forEach((d) =>
+        d.forEach((c) => {
+          if (c[1] == "g" && typeof c[2] == "string") {
+            c[2] = T.findIndex((t) => t.n == c[2]);
+            if (c[2] < 0) c[2] = 0;
+          }
+        }),
+      );
       const shuf = (a) =>
         a
           .map((x) => [Math.random(), x])

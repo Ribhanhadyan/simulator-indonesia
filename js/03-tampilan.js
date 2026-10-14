@@ -201,8 +201,10 @@ const EFF = (p, c) => {
         ? "Langsung masuk penjara, lalu negara menyita 1 propertimu yang paling bernilai (hasil korupsi)"
         : a == "m"
           ? v > 0
-            ? "Terima " + fm(Math.round((v * K * R(p).cg) / 1e3) * 1e3) + " dari bank"
-            : "Bayar " + fm(Math.round((-v * K * cm(p, c[0])) / 1e3) * 1e3) + " (masuk Dana Bansos)"
+            ? "Terima " + fm(kartuNom(p, c).amt) + " dari bank"
+            : kartuNom(p, c).free
+              ? "Gratis, berobat ditanggung kartu Konsultasi"
+              : "Bayar " + fm(kartuNom(p, c).amt) + " (masuk Dana Bansos)"
           : a == "e"
             ? "Terima " + fm(v * K) + " dari tiap pemain"
             : a == "g"
