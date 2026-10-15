@@ -1,4 +1,4 @@
-const CACHE = "simulator-id-v17";
+const CACHE = "simulator-id-v18";
 /* file inti: gagal satu tidak membatalkan instalasi (dulu cache.addAll gagal total bila ada 1 file hilang) */
 const CORE = [
   "./",
@@ -21,6 +21,7 @@ const CORE = [
   "css/11-market.css",
   "css/12-icons.css",
   "css/13-replay.css",
+  "css/14-tengah.css",
   "assets-visual.css",
   "assets-visual.js",
   "js/01-fiskal.js",
@@ -44,6 +45,7 @@ const CORE = [
   "js/18-sambung-aset.js",
   "js/19-stabil.js",
   "js/20-developer.js",
+  "js/21-tengah.js",
 ];
 /* aset gambar: dicache saat instalasi (best-effort) agar efek visual tetap muncul saat offline */
 const IMAGES = [
