@@ -17,7 +17,7 @@ const APBN_AWAL = 1e8,
   NG_MAX = 1e8,
   NG_BUNGA = 0.02,
   NG_CADANGAN = 2e7,
-  PCT_MAKS = 8e7;
+  PCT_MAKS = 6e7;
 const NG = { d: 0, baru: 0, penuh: 0 }; /* d = utang negara (pokok + bunga yang dikapitalisasi) */
 const GOV_ROLES = ["Politisi", "PNS", "TNI/Polri"];
 const isGov = (p) => isP(p) || GOV_ROLES.includes(R(p).n);
