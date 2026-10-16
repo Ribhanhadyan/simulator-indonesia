@@ -11,7 +11,9 @@
                 " ke rupiah nyata. Pengali pajak peran dan penyesuaian fiskal APBN ikut berlaku; Presiden bebas PPh. Pajaknya masuk Dana APBN.",
               "Lempar 2 dadu. Kembar = lempar lagi, kembar 3× = masuk penjara.",
               "Petak kosong: beli, atau dilelang jika tidak dibeli.",
-              "Pajak dan denda masuk <b>Dana APBN</b>. Petak <b>KORUPSI</b>: pilih korupsi (gelapkan total dadu × " + BANSOS_PCT + "% isi kas, tapi jadi buruan OTT) atau tidak (tidak terjadi apa-apa).",
+              "Pajak dan denda masuk <b>Dana APBN</b>, yang dimulai dari " + fm(APBN_AWAL) + ". Petak <b>KORUPSI</b>: pilih korupsi (gelapkan total dadu × " + BANSOS_PCT + "% isi kas, maks " + fm(PCT_MAKS) + ", tapi jadi buruan OTT) atau tidak (tidak terjadi apa-apa).",
+              "🏛️ <b>Gaji pemerintahan</b>: gaji MULAI <b>Presiden, Politisi, PNS, dan TNI/Polri</b> dibayar dari Dana APBN (PPh 21-nya kembali ke APBN). Gaji peran lain tidak dari APBN.",
+              "🏦 <b>Utang negara</b>: bila kas APBN habis saat membayar gaji pemerintahan, insentif MBG, atau cicilan Kopdes, negara <b>meminjam ke bank</b> sebesar kekurangannya (plafon " + fm(NG_MAX) + "). Bunga " + NG_BUNGA * 100 + "% per putaran (mengikuti suku bunga BI) dibayar dari kas APBN; bila kas tak cukup, bunga ditambahkan ke utang. Kas APBN di atas " + fm(NG_CADANGAN) + " otomatis dipakai melunasi utang. Jika plafon habis, kekurangan menjadi <b>tunggakan negara</b>.",
               "Penjara: bayar denda Rp500.000, lempar kembar (maks 3 percobaan), atau pakai kartu bebas.",
               "Menang: pemain terakhir yang tidak bangkrut.",
               "🔀 <b>Urutan main</b> diundi dengan animasi sekali di awal permainan (bisa dimatikan di Pengaturan Aturan), lalu tetap sama sepanjang permainan.",
@@ -32,7 +34,7 @@
                 MBG_MAX +
                 " per properti kota. Pemilik terima insentif <b>" +
                 fm(MBG_PAY) +
-                "</b> per unit tiap lewat atau mendarat di MULAI, dibayar dari <b>Dana APBN</b>. Jika kas APBN kurang, pemilik hanya menerima sisa kas dan kekurangannya jadi <b>tunggakan negara</b> yang dibayar lebih dulu saat kas terisi. Jual MBG dapat setengah harga.",
+                "</b> per unit tiap lewat atau mendarat di MULAI, dibayar dari <b>Dana APBN</b>. Jika kas APBN kurang, negara meminjam ke bank; bila plafon utang habis, pemilik hanya menerima sisa dan kekurangannya jadi <b>tunggakan negara</b> yang dibayar lebih dulu saat kas terisi. Jual MBG dapat setengah harga.",
               "Rumah dan MBG harus dijual dulu sebelum properti didagangkan atau digadai. Properti ber-Kopdes tidak bisa didagangkan maupun digadai.",
             ]),
           ) +
@@ -42,7 +44,7 @@
                 L([
                   "Program nasional yang aktif sejak putaran " + KD_RAPAT + ". Tiap pemain pemilik properti kota wajib membangun <b>1 Kopdes</b> (Kopdes wajib) dalam " + KD_TENGGAT + " putaran. Jika lalai, negara menunjuk satu propertimu.",
                   "Bangun lewat 🏠 Aset › Program Pemerintah. Membangun gratis; maks 1 Kopdes per petak. Kopdes tambahan bersifat sukarela, dan Kopdes wajib tidak bisa diserahkan.",
-                  "<b>Cicilan</b> ditanggung APBN lewat bank negara (" + fm(KD_CIL) + " per putaran, tenor 20 putaran). Jika kas APBN kurang, kekurangannya jadi <b>tunggakan negara</b>.",
+                  "<b>Cicilan</b> ditanggung APBN lewat bank negara (" + fm(KD_CIL) + " per putaran, tenor 20 putaran). Jika kas APBN kurang, negara meminjam ke bank; bila plafon habis, kekurangannya jadi <b>tunggakan negara</b>.",
                   "Tunggakan yang melewati masa tenggang " + KD_GRACE + " putaran ditalangi pemilik dan tercatat sebagai <b>piutang ke negara</b>, dibayar saat kas APBN pulih.",
                   "<b>Iuran</b> " + KD_IURAN * 100 + "% dari sewa dibayar penyewa sebagai iuran tambahan di properti ber-Kopdes, ditahan sebagai saldo. Saat pemilik lewat MULAI, saldo melunasi tunggakan lebih dulu, sisanya dibagi antara pemilik dan APBN.",
                   "Bantuan negara bisa disalurkan lewat Kopdes pemain lain. Penyalur dapat komisi 10%, dan boleh menilap hingga 30% (menjadi jejak korupsi yang diincar OTT).",
@@ -93,7 +95,7 @@
               "<b>Pemilu</b> tiap 5 putaran. Tiap pemain memilih satu pemain lain (bukan diri sendiri). Suara Politisi ×2. Seri diundi dadu.",
               "Masa jabatan 5 putaran, maks 2 periode berturut-turut.",
               "Pemilih yang memilih pemenang dapat bonus Rp200.000 dari APBN.",
-              "<b>Pasif</b>: gaji MULAI ×1,5 dan kebal pajak; kebal OTT dan tilang; ambil 20% dari setiap setoran ke Dana Bansos.",
+              "<b>Pasif</b>: gaji MULAI ×1,5 (dibayar APBN) dan kebal pajak; kebal OTT dan tilang; ambil 20% dari setiap setoran ke Dana Bansos.",
               "<b>Kebijakan</b> (tombol 👑, 1× per putaran, pilih 1 dari 3 yang diundi): " + KB.map((x) => x[1] + " (" + x[2] + ")").join("; ") + ".",
               "<b>🕊️ Redam situasi</b> (di Program Pemerintah): menurunkan stress level " + RED.bump + " poin dengan biaya " + fm(RED.cost) + " dari kas Presiden (masuk Dana APBN). Efeknya meluruh sekitar 15% tiap putaran, bisa dipakai lagi setelah " + RED.cd + " putaran, dan hanya aktif saat stress ≥ " + RED.min + ".",
             ]),

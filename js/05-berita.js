@@ -71,7 +71,7 @@
 
       /* ---- Berita yang membaca kondisi permainan. b = dorongan meter kekacauan, e = mengubah ECO ---- */
       nmn("bansos", 0, 3, {
-        c: () => (POOL >= 4e6 && nPoor() ? { p: nPoor(), a: nRd(POOL * 0.3) } : null),
+        c: () => (POOL >= 4e6 && nPoor() ? { p: nPoor(), a: Math.min(PCT_MAKS, nRd(POOL * 0.3)) } : null),
         tx: () => `Kas APBN mencapai ${fm(POOL)}. Pemerintah menyalurkan bantuan sosial.`,
         fx: (c) => `${c.p.n} (kas terendah) menerima ${fm(c.a)} dari APBN`,
         run: async (c) => {
@@ -367,12 +367,12 @@
             {
               b: -8,
               tx: () => (PRES.id >= 0 && P[PRES.id] && !P[PRES.id].x ? `Presiden <b>${P[PRES.id].n}</b> menerima perwakilan demonstran.` : "DPR menerima tuntutan demonstran."),
-              fx: () => (PRES.id >= 0 && P[PRES.id] && !P[PRES.id].x ? "Kebijakan Presiden tidak dapat digunakan putaran ini" : "Pemain berkas terendah menerima 20% kas APBN"),
+              fx: () => (PRES.id >= 0 && P[PRES.id] && !P[PRES.id].x ? "Kebijakan Presiden tidak dapat digunakan putaran ini" : "Pemain berkas terendah menerima 20% kas APBN (maks " + fm(PCT_MAKS) + ")"),
               run: async () => {
                 if (PRES.id >= 0 && P[PRES.id] && !P[PRES.id].x) PRES.used = 1;
                 else {
                   const p = nPoor(),
-                    g = Math.min(POOL, nRd(POOL * 0.2));
+                    g = Math.min(POOL, PCT_MAKS, nRd(POOL * 0.2));
                   if (p && g) {
                     POOL -= g;
                     say(`🏛️ Bantuan sosial ${fm(g)} untuk ${p.n}`);

@@ -584,7 +584,7 @@
         `<div class="w"><b>Stress level</b><span class="cbar"><i style="width:${nc}%;background:${nz[2]}"></i></span>${nc} · ${nz[0]}</div>` +
         `<div class="w"><b>Berita terakhir</b>${esc(NW.last || "Belum ada berita.")}</div>` +
         `<div class="w"><b>Ekonomi</b>${esc(ECO.n)}${ECO.d ? ` · ${ECO.d} putaran lagi` : ""}</div>` +
-        `<div><b>Dana APBN</b>${fm(POOL)}</div><div><b>Aset negara</b>${nneg()} properti</div>${FZ.L >= 0.05 ? '<div class="w"><b>🧮 Fiskal · ' + fzLabel(FZ.L)[0] + "</b>pajak ×" + fx(fzTax()) + ", sewa aset negara ×" + fx(fzRent()) + ", potongan Presiden ×" + fx(fzEff()) + "</div>" : ""}` +
+        `<div><b>Dana APBN</b>${fm(POOL)}${NG.d ? " · utang negara " + fm(NG.d) : ""}</div><div><b>Aset negara</b>${nneg()} properti</div>${FZ.L >= 0.05 ? '<div class="w"><b>🧮 Fiskal · ' + fzLabel(FZ.L)[0] + "</b>pajak ×" + fx(fzTax()) + ", sewa aset negara ×" + fx(fzRent()) + ", potongan Presiden ×" + fx(fzEff()) + "</div>" : ""}` +
         `<div class="w"><b>Krisis · ${LV.i} ${LV.n}</b>${cr ? `Tahap ${cr} · sewa ×${fx(crM())}, gaji ×${fx(crG())}` : SET.cr ? `mulai putaran ${LV.st}` : "dimatikan"}${DIR < 0 ? " · 🔁 arah terbalik" : ""}</div>` +
         `<div><b>Presiden 👑</b>${pr}</div><div><b>Pemilu 🗳️</b>setelah putaran ${Math.ceil(rnd / 5) * 5}</div>` +
         `<div class="w"><b>Pion OTT 👮 (${POLS.length})</b>${POLS.map((x) => esc(T[x.pos].n)).join(", ")}</div></div>`,

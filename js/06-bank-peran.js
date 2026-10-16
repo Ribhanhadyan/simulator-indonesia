@@ -166,7 +166,7 @@
       }
       async function korupsi(p, sum) {
         const pc = bansosPct(sum),
-          g = Math.min(POOL, Math.round((POOL * pc) / 100 / 1e3) * 1e3);
+          g = Math.min(POOL, pctPool(pc / 100));
         if (!g) {
           if (!p.b) await ask("<h3>🕵️ KORUPSI</h3><p>Kas APBN kosong, tidak ada yang bisa digelapkan.</p>", [["OK", 1]], p);
           say(`🕵️ ${p.n} mendarat di KORUPSI, tapi kas APBN kosong`);

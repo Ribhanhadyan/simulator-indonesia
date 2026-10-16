@@ -781,6 +781,7 @@ async function game() {
       if (ECO.d && !--ECO.d) ECO = BASE;
       if (rnd >= 2) await news();
       if (KD_MAX) await kopdesPutaran();
+      ngPutaran();
       await fzUpdate();
       if (P.filter((x) => !x.x).length > 1) {
         await krisis();

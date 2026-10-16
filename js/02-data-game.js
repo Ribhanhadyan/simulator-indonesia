@@ -205,7 +205,7 @@
           .map((x) => x[1]);
       const BASE = { n: "Ekonomi stabil", m: 1, go: 2e6, g: {}, r: 1, bi: 1, au: 1, d: 0 };
       let ECO = BASE,
-        POOL = 0,
+        POOL = APBN_AWAL,
         rnd = 1,
         CT = 0;
       const EV = [

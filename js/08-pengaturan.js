@@ -32,7 +32,7 @@ const sel = (id, lb, o, c) =>
     `<label class="ck tg"><span class="lb"><b>${lb}</b>${hint ? `<small>${hint}</small>` : ""}</span><input type="checkbox" class="sw" id="${id}" role="switch"${on ? " checked" : ""}></label>`;
 function save() {
   try {
-    localStorage.setItem(SK, JSON.stringify({ v: 1, nn: NN, t: Date.now(), P, own, dk, cur, TURN, rnd, POOL, fz: FZ.L, ECO, DIR, ud, lv: LVL.indexOf(LV), LS, PRES, POLS, log, SET, ST, NW, KDS, rpl: RPL, bd: bandar }));
+    localStorage.setItem(SK, JSON.stringify({ v: 1, nn: NN, t: Date.now(), P, own, dk, cur, TURN, rnd, POOL, ng: NG.d, fz: FZ.L, ECO, DIR, ud, lv: LVL.indexOf(LV), LS, PRES, POLS, log, SET, ST, NW, KDS, rpl: RPL, bd: bandar }));
   } catch (e) {}
 }
 function clearSave() {
@@ -54,6 +54,9 @@ function restore(sv) {
   TURN = Array.isArray(sv.TURN) && sv.TURN.length == P.length && P.every((x) => sv.TURN.includes(x.id)) ? sv.TURN.slice() : P.map((x) => x.id);
   rnd = sv.rnd;
   POOL = sv.POOL;
+  NG.d = sv.ng || 0;
+  NG.baru = 0;
+  NG.penuh = 0;
   FZ.L = sv.fz || 0;
   ECO = sv.ECO;
   Object.assign(NW, { bump: 0, last: "", feed: [], hist: [], ph: 0, arc: null, n: {}, cd: 0 }, sv.NW || {});

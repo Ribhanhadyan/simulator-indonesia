@@ -93,13 +93,13 @@ async function kopdesPutaran() {
     for (const i of kdList(p)) {
       const k = own[i].kd;
       if (k.n > 0) {
-        const bayar = Math.min(POOL, cil);
-        POOL -= bayar;
+        const bayar = apbnBayar(cil, 1);
         k.t += cil - bayar;
         k.n--;
       }
       k.g = k.t > 0 ? k.g + 1 : 0;
     }
+  ngLapor();
   /* 3. APBN melunasi piutang pemilik bila ada kas */
   for (const p of P.filter((x) => !x.x))
     for (const i of kdList(p)) {

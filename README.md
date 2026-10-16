@@ -37,12 +37,15 @@ Nuansa Indonesia hadir lewat:
 - **Petak khusus**: Kesempatan, Dana Umum, Karier & Peran, Tambang Emas, KORUPSI, Penjara, Lelang, Kios Gelap (dulu Market), BUMN, Bandara, Pajak Penghasilan, dan Pajak Barang Mewah
 - **Rumah & hotel**: bangun merata dalam satu grup warna, kapan saja lewat tombol 🏠 Aset
 - **Gadai 50% dan tebus 55%**, lelang, dan dagang antar pemain
-- **🍱 MBG**: unit khusus pada properti kota. Insentifnya dibayar dari Dana APBN, dan kekurangan kas menjadi tunggakan negara
+- **🍱 MBG**: unit khusus pada properti kota. Insentifnya dibayar dari Dana APBN; bila kas habis negara meminjam ke bank, dan kekurangan di atas plafon menjadi tunggakan negara
 - **🔨 Lelang, 🏭 BUMN (saham & dividen), dan ✈️ Bandara** (terbang gratis ke stasiun mana pun)
 
 ### 💰 Ekonomi & Fiskal
 - **PPh 21** atas gaji MULAI dengan tarif progresif UU HPP (dikurangi PTKP)
-- **Dana APBN** menampung pajak dan denda. Belanja di Kios Gelap masuk **Kas Bandar**, bukan APBN
+- **Dana APBN** menampung pajak dan denda, dimulai dari **Rp100.000.000**. Belanja di Kios Gelap masuk **Kas Bandar**, bukan APBN
+- **👔 Gaji pemerintahan**: gaji MULAI **Presiden, Politisi, PNS, dan TNI/Polri** dibayar dari Dana APBN (PPh 21 kembali ke APBN)
+- **🏦 Utang negara**: saat kas APBN habis, negara **meminjam ke bank** untuk gaji pemerintahan, insentif MBG, dan cicilan Kopdes (plafon Rp100.000.000, bunga 2% per putaran mengikuti suku bunga BI). Kas di atas Rp20.000.000 otomatis melunasi utang. Di atas plafon, kekurangan menjadi tunggakan negara
+- Pengambilan "persen dari kas APBN" (petak KORUPSI, dua kartu Kios Gelap, bansos) dibatasi **Rp5.000.000** (`PCT_MAKS` di `js/01-fiskal.js`) agar tetap wajar saat kas APBN besar
 - **🧮 Fiskal otomatis (logika fuzzy)**: tingkat pengetatan dihitung dari kas APBN dan tunggakan negara, lalu menaikkan pajak (maks ×1,6) dan sewa aset negara (maks ×1,4)
 - **Bank**: plafon pinjaman Rp5 juta + 50% nilai properti, tenor 5 giliran (bunga 4%) atau 10 giliran (3%), bunga mengikuti berita, peran, dan kebijakan presiden
 - **📰 Berita nasional** yang menyesuaikan kondisi permainan, dengan tingkat kekacauan 0–100% dalam lima fase

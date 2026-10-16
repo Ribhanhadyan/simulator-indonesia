@@ -113,9 +113,21 @@
           .reduce((a, i) => a + (own[i].mb || 0), 0);
       const bayarGaji = (p, ket) => {
         const g = Math.round((ECO.go * R(p).go * (isP(p) ? 1.5 : 1) * crG()) / 1e3) * 1e3,
-          t = pph21(g, p);
-        p.cash += g - t;
+          gov = isGov(p);
+        /* profesi pemerintahan: gaji dibayar APBN (kas, lalu pinjaman bank); kekurangan jadi tunggakan negara */
+        const terima = gov ? apbnBayar(g, 1) : g,
+          tunda = g - terima,
+          t = Math.min(pph21(g, p), terima);
+        p.cash += terima - t;
         if (t) toAPBN(t, p);
+        if (gov) {
+          ket += " · dibayar APBN";
+          ngLapor();
+          if (tunda > 0) {
+            p.mt = (p.mt || 0) + tunda;
+            say(`⚠️ APBN tak sanggup membayar penuh: gaji ${p.n} tertunda ${fm(tunda)} (jadi tunggakan negara, dibayar saat kamu lewat MULAI lagi)`);
+          }
+        }
         say(
           t
             ? `${p.n} menerima gaji ${fm(g)}, dipotong PPh 21 ${fm(t)} (${((t / g) * 100).toFixed(1).replace(".", ",")}%), bersih ${fm(g - t)}${ket}`
@@ -135,9 +147,8 @@
             tg = p.mt || 0,
             due = Math.round((m * MBG_PAY * pgM()) / 1e3) * 1e3 + tg;
           if (due > 0) {
-            const bayar = Math.min(due, POOL),
+            const bayar = apbnBayar(due),
               sisa = due - bayar;
-            POOL -= bayar;
             p.cash += bayar;
             p.mt = sisa;
             if (!sisa) say(`🍱 ${p.n} menerima insentif MBG ${fm(bayar)} dari Dana APBN (${m} MBG${tg ? ", termasuk tunggakan " + fm(tg) : ""})`);

@@ -335,11 +335,11 @@
           n: "Amplop DPR",
           i: "💼",
           p: 18e5,
-          d: "Pakai: ambil 60% isi Dana APBN (tercatat sebagai jejak korupsi, diincar OTT).",
+          d: "Pakai: ambil 60% isi Dana APBN, maks " + fm(PCT_MAKS) + " (tercatat sebagai jejak korupsi, diincar OTT).",
           use: 1,
           can: (p) => POOL >= 2e5,
           fx: (p) => {
-            const a = Math.round((POOL * 0.6) / 1e3) * 1e3;
+            const a = pctPool(0.6);
             POOL -= a;
             p.cash += a;
             p.kor = (p.kor || 0) + a;
@@ -476,11 +476,11 @@
           n: "Dana BOS",
           i: "📚",
           p: 1e6,
-          d: "Pakai: ambil 30% isi Dana APBN.",
+          d: "Pakai: ambil 30% isi Dana APBN, maks " + fm(PCT_MAKS) + ".",
           use: 1,
           can: (p) => POOL >= 2e5,
           fx: (p) => {
-            const a = Math.round((POOL * 0.3) / 1e3) * 1e3;
+            const a = pctPool(0.3);
             POOL -= a;
             p.cash += a;
             return "dana BOS cair " + fm(a);

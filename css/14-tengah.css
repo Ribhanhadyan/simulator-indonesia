@@ -711,3 +711,831 @@
     display: none;
   }
 }
+
+/* =====================================================================
+   FASE 2: PROYEK PEMERINTAH (Tol Trans-Nusantara)
+   Ruas tol layang di depan kota, crane, mobil & truk, papan MANGKRAK, konfeti peresmian.
+   Dikendalikan kelas dari 21-tengah.js: .sg.done/.bld, .cr.show/.mv, svg.has, #ctr.pj-stall
+   ===================================================================== */
+.sk-road {
+  left: 0;
+  width: 100%;
+  bottom: 7.5%;
+  height: 12%;
+  filter: brightness(var(--shade));
+  transition: filter 1.8s;
+}
+.sk-road svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.rd .o,
+.rd .o1 {
+  stroke: #111;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.rd .o {
+  stroke-width: 2px;
+}
+.rd .o1 {
+  stroke-width: 1.3px;
+}
+.rd .pl {
+  fill: color-mix(in srgb, #d4d3ca, #000 var(--dim));
+}
+.rd .dk2 {
+  fill: color-mix(in srgb, #8d949b, #000 var(--dim));
+}
+.rd .rl {
+  fill: none;
+  stroke: #fffdf6;
+  stroke-width: 1.6px;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.rd .ds {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 1.6px;
+  stroke-dasharray: 7 5;
+  vector-effect: non-scaling-stroke;
+}
+.rd .wh {
+  fill: #111;
+}
+
+/* ruas: tersembunyi sampai jadi; yang sedang dibangun tumbuh dari kiri ke kanan */
+.rd .sg {
+  visibility: hidden;
+}
+.rd .sg.done,
+.rd .sg.bld {
+  visibility: visible;
+}
+.rd .sg.bld {
+  transform-origin: var(--x) 0;
+  animation: pj-grow var(--bt, 7s) linear forwards;
+}
+@keyframes pj-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.rd .gate {
+  display: none;
+}
+.rd.has .gate {
+  display: inline;
+}
+
+/* crane */
+.rd .cr {
+  display: none;
+  transform: translateX(var(--cx, 0px));
+}
+.rd .cr.show {
+  display: inline;
+}
+.rd .cr.mv {
+  animation: pj-move var(--bt, 7s) linear forwards;
+}
+@keyframes pj-move {
+  from {
+    transform: translateX(var(--x0, 0px));
+  }
+  to {
+    transform: translateX(var(--x1, 0px));
+  }
+}
+.rd .crc {
+  fill: color-mix(in srgb, #f7941d, #000 var(--dim));
+}
+.rd .cw {
+  fill: #555;
+}
+.rd .hk {
+  fill: var(--gold);
+  animation: pj-hook 3s ease-in-out infinite alternate;
+}
+.rd .cn {
+  fill: #f7941d;
+}
+.rd .lt,
+.rd .cab {
+  fill: none;
+  stroke: #111;
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+.rd .cab {
+  transform-origin: 21px -5.8px;
+  animation: pj-cable 3s ease-in-out infinite alternate;
+}
+.rd .jb {
+  transform-origin: 0 -6px;
+  animation: pj-swing 4.5s ease-in-out infinite alternate;
+}
+@keyframes pj-swing {
+  from {
+    transform: rotate(-2.2deg);
+  }
+  to {
+    transform: rotate(2.2deg);
+  }
+}
+@keyframes pj-cable {
+  to {
+    transform: scaleY(1.6);
+  }
+}
+@keyframes pj-hook {
+  to {
+    transform: translateY(5.6px);
+  }
+}
+
+/* debu konstruksi: hanya saat crane benar-benar membangun */
+.rd .dst {
+  display: none;
+}
+.rd .cr.mv .dst {
+  display: inline;
+}
+.rd .dst circle {
+  fill: #d8c9a8;
+  stroke: #111;
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pj-dust 1.8s ease-out infinite;
+}
+.rd .dst circle:nth-child(2) {
+  animation-delay: -0.6s;
+}
+.rd .dst circle:nth-child(3) {
+  animation-delay: -1.2s;
+}
+@keyframes pj-dust {
+  0% {
+    opacity: 0.85;
+    transform: scale(0.3);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.8) translate(-4px, -7px);
+  }
+}
+
+/* mobil & truk di ruas yang sudah jadi (jarak tempuh = lebar ruas jadi: --W) */
+.rd .cars {
+  display: none;
+}
+.rd.has .cars {
+  display: inline;
+}
+.rd .car {
+  opacity: 0;
+  animation: pj-car var(--cd, 10s) linear infinite;
+}
+.rd .car.b2 {
+  animation-name: pj-car-r;
+}
+@keyframes pj-car {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  6%,
+  92% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(var(--W, 0px));
+    opacity: 0;
+  }
+}
+@keyframes pj-car-r {
+  0% {
+    transform: translateX(var(--W, 0px));
+    opacity: 0;
+  }
+  6%,
+  92% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+}
+
+/* MANGKRAK: semua gerak pembangunan berhenti (lalu lintas di ruas jadi tetap jalan), papan merah muncul */
+#ctr.pj-stall .rd .cr,
+#ctr.pj-stall .rd .cr *,
+#ctr.pj-stall .rd .sg.bld {
+  animation-play-state: paused;
+}
+#ctr.pj-stall .rd .dst {
+  display: none;
+}
+.rd .stl {
+  display: none;
+}
+#ctr.pj-stall .rd .stl {
+  display: inline;
+}
+.rd .stl rect {
+  fill: var(--brand);
+}
+.rd .stl text {
+  fill: #fff;
+  font: 700 6.4px var(--font-d);
+  letter-spacing: 0.08em;
+  text-anchor: middle;
+}
+
+/* catatan sesaat + konfeti peresmian */
+.pj-note {
+  position: absolute;
+  z-index: 2;
+  top: 14.5%;
+  left: 50%;
+  transform: translate(-50%, -0.6em);
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  font: 600 max(1.5em, 8.5px) / 1 var(--font-d);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--gold);
+  color: #111;
+  border: 2px solid #111;
+  box-shadow: 0.2em 0.25em 0 #0005;
+  padding: 0.45em 0.8em;
+  transition:
+    opacity 0.35s ease,
+    transform 0.35s ease;
+}
+.pj-note.on {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.pj-note.bad {
+  background: var(--brand);
+  color: #fff;
+}
+.pj-conf {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  display: none;
+}
+.pj-conf.on {
+  display: block;
+}
+.pj-conf i {
+  position: absolute;
+  top: -5%;
+  left: var(--l);
+  width: 0.9em;
+  height: 0.55em;
+  background: var(--c, #f4b400);
+  border: 1px solid #111;
+  animation: pj-fall 3s linear infinite;
+}
+@keyframes pj-fall {
+  to {
+    transform: translateY(110vh) rotate(540deg);
+  }
+}
+
+/* mode hemat: ruas langsung jadi, tanpa lalu lintas/debu/konfeti */
+@media (prefers-reduced-motion: reduce) {
+  .rd .cars,
+  .rd .dst,
+  .pj-conf {
+    display: none !important;
+  }
+  .pj-note {
+    transition: none;
+  }
+}
+#ctr.tg-lite .rd .cars,
+#ctr.tg-lite .rd .dst,
+#ctr.tg-lite .pj-conf {
+  display: none !important;
+}
+#ctr.tg-lite .pj-note {
+  transition: none;
+}
+
+/* ---------- Pita "breaking news" bawaan game dimatikan ----------
+   Beritanya sudah ada di ticker bawah papan dan di panel Situasi negara. */
+.fx-breaking {
+  display: none !important;
+}
+
+/* ---------- Pesan giliran di tengah papan disembunyikan secara visual ----------
+   Teksnya tetap ada di DOM (bukan display:none): dipakai baris "Situasi negara" di sidebar, ticker saat papan
+   diperbesar, dan pembaca layar (role="status"). */
+#now {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  min-height: 0 !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+  box-shadow: none !important;
+}
+
+/* ---------- Perbaikan: panel "Situasi negara" ikut terperas hilang di layar pendek ----------
+   #side adalah kolom flex dengan overflow-y:auto. #newsw (overflow:hidden) boleh menyusut sampai 2px saat tinggi
+   layar < ~660px, jadi panelnya tampak hilang (baru muncul saat browser di-zoom out). Dibuat tidak menyusut;
+   kolom samping tinggal digulir. */
+#side > #newsw {
+  flex: 0 0 auto;
+}
+
+/* ---------- Utang negara di HUD (muncul hanya bila APBN berutang) ---------- */
+.hud .ap {
+  flex-wrap: wrap;
+}
+.hud .ap em {
+  flex-basis: 100%;
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--bad);
+  margin-top: -0.15em;
+}
+:root[data-theme="dark"] .hud .ap em {
+  color: #ff8077;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .hud .ap em {
+    color: #ff8077;
+  }
+}
+@media (max-width: 760px) {
+  .hud .ap em {
+    display: none;
+  }
+}
+
+/* =====================================================================
+   FASE 3: kampung (Kopdes, dapur MBG, Kios Gelap) + tugu kekayaan
+   ===================================================================== */
+.sk-town {
+  left: 0;
+  width: 100%;
+  bottom: 8%;
+  height: 11%;
+  filter: brightness(var(--shade));
+  transition: filter 1.8s;
+  pointer-events: none;
+}
+.sk-town svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.sk-town .sp.new {
+  animation: tw-pop 0.5s ease-out both;
+}
+@keyframes tw-pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.sk-town .stm circle {
+  fill: #fffdf6;
+  stroke: #111;
+  stroke-width: 0.8;
+  opacity: 0;
+  animation: tw-steam 4.2s ease-out infinite;
+}
+.sk-town .stm circle:nth-child(2) {
+  animation-delay: 1.4s;
+}
+.sk-town .stm circle:nth-child(3) {
+  animation-delay: 2.8s;
+}
+@keyframes tw-steam {
+  0% {
+    opacity: 0.9;
+    transform: translate(0, 0) scale(0.6);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(4px, -14px) scale(1.5);
+  }
+}
+.sk-town .bs {
+  stroke: #111;
+  stroke-width: 0.8;
+}
+.sk-town .bs.a {
+  fill: #e0301e;
+  animation: tw-sir 0.7s steps(1) infinite;
+}
+.sk-town .bs.b {
+  fill: #2f6bff;
+  animation: tw-sir 0.7s steps(1) infinite 0.35s;
+}
+@keyframes tw-sir {
+  50% {
+    opacity: 0.15;
+  }
+}
+.sk-town .bd.kepepet rect:first-child {
+  stroke: #c9281d;
+  stroke-width: 2;
+}
+
+.mon {
+  position: absolute;
+  z-index: 2;
+  right: 2.5%;
+  top: 15%;
+  width: 15.5%;
+  min-width: 78px;
+  font-size: 1.7em;
+  padding: 0.35em 0.4em 0;
+  background: color-mix(in srgb, var(--surface, #fffdf6), transparent 8%);
+  border: 2px solid #111;
+  box-shadow: 2px 2px 0 #111;
+  text-align: center;
+  pointer-events: none;
+}
+.mon[hidden] {
+  display: none;
+}
+.mon .mt {
+  display: block;
+  font: 700 0.5em/1 var(--font-d, Oswald, sans-serif);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink, #111);
+  margin-bottom: 1.1em;
+}
+.mon .bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.3em;
+  height: 4.6em;
+  border-bottom: 2px solid #111;
+}
+.mon .mbr {
+  position: relative;
+  flex: 1 1 0;
+  max-width: 1.5em;
+  height: var(--h);
+  background: var(--bc);
+  border: 1.5px solid #111;
+  border-bottom: 0;
+  transition: height 1s cubic-bezier(0.3, 1.3, 0.5, 1);
+}
+.mon .mbr.lead::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  width: 1.1em;
+  height: 0.7em;
+  margin-bottom: 0.15em;
+  transform: translateX(-50%);
+  background: var(--gold, #f4b400);
+  clip-path: polygon(0 100%, 0 25%, 25% 60%, 50% 0, 75% 60%, 100% 25%, 100% 100%);
+}
+.mon .ped {
+  display: block;
+  height: 0.45em;
+  margin: 0 -0.5em;
+  background: #d8d2c4;
+  border-top: 2px solid #111;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sk-town .sp.new,
+  .sk-town .stm circle,
+  .sk-town .bs {
+    animation: none;
+  }
+  .sk-town .stm circle {
+    opacity: 0.7;
+  }
+  .mon .mbr {
+    transition: none;
+  }
+}
+#ctr.tg-lite .sk-town .stm circle,
+#ctr.tg-lite .sk-town .bs {
+  animation: none;
+}
+#ctr.tg-lite .sk-town .stm circle {
+  opacity: 0.7;
+}
+@media (max-width: 760px) {
+  .mon {
+    display: none;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .mon {
+    background: color-mix(in srgb, var(--surface, #222), transparent 8%);
+  }
+}
+
+/* =====================================================================
+   FASE 4: pesawat, balon udara, kembang api (hiasan, hanya saat tenang / perayaan)
+   ===================================================================== */
+.sk-plane,
+.sk-ball {
+  opacity: 0;
+  pointer-events: none;
+  filter: brightness(var(--shade));
+}
+.sk-plane {
+  top: 21%;
+  left: 0;
+  width: 9%;
+  animation: sk-plane 70s linear infinite;
+  animation-delay: -52s;
+}
+.sk-plane svg,
+.sk-ball svg {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+.sk-plane path,
+.sk-ball path,
+.sk-ball rect {
+  stroke: #111;
+  stroke-width: 1.3;
+  stroke-linejoin: round;
+}
+.sk-plane path:first-child {
+  fill: none;
+}
+@keyframes sk-plane {
+  0% {
+    transform: translateX(-12vw);
+    opacity: 0;
+  }
+  3% {
+    opacity: 1;
+  }
+  34% {
+    opacity: 1;
+  }
+  38%,
+  100% {
+    transform: translateX(640%);
+    opacity: 0;
+  }
+}
+.sk-ball {
+  top: 40%;
+  left: 83%;
+  width: 4.2%;
+  animation: sk-ball 9s ease-in-out infinite alternate;
+}
+@keyframes sk-ball {
+  to {
+    transform: translate(-8%, -26%);
+  }
+}
+#ctr[data-ph="0"] .sk-plane,
+#ctr[data-ph="1"] .sk-plane {
+  visibility: visible;
+}
+#ctr[data-ph="0"] .sk-ball,
+#ctr[data-ph="1"] .sk-ball {
+  opacity: 1;
+}
+#ctr[data-ph="2"] .sk-plane,
+#ctr[data-ph="3"] .sk-plane,
+#ctr[data-ph="4"] .sk-plane,
+#ctr[data-ph="2"] .sk-ball,
+#ctr[data-ph="3"] .sk-ball,
+#ctr[data-ph="4"] .sk-ball {
+  display: none;
+}
+.sk-ball {
+  transition: opacity 1.6s;
+}
+
+.sk-fw {
+  inset: 0;
+  pointer-events: none;
+}
+.sk-fw .b {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+}
+.sk-fw .b0 {
+  left: 28%;
+  top: 22%;
+}
+.sk-fw .b1 {
+  left: 52%;
+  top: 14%;
+}
+.sk-fw .b2 {
+  left: 74%;
+  top: 28%;
+}
+.sk-fw u {
+  position: absolute;
+  left: -2px;
+  top: -2px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--gold, #f4b400);
+  box-shadow: 0 0 0 1px #111;
+}
+.sk-fw .b1 u:nth-child(odd) {
+  background: #c9281d;
+}
+.sk-fw .b2 u:nth-child(odd) {
+  background: #2f6bff;
+}
+.sk-fw.go .b {
+  animation: fw-b 1.8s ease-out both;
+}
+.sk-fw.go .b1 {
+  animation-delay: 0.6s;
+}
+.sk-fw.go .b2 {
+  animation-delay: 1.3s;
+}
+.sk-fw.go .b u {
+  animation: fw-u 1.8s ease-out both;
+  animation-delay: inherit;
+}
+.sk-fw.go .b1 u {
+  animation-delay: 0.6s;
+}
+.sk-fw.go .b2 u {
+  animation-delay: 1.3s;
+}
+@keyframes fw-b {
+  0% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes fw-u {
+  0% {
+    transform: rotate(var(--a)) translateY(0) scale(1);
+  }
+  100% {
+    transform: rotate(var(--a)) translateY(-3.6em) scale(0.4);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sk-plane,
+  .sk-ball,
+  .sk-fw {
+    display: none;
+  }
+}
+#ctr.tg-lite .sk-plane,
+#ctr.tg-lite .sk-ball,
+#ctr.tg-lite .sk-fw {
+  display: none;
+}
+@media (max-width: 760px) {
+  .sk-ball {
+    display: none;
+  }
+}
+
+/* =====================================================================
+   FASE 4: hiasan hidup (pesawat, kereta, kembang api pergantian juara)
+   ===================================================================== */
+.sk-train {
+  left: 0;
+  bottom: 17.2%;
+  width: 22%;
+  filter: brightness(var(--shade));
+  animation: tr-go 58s linear infinite;
+  animation-delay: -30s;
+  transition: opacity 1.5s;
+}
+.sk-train svg {
+  display: block;
+  width: 100%;
+}
+@keyframes tr-go {
+  0% {
+    transform: translateX(-110%);
+  }
+  40%,
+  100% {
+    transform: translateX(470%);
+  }
+}
+#ctr[data-ph="4"] .sk-train {
+  opacity: 0;
+}
+.mon .fw {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.mon .fw i {
+  position: absolute;
+  left: -0.2em;
+  top: -0.2em;
+  width: 0.4em;
+  height: 0.4em;
+  border-radius: 50%;
+  background: var(--fc, #f4b400);
+  border: 1px solid #111;
+  opacity: 0;
+}
+.mon.win .fw i {
+  animation: fw-b 1.4s ease-out both;
+  transform: rotate(calc(var(--n) * 45deg));
+}
+.mon .fw i:nth-child(1) { --n: 0; }
+.mon .fw i:nth-child(2) { --n: 1; }
+.mon .fw i:nth-child(3) { --n: 2; }
+.mon .fw i:nth-child(4) { --n: 3; }
+.mon .fw i:nth-child(5) { --n: 4; }
+.mon .fw i:nth-child(6) { --n: 5; }
+.mon .fw i:nth-child(7) { --n: 6; }
+.mon .fw i:nth-child(8) { --n: 7; }
+@keyframes fw-b {
+  0% {
+    opacity: 1;
+    transform: rotate(calc(var(--n) * 45deg)) translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(calc(var(--n) * 45deg)) translateY(-3.6em) scale(0.4);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sk-train {
+    animation: none;
+    display: none;
+  }
+  .mon.win .fw i {
+    animation: none;
+  }
+}
+#ctr.tg-lite .sk-train {
+  animation: none;
+  display: none;
+}
+@media (max-width: 760px) {
+  .sk-train {
+    display: none;
+  }
+}
+
+/* Dek kartu Kesempatan & Dana Umum di tengah papan disembunyikan (tetap ada di layout agar animasi tarik kartu aman) */
+#ctr .dk {
+  visibility: hidden;
+}
+/* Gambar pion di papan disamakan dengan warna pemain di panel: P1 merah, P2 hijau, P3 oranye, P4 biru */
+#pins .fx-pion.p2 {
+  background-image: url(../png/pion/pion-3.png);
+}
+#pins .fx-pion.p3 {
+  background-image: url(../png/pion/pion-6.png);
+}
+#pins .fx-pion.p4 {
+  background-image: url(../png/pion/pion-2.png);
+}
