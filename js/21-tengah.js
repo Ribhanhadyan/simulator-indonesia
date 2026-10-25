@@ -215,7 +215,16 @@ const PLANE = `<svg viewBox="0 0 60 20" aria-hidden="true"><path d="M2 10H12" st
       }
       plots += `<g class="pt s0"><path class="gr" d="${gr}"/><g class="tr">${tr}</g><g class="ch">${ch}</g><g class="sb">${sb}</g><g class="sw">${sw}</g><g class="fl">${fl}</g><g class="sm">${sm}</g></g>`;
     }
-    return `<svg viewBox="0 0 300 ${FH}" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><path class="hb" d="${base}"/>${plots}<path class="hl" d="${outline}"/></svg>`;
+    /* sayap lereng: bukit diperpanjang melewati tepi kiri/kanan (svg overflow:visible) supaya di panel lebar
+       bukitnya tetap membentang penuh sampai tepi panel, bukan hanya di tengah */
+    const y0 = hy(0),
+      y1 = hy(300),
+      wl = `M-700 ${f1(y0 + 12)}C-400 ${f1(y0 + 8)} -200 ${f1(y0 + 1)} 0 ${f1(y0)}`,
+      wr = `M300 ${f1(y1)}C500 ${f1(y1 - 1)} 700 ${f1(y1 + 5)} 1000 ${f1(y1 + 10)}`,
+      wings =
+        `<path class="hb hw" d="${wl}L0 ${FH}L-700 ${FH}Z"/><path class="hb hw" d="${wr}L1000 ${FH}L300 ${FH}Z"/>` +
+        `<path class="hl" d="${wl}"/><path class="hl" d="${wr}"/>`;
+    return `<svg viewBox="0 0 300 ${FH}" preserveAspectRatio="xMidYMax meet" aria-hidden="true">${wings}<path class="hb" d="${base}"/>${plots}<path class="hl" d="${outline}"/></svg>`;
   })();
 
   /* helikopter water bombing (muncul bila Presiden memilih "Atasi") */

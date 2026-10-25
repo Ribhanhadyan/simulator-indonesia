@@ -2187,3 +2187,102 @@
     filter: brightness(calc(var(--shade) * 0.72));
   }
 }
+
+/* =====================================================================
+   PERBAIKAN: proporsi panorama di layar lebar + ticker tidak lagi menimpa adegan
+   ---------------------------------------------------------------------
+   Masalah lama:
+   1. Adegan digambar untuk papan PERSEGI. Di desktop papan bisa selebar 1.8:1 dan ukuran font tengah
+      (--f) dihitung dari (lebar + tinggi), jadi banner, HUD, awan, dan matahari terlalu besar dibanding
+      tinggi panel, sementara kota/hutan (yang mengikuti tinggi) tampak kecil dan menyempit di tengah.
+   2. Ticker "Berita" memakai position:absolute di atas adegan, sehingga menutupi dasar adegan
+      (tanah, jalan, warga) dan ikut menutup animasi di belakangnya.
+   Perbaikan:
+   - Font tengah dibatasi oleh TINGGI papan (min(--f, tinggi/113)); di papan persegi hasilnya tidak berubah.
+   - Adegan dirakit di dalam "kotak desain" (--dw) selebar maksimum 84em yang berada di tengah. Langit,
+     tanah, hujan, kilat, dan lampu sirene tetap memenuhi seluruh lebar (full-bleed), awan/kereta melintas
+     sampai tepi panel.
+   - Ticker menjadi strip tersendiri di bawah adegan. Bingkai adegan hanya menyisakan 5.7em di bawahnya
+     (strip tanah polos sesuai desain asli) dan ruang ticker di luar itu dipotong dari bingkai, jadi
+     jalan, kampung, dan warga tidak lagi tertutup, termasuk di HP (ticker minimum 8.5px).
+   ===================================================================== */
+#board {
+  --bh: var(--h, var(--s)); /* tinggi papan: --h di desktop, --s (persegi) di HP/tablet */
+}
+#ctr {
+  container-type: inline-size; /* cqw = lebar panel tengah, dipakai untuk elemen full-bleed */
+  box-sizing: border-box;
+  font-size: min(var(--f), calc(var(--bh) / 113));
+  --tvh: calc(3.7 * max(1.55em, 8.5px)); /* tinggi ticker, dihitung dari font-size #ctr */
+  --dw: min(100%, 84em); /* lebar kotak desain adegan */
+  --tvx: max(0px, calc(var(--tvh) - 5.7em)); /* tinggi ticker di luar 5.7em yang memang sudah dipakai desain asli */
+  padding-bottom: var(--tvx); /* banner & dadu tetap terpusat di area adegan */
+}
+
+/* kotak adegan: berhenti tepat di atas ticker, selebar kotak desain, di tengah panel */
+.sk {
+  inset: 0 auto var(--tvx) calc(50% - var(--dw) / 2);
+  width: var(--dw);
+  overflow: visible; /* tepi sebenarnya dipotong oleh #ctr */
+  --bl: calc((var(--dw) - 100cqw) / 2); /* jarak ke tepi kiri panel (negatif bila kotak lebih sempit) */
+}
+/* lapisan yang harus memenuhi seluruh lebar panel */
+.sk > .sk-bg,
+.sk > .sk-storm,
+.sk > .sk-haze,
+.sk > .sk-glow,
+.sk > .sk-ground,
+.sk > .sk-asap,
+.sk > .sk-flash {
+  left: var(--bl);
+  right: var(--bl);
+  width: auto;
+}
+.sk > .sk-bg,
+.sk > .sk-asap,
+.sk > .sk-flash {
+  top: 0;
+  bottom: 0;
+}
+.sk > .sk-rain {
+  left: var(--bl);
+  width: calc(100cqw + 8em);
+}
+.sk > .sk-sir.m {
+  left: calc(var(--bl) - 22%);
+}
+.sk > .sk-sir.b {
+  right: calc(var(--bl) - 22%);
+}
+/* awan & kereta melintas di seluruh lebar panel (bukan hanya kotak desain) */
+.sk > .sk-cl,
+.sk > .sk-train {
+  left: var(--bl);
+}
+@keyframes sk-drift {
+  from {
+    transform: translateX(-110%);
+  }
+  to {
+    transform: translateX(calc(100cqw + 10%));
+  }
+}
+@keyframes tr-go {
+  0% {
+    transform: translateX(-110%);
+  }
+  40%,
+  100% {
+    transform: translateX(calc(100cqw + 10%));
+  }
+}
+
+/* warga tetap berdiri tepat di atas ticker (5.4em = 5.7em tinggi ticker desain - 0.3em) */
+.sk-folk {
+  bottom: 5.4em;
+}
+
+/* sayap lereng bukit (perpanjangan di layar lebar) berwarna sama dengan petak hutan */
+.sk-forest .hw {
+  fill: color-mix(in srgb, #3f8a45, #000 var(--dim));
+}
