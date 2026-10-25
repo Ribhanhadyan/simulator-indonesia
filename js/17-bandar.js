@@ -94,6 +94,12 @@ function bdHarga(p, k) {
     if (!c.lotre && c.rak != 0 && bdTier(p) == "tamu" && (p.kartu || 0) >= 1 && (p.kartu || 0) <= 2 && 0.6 < f) (f = 0.6), (lb = "paket −40%");
     if (p.kupon && 1 - p.kupon < f) (f = 1 - p.kupon), (lb = "kupon −" + Math.round(p.kupon * 100) + "%");
   }
+  /* bonus berhenti tepat di petak Kios Gelap (aktif selama kunjungan itu, juga saat razia) */
+  const mb = p.mkBonus;
+  if (mb) {
+    if (mb.d && 1 - mb.d < f) (f = 1 - mb.d), (lb = "diskon menginjak petak −" + Math.round(mb.d * 100) + "%");
+    if (mb.sp === k && 0.5 < f) (f = 0.5), (lb = "⭐ barang spesial −50%");
+  }
   return { h: f < 1 ? bd1e4(tetap * f) : tetap, tetap, lb, kupon: lb.startsWith("kupon") };
 }
 const bdTerima = (a) => {

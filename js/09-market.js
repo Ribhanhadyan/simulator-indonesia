@@ -743,17 +743,41 @@
         say(`🤫 ${p.n} jadi antek Bandar: komisi ${fm(g)}, jejak korupsi +${fm(Math.round(g * 1.5))}`);
         return "Komisi " + fm(g) + " diterima. Jejak korupsimu naik " + fm(Math.round(g * 1.5)) + ".";
       }
-      async function market(p) {
+      /* Kios Gelap: mode "lewat" = hanya melewati petak (harga normal), "injak" = berhenti tepat di petak (diskon 30% atau 1 barang spesial −50%) */
+      async function market(p, mode) {
+        p.mkBonus = null;
+        try {
+          if (mode == "injak" && bdBuka()) {
+            const ks = Object.keys(CARD),
+              cand = ks.filter((k) => {
+                const c = CARD[k];
+                return (c.rak == 2 || c.rak == 5) && !c.lotre && !kiosOk(p, k);
+              });
+            if (cand.length && Math.random() < 0.5) {
+              const sp = shuf(cand)[0];
+              p.mkBonus = { sp, ban: "⭐ <b>Berhenti tepat di petak!</b> Bandar menyodorkan barang spesial: " + CARD[sp].i + " <b>" + CARD[sp].n + "</b> diskon 50%." };
+            } else p.mkBonus = { d: 0.3, ban: "🎁 <b>Berhenti tepat di petak!</b> Semua barang hari ini diskon 30%." };
+          }
+          await marketIsi(p, mode);
+        } finally {
+          p.mkBonus = null;
+        }
+      }
+      async function marketIsi(p, mode) {
         bdStat(p);
         if (!bdBuka()) {
+          if (mode == "lewat") return;
           const tt = bandar.rebootSetelah != null ? "Kios Gelap sedang tutup. Kabarnya buka lagi sekitar putaran " + bandar.rebootSetelah + "." : "Kios Gelap baru buka setelah peran dibagikan (putaran 3).";
           say(`🕶️ ${p.n} mampir ke Kios Gelap, tapi tutup`);
           if (!p.b) await ask(`<h3>🕶️ Kios Gelap</h3><div class="sub">${p.n}</div><p class="ct">${tt}</p>`, [["OK", 1]], p);
           return;
         }
-        const offer = marketOffer(p);
+        const offer = marketOffer(p),
+          mb = p.mkBonus,
+          ban = mb ? mb.ban : mode == "lewat" ? "🚶 Kamu cuma melewati petak ini, jadi harga normal. Berhenti tepat di petak Kios Gelap untuk dapat diskon atau barang spesial." : "";
+        if (mb && mb.sp && !offer.includes(mb.sp)) offer.push(mb.sp);
         let bought = false;
-        say(`🕶️ ${p.n} masuk Kios Gelap`);
+        say(`🕶️ ${p.n} ${mode == "lewat" ? "mampir sambil lewat ke" : "berhenti di"} Kios Gelap${mb ? (mb.sp ? " (barang spesial −50%)" : " (diskon 30%)") : ""}`);
         if (p.b) {
           const res = 3e6 * BM(),
             got = [];
@@ -784,6 +808,7 @@
             antek = p.antekR !== rnd && bandar.kas >= 2e6;
           const c = await mkAsk(
             `<h3>🕶️ Kios Gelap</h3><div class="sub">${p.n} · uang ${fm(p.cash)}</div>` +
+              (ban ? sec(mb ? "Bonus petak" : "Info", '<p class="ct">' + ban + "</p>") : "") +
               (bandar.tiarap ? sec("🚨 Razia", '<p class="ct">Bandar sedang tiarap: harga +20%, tanpa promo, maks 1 kartu dan 1 lotre per pemain per putaran.</p>') : "") +
               (note ? sec("Barusan", '<p class="ct">' + note + "</p>") : "") +
               (intel.length ? sec("Intel", intel.map((t) => '<p class="ct">' + t + "</p>").join("")) : "") +

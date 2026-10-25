@@ -182,7 +182,7 @@ const rw = (a, b) => `<div class="rw"><span>${a}</span><b>${b}</b></div>`,
   sec = (h, b) => `<div class="sec"><h4>${h}</h4>${b}</div>`;
 const TY = { s: "Properti Kota", r: "Stasiun Kereta", u: "Utilitas", x: "Pajak", c: "Kartu", k: "Kartu", gm: "Tambang", rp: "Karier", la: "Lelang", mk: "Kios Gelap", bu: "BUMN", ap: "Transportasi" },
   NT = {
-    mk: "Lapak gelap milik Bandar (buka setelah peran dibagikan): Lotre Receh selalu ada, ditambah kartu abu-abu, barang terlarang, barang baru, dan kartu khusus perannya. Uang masuk Kas Bandar. Bandar menyesuaikan peluang menurut kebiasaan belimu.",
+    mk: "Lapak gelap milik Bandar (buka setelah peran dibagikan). Cukup lewat untuk belanja; berhenti tepat di petak ini dapat diskon 30% atau satu barang spesial −50%: Lotre Receh selalu ada, ditambah kartu abu-abu, barang terlarang, barang baru, dan kartu khusus perannya. Uang masuk Kas Bandar. Bandar menyesuaikan peluang menurut kebiasaan belimu.",
     la: "Satu properti yang belum terjual dipilih acak, lalu langsung dilelang ke semua pemain.",
     bu: "Beli saham BUMN (maks 3 per pemain). Pemegang saham menerima dividen tiap lewat MULAI; dividen turun saat krisis.",
     ap: "Terbang gratis ke stasiun kereta mana pun (sewa berlaku bila milik pemain lain), atau tetap di sini.",

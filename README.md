@@ -66,6 +66,7 @@ Nuansa Indonesia hadir lewat:
 
 ### 🕶️ Kios Gelap (Market yang Dikelola Bandar)
 - Petak Market (tipe `mk` tetap, agar simpanan lama terbaca) kini bernama **Kios Gelap** dan dikelola **Bandar** (NPC). Buka setelah peran dibagikan (putaran 3). Uang belanja masuk **Kas Bandar**
+- **Lewat vs injak**: cukup melewati petak Kios Gelap sudah bisa belanja (harga normal). Berhenti tepat di petaknya memberi bonus acak: diskon 30% semua barang, atau satu barang spesial −50%
 - Tiap kunjungan menjual 4–5 barang dalam lima rak: **Lotre Receh** (selalu ada, Rp250.000), kartu abu-abu (Dadu Ganda, Asuransi Sewa, Diskon Properti, Bebas Pajak, Kupon Kesempatan), barang terlarang (Kunci Bebas Penjara, Kebal Hukum, Sabotase; menambah jejak korupsi 30% dari harga), kartu khusus peran, dan barang baru (Uang Tutup Mulut, Cuci Uang, Informan OTT, Bocoran Berita)
 - **Satire**: Bandar membaca kebiasaan belimu. Pemain naik tier *Tamu → Langganan → Pecandu* dan peluang lotre bergeser dari umpan ke panen. Yang dipajang hanya tabel Langganan (balik ±87%); tabel sesungguhnya tersembunyi per pemain
 - Bandar punya dinamika sendiri: setoran ke oknum, kupon pancing balik, razia saat kas menggemuk (>150% modal), mode kepepet saat kas menipis (<25%), tiga akhir konfrontasi (negara menang, Bandar menang, perang oknum), dan reboot dengan modal kecil setelah 8 putaran

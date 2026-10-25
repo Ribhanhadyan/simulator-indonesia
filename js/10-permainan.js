@@ -120,6 +120,12 @@ async function move(p, n) {
     if (!p.pos) gaji(p);
     render();
     await sleep(150);
+    /* melewati petak Kios Gelap (bukan petak tujuan): cukup lewat untuk belanja, harga normal */
+    if (k < n - 1 && T[p.pos].t == "mk" && bdBuka()) {
+      if (window.SimFX) SimFX.mkLampu(p.pos);
+      await market(p, "lewat");
+      if (p.x) break;
+    }
   }
 }
 async function land0(p, sum) {
@@ -193,7 +199,7 @@ async function land0(p, sum) {
       SimFX.mkLampu(i);
       SimFX.petak(i, "glow");
     }
-    await market(p);
+    await market(p, "injak");
   }
   else if (t.t == "bu") await bumn(p);
   else if (t.t == "ap") await bandara(p);
