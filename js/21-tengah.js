@@ -5,7 +5,10 @@
    - HUD atas: suasana nasional + Dana APBN
    - ticker berita di bawah: berita terbaru, ekonomi berlaku, presiden, proyek, krisis
    - FASE 2: proyek tol (crane, ruas dibangun bertahap, mangkrak, resmi dibuka) dari jumlah aset negara
-   Murni tampilan: tidak mengubah aturan, state, atau simpanan. Semua elemen aria-hidden (informasi yang sama
+   - FASE 2b: hutan di belakang kota. Seri berita "Kebakaran Hutan dan Lahan" (NW.kh) membakar petak hutan, kabut asap menyelimuti kota,
+     Presiden memilih atasi (helikopter water bombing) atau biarkan, lalu bekas hutan menjadi kebun sawit
+   - FASE 2c: warga kecil di jalur depan kota; aktivitasnya mengikuti berita terbaru (NW.ev) dan tahap karhutla
+   Murni tampilan: tidak mengubah aturan, state, atau simpanan (keadaan hutan NW.kh ditulis oleh 05-berita.js). Semua elemen aria-hidden (informasi yang sama
    sudah ada di panel Situasi negara & log). Dimuat SETELAH 20-developer.js (bergantung pada render() yang
    dibungkus 15-ux.js). Mode hemat (gerak dikurangi / FX_LEVEL low) dikendalikan CSS lewat kelas .tg-lite. */
 (() => {
@@ -124,14 +127,260 @@ const PLANE = `<svg viewBox="0 0 60 20" aria-hidden="true"><path d="M2 10H12" st
   const FW = `<div class="sk-fw" id="sk-fw">${[0, 1, 2].map((n) => `<i class="b b${n}">${Array.from({ length: 10 }, (_, k) => `<u style="--a:${k * 36}deg"></u>`).join("")}</i>`).join("")}</div>`;
   const KERETA = `<svg viewBox="0 0 120 14" aria-hidden="true">${[0, 1, 2].map((i) => `<rect x="${i * 30}" y="2" width="27" height="9" rx="1.5" fill="${["#f4b400", "#fffdf6", "#c9281d"][i]}" stroke="#111" stroke-width="1.2"/><path d="M${i * 30 + 4} 5H${i * 30 + 23}" stroke="#2a6fb5" stroke-width="2.4"/>`).join("")}<path d="M90 11V4Q90 2 93 2H110L118 7V11Z" fill="#c9281d" stroke="#111" stroke-width="1.2"/><path d="M100 5H108L111 8H100Z" fill="#9bd6f5" stroke="#111" stroke-width=".8"/><circle cx="12" cy="11.5" r="2" fill="#111"/><circle cx="42" cy="11.5" r="2" fill="#111"/><circle cx="72" cy="11.5" r="2" fill="#111"/><circle cx="96" cy="11.5" r="2" fill="#111"/><circle cx="110" cy="11.5" r="2" fill="#111"/></svg>`;
 
+  /* ---------- FASE 2b: HUTAN (kebakaran hutan -> bekas hutan jadi lahan sawit) ----------
+     Murni visual, dibaca dari NW.kh yang ditulis seri berita "Kebakaran Hutan dan Lahan" (05-berita.js).
+     Bukit hutan di belakang kota dibagi KHN petak. Nilai petak: 0 hutan hijau, 1 terbakar, 2 hangus,
+     3 dibuka & ditanami bibit sawit, 4 kebun sawit dewasa. Kabut asap & helikopter water bombing mengikuti tahap seri. */
+  const KHN = typeof KH_N == "number" ? KH_N : 8,
+    FH = 114;
+  const rr = (n) => {
+    const s = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+    return s - Math.floor(s);
+  };
+  const f1 = (n) => (Math.round(n * 10) / 10).toString();
+  const hy = (x) => 60 - 12 * Math.sin((x / 300) * Math.PI * 1.25 + 0.5) - 4 * Math.sin(x / 23);
+  const palma = (x, yb, h) => {
+    const t = yb - h;
+    return (
+      `<g><path class="o1 pk1" fill="none" d="M${f1(x)} ${f1(yb)}Q${f1(x + 1.2)} ${f1(yb - h / 2)} ${f1(x)} ${f1(t)}"/>` +
+      `<path class="o1 fr1" d="M${f1(x)} ${f1(t)}Q${f1(x - 6)} ${f1(t - 3.4)} ${f1(x - 9.4)} ${f1(t + 3.6)}Q${f1(x - 4)} ${f1(t - 0.6)} ${f1(x)} ${f1(t)}Z"/>` +
+      `<path class="o1 fr1" d="M${f1(x)} ${f1(t)}Q${f1(x + 6)} ${f1(t - 3.4)} ${f1(x + 9.4)} ${f1(t + 3.6)}Q${f1(x + 4)} ${f1(t - 0.6)} ${f1(x)} ${f1(t)}Z"/>` +
+      `<path class="o1 fr1" d="M${f1(x)} ${f1(t)}Q${f1(x - 3)} ${f1(t - 8)} ${f1(x - 7)} ${f1(t - 7)}Q${f1(x - 2)} ${f1(t - 4.6)} ${f1(x)} ${f1(t)}Z"/>` +
+      `<path class="o1 fr1" d="M${f1(x)} ${f1(t)}Q${f1(x + 3)} ${f1(t - 8)} ${f1(x + 7)} ${f1(t - 7)}Q${f1(x + 2)} ${f1(t - 4.6)} ${f1(x)} ${f1(t)}Z"/>` +
+      `<circle class="bn" cx="${f1(x - 1.2)}" cy="${f1(t + 1.6)}" r="1.3"/><circle class="bn" cx="${f1(x + 1.4)}" cy="${f1(t + 2)}" r="1.3"/></g>`
+    );
+  };
+  const FOREST = (() => {
+    const W = 300 / KHN,
+      bx = (i, d) => (i <= 0 || i >= KHN ? i * W : i * W + (rr(i * 7 + d) - 0.5) * 7);
+    let plots = "",
+      outline = `M0 ${f1(hy(0))}`;
+    let base = `M0 ${FH}L0 ${f1(hy(0))}`;
+    for (let x = 4; x <= 300; x += 4) {
+      outline += `L${x} ${f1(hy(x))}`;
+      base += `L${x} ${f1(hy(x))}`;
+    }
+    base += `L300 ${FH}Z`;
+    for (let i = 0; i < KHN; i++) {
+      const x0 = i * W,
+        x1 = x0 + W;
+      /* batas antarpetak bergerigi (bukan garis lurus) supaya petak yang terbakar menyatu dengan lereng */
+      let gr = `M${f1(bx(i, 0))} ${f1(hy(bx(i, 0)))}`;
+      for (let x = bx(i, 0) + 4; x < bx(i + 1, 0); x += 4) gr += `L${f1(x)} ${f1(hy(x))}`;
+      [0, 11, 22, 34].forEach((d) => {
+        const x = bx(i + 1, d);
+        gr += `L${f1(x)} ${f1(hy(x) + d)}`;
+      });
+      for (let x = bx(i + 1, 34) - 4; x > bx(i, 34); x -= 4) gr += `L${f1(x)} ${f1(hy(x) + 34)}`;
+      [34, 22, 11].forEach((d) => {
+        const x = bx(i, d);
+        gr += `L${f1(x)} ${f1(hy(x) + d)}`;
+      });
+      gr += "Z";
+      let tr = "",
+        fl = "",
+        sm = "",
+        ch = "",
+        sb = "",
+        sw = "";
+      for (let k = 0; k < 5; k++) {
+        const x = x0 + (k + 0.5) * (W / 5) + (rr(i * 11 + k) - 0.5) * 3,
+          yb = hy(x) + 2,
+          th = 9 + rr(i * 5 + k + 3) * 7,
+          cy = yb - th - 2,
+          rx = 5.4 + rr(i * 7 + k) * 2,
+          ry = 4.4 + rr(i * 3 + k + 1) * 1.5;
+        tr += `<g><rect class="o1 tk" x="${f1(x - 0.8)}" y="${f1(cy)}" width="1.6" height="${f1(yb - cy)}"/><ellipse class="o1 cn c${k % 3}" cx="${f1(x)}" cy="${f1(cy)}" rx="${f1(rx)}" ry="${f1(ry)}"/><ellipse class="cl2 c${k % 3}" cx="${f1(x - rx * 0.35)}" cy="${f1(cy + 0.8)}" rx="${f1(rx * 0.5)}" ry="${f1(ry * 0.55)}"/></g>`;
+        ch += `<path class="hk" d="M${f1(x)} ${f1(yb)}L${f1(x)} ${f1(cy + 1)}M${f1(x)} ${f1(cy + 3)}l-2.6 -2.4M${f1(x)} ${f1(cy + 5)}l2.4 -2.2"/>`;
+        if (k < 4)
+          fl +=
+            `<g class="fmg" style="animation-delay:-${(rr(i * 13 + k) * 1.4).toFixed(2)}s"><path class="o1 fm" d="M${f1(x)} ${f1(cy - 7)}C${f1(x + 4)} ${f1(cy - 3)} ${f1(x + 4.4)} ${f1(cy + 1)} ${f1(x)} ${f1(cy + 2.6)}C${f1(x - 4.4)} ${f1(cy + 1)} ${f1(x - 4)} ${f1(cy - 3)} ${f1(x)} ${f1(cy - 7)}Z"/>` +
+            `<path class="fm2" d="M${f1(x)} ${f1(cy - 3)}C${f1(x + 2)} ${f1(cy - 1)} ${f1(x + 2)} ${f1(cy + 1)} ${f1(x)} ${f1(cy + 2)}C${f1(x - 2)} ${f1(cy + 1)} ${f1(x - 2)} ${f1(cy - 1)} ${f1(x)} ${f1(cy - 3)}Z"/></g>`;
+        if (k < 4) sm += `<circle class="sc" cx="${f1(x)}" cy="${f1(cy - 4)}" r="3.6" style="animation-delay:-${(rr(i * 17 + k) * 7).toFixed(2)}s"/>`;
+      }
+      /* lahan dibuka: barisan tanah + bibit sawit mengikuti lereng */
+      [7, 14, 21].forEach((d) => {
+        let p = "";
+        for (let x = x0 + 1; x <= x1 - 1; x += 6) p += (p ? "L" : "M") + `${f1(x)} ${f1(hy(x) + d)}`;
+        sb += `<path class="so" d="${p}"/>`;
+      });
+      for (let j = 0; j < 6; j++) {
+        const x = x0 + 3 + (j * (W - 6)) / 5,
+          y = hy(x) + 6 + (j % 2) * 7;
+        sb += `<path class="sd" d="M${f1(x)} ${f1(y)}v-3M${f1(x)} ${f1(y - 1.6)}l-2 -1.6M${f1(x)} ${f1(y - 1.6)}l2 -1.6"/>`;
+      }
+      for (let j = 0; j < 4; j++) {
+        const x = x0 + 4.5 + (j * (W - 9)) / 3;
+        sw += palma(x, hy(x) + 3 + (j % 2) * 1.5, 11 + (j % 2) * 2);
+      }
+      plots += `<g class="pt s0"><path class="gr" d="${gr}"/><g class="tr">${tr}</g><g class="ch">${ch}</g><g class="sb">${sb}</g><g class="sw">${sw}</g><g class="fl">${fl}</g><g class="sm">${sm}</g></g>`;
+    }
+    return `<svg viewBox="0 0 300 ${FH}" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><path class="hb" d="${base}"/>${plots}<path class="hl" d="${outline}"/></svg>`;
+  })();
+
+  /* helikopter water bombing (muncul bila Presiden memilih "Atasi") */
+  const HELI =
+    `<svg viewBox="0 0 64 36" aria-hidden="true"><g class="hb">` +
+    `<path class="o1" d="M8 13Q8 6 20 6H32Q38 6 40 11L54 10V14L40 15Q38 20 30 20H18Q8 20 8 13Z" style="fill:#fffdf6"/>` +
+    `<path class="o1" d="M13 8H24V13H10Q9 9 13 8Z" style="fill:#9bd6f5"/>` +
+    `<path class="o1" d="M54 8L60 4V16L54 14Z" style="fill:#c9281d"/>` +
+    `<path class="o1" d="M16 23H34" fill="none"/><path class="o1" d="M20 20V23M30 20V23" fill="none"/>` +
+    `<g class="rt"><path class="o1" d="M3 4H46" fill="none"/></g><path class="o1" d="M24 4V6" fill="none"/>` +
+    `<path class="o1" d="M25 23V27" fill="none"/><path class="o1" d="M20.5 27H29.5L28 32H22Z" style="fill:#4a90d9"/>` +
+    `<g class="dr"><circle cx="22" cy="33" r="1.3"/><circle cx="25" cy="33" r="1.3"/><circle cx="28" cy="33" r="1.3"/></g></g></svg>`;
+
+  /* ---------- FASE 2c: WARGA KECIL ----------
+     Orang-orang kecil di jalur depan kota melakukan aktivitas sesuai berita terbaru (NW.ev) dan sesuai tahap kebakaran hutan.
+     Tanpa berita baru, mereka mengikuti suasana nasional (5 fase). Semua digambar dari kode; tidak menambah state aturan. */
+  const SKIN = ["#f1c9a0", "#d9a273", "#b57a4c", "#7a4a2a"],
+    SHIRT = ["#c9281d", "#2f6bff", "#1b7f3a", "#f4b400", "#7a52d0", "#e8e2d0", "#f7941d", "#2aa5a0"],
+    PKC = ["#c9281d", "#2f6bff", "#f7941d", "#1b7f3a"];
+  /* alat peraga: slot h = kepala, x = di atas kepala, b = menimpa badan, a = di tangan kanan (ikut ayunan), g = di tanah */
+  const PR = {
+    helm: ["h", `<path class="o1" d="M-3.3 -16.4Q0 -20.8 3.3 -16.4Z" style="fill:#f4b400"/><rect class="o1" x="-3.9" y="-16.9" width="7.8" height="1.1" style="fill:#f4b400"/>`],
+    helmm: ["h", `<path class="o1" d="M-3.3 -16.4Q0 -20.8 3.3 -16.4Z" style="fill:#e0301e"/><rect class="o1" x="-3.9" y="-16.9" width="7.8" height="1.1" style="fill:#e0301e"/>`],
+    caping: ["h", `<path class="o1" d="M-6.4 -16.2L0 -22L6.4 -16.2Z" style="fill:#d9b86a"/>`],
+    topi: ["h", `<path class="o1" d="M-3 -16.6Q0 -20 3 -16.6Z" style="fill:#2f6bff"/><path class="ln" d="M2.6 -16.6H6"/>`],
+    peci: ["h", `<path class="o1" d="M-2.9 -17.4H2.9L2.6 -19.2H-2.6Z" style="fill:#111"/>`],
+    ikat: ["h", `<rect x="-2.9" y="-17.6" width="5.8" height="1.2" style="fill:#c9281d"/>`],
+    masker: ["h", `<rect class="o1" x="-2.3" y="-14.6" width="4.6" height="2.2" rx=".7" style="fill:#fffdf6"/>`],
+    rompi: ["b", `<path d="M-2.7 -12.5L-2.9 -7H2.9L2.7 -12.5Z" style="fill:#f7941d"/><path d="M-1 -12.8V-7M1 -12.8V-7" style="stroke:#fffdf6;stroke-width:.9px;fill:none"/>`],
+    rompim: ["b", `<path d="M-2.7 -12.5L-2.9 -7H2.9L2.7 -12.5Z" style="fill:#e0301e"/><path d="M-1 -12.8V-7M1 -12.8V-7" style="stroke:#fffdf6;stroke-width:.9px;fill:none"/>`],
+    ember: ["a", `<path class="o1" d="M2.2 -7.4H5.8L5 -3.6H3Z" style="fill:#4a90d9"/><path class="ln" d="M2.2 -7.4Q4 -9.8 5.8 -7.4"/>`],
+    jerigen: ["a", `<rect class="o1" x="2.4" y="-9" width="4" height="5" style="fill:#f7941d"/><rect class="o1" x="3.1" y="-9.9" width="1.8" height="1" style="fill:#c9281d"/>`],
+    kamera: ["a", `<rect class="o1" x="2.6" y="-10" width="3.6" height="2.6" style="fill:#333"/><circle cx="4.4" cy="-8.7" r=".8" style="fill:#9bd6f5"/>`],
+    mic: ["a", `<path class="ln" d="M3.6 -7L5.8 -10.6"/><circle class="o1" cx="6.1" cy="-11" r="1.2" style="fill:#c9281d"/>`],
+    ponsel: ["a", `<rect class="o1" x="3.4" y="-9.6" width="1.9" height="3.2" rx=".4" style="fill:#222"/>`],
+    clip: ["a", `<rect class="o1" x="2.6" y="-10.4" width="3.8" height="4.8" style="fill:#fffdf6"/><path class="ln" d="M3.5 -8.8H5.6M3.5 -7.3H5.6"/>`],
+    tas: ["a", `<path class="o1" d="M2.4 -7H6.4L6 -2.6H2.9Z" style="fill:#e8d3a0"/><path class="ln" d="M3.2 -7Q4.4 -9.2 5.6 -7"/>`],
+    kardus: ["a", `<rect class="o1" x="1.8" y="-10" width="5.4" height="4.2" style="fill:#c99a5b"/><path class="ln" d="M1.8 -8.6H7.2"/>`],
+    bendera: ["a", `<path class="ln" d="M3.8 -6V-25"/><rect class="o1" x="3.8" y="-25" width="7.4" height="2.2" style="fill:#c9281d"/><rect class="o1" x="3.8" y="-22.8" width="7.4" height="2.2" style="fill:#fffdf6"/>`],
+    kipas: ["a", `<path class="o1" d="M3.2 -9.4L7.6 -12.4L7.8 -8Z" style="fill:#f4b400"/>`],
+    egrek: ["a", `<path class="ln" d="M3.6 -7L8.2 -26"/><path class="o1" d="M7.6 -26.4L11.4 -24.4L8.6 -22.8Z" style="fill:#b8b8b8"/>`],
+    tandan: ["a", `<path class="o1" d="M2.2 -7.2H7L6.2 -3.4H3Z" style="fill:#b5541c"/><circle class="o1" cx="3.6" cy="-8" r="1.2" style="fill:#f7941d"/><circle class="o1" cx="5.6" cy="-8.3" r="1.2" style="fill:#f7941d"/>`],
+    selang: ["a", `<path class="ln" d="M3.6 -7L8.4 -9.4"/><path class="wt" d="M8.4 -9.4Q14 -13 19 -6"/>`],
+    bibit: ["a", `<path class="ln" d="M3.9 -7V-3.6"/><path class="o1" d="M3.9 -3.6Q1.6 -5.4 1.8 -3.2ZM3.9 -3.6Q6.2 -5.4 6 -3.2Z" style="fill:#3d9a4a"/>`],
+    emas: ["a", `<path class="o1" d="M2.4 -7.6H6.6L5.6 -9.8H3.4Z" style="fill:#f4b400"/>`],
+    cangkul: ["a", `<path class="ln" d="M3.6 -7L7.4 -1.6"/><path class="o1" d="M6.6 -1.6L10.4 -2L9.2 .6Z" style="fill:#999"/>`],
+    plak: ["x", `<g class="pk"><path class="ln" d="M0 -17V-23"/><rect class="o1" x="-6" y="-31" width="12" height="8.4" style="fill:var(--pkc,#c9281d)"/><path class="wl" d="M-3.8 -28.4H3.8M-3.8 -26H2"/></g>`],
+    tanya: ["x", `<text class="qm" x="0" y="-20" text-anchor="middle">?</text>`],
+    seru: ["x", `<text class="qm" x="0" y="-20" text-anchor="middle">!</text>`],
+    payung: ["x", `<path class="o1" d="M-8 -19Q0 -29 8 -19Z" style="fill:var(--pkc,#2f6bff)"/><path class="ln" d="M0 -19V-12"/>`],
+    koper: ["g", `<rect class="o1" x="-9" y="-5" width="5.4" height="5" style="fill:#7a4a24"/>`],
+    bola: ["g", `<circle class="o1 bl" cx="7" cy="-2" r="2" style="fill:#fffdf6"/>`],
+  };
+  /* benda tetap di jalur (antrean berbaris di sebelah kirinya) */
+  const SP = {
+    pompa: `<rect class="o1" x="-4" y="-17" width="8" height="17" style="fill:#c9281d"/><rect class="o1" x="-3" y="-14.5" width="6" height="5" style="fill:#9bd6f5"/><path class="ln" d="M4 -10Q8.4 -10 8.4 -5V-2"/><rect class="o1" x="-5.5" y="-1.4" width="11" height="1.4" style="fill:#555"/>`,
+    loket: `<rect class="o1" x="-9" y="-8" width="18" height="8" style="fill:#fffdf6"/><path class="o1" d="M-11 -8L-8 -17H8L11 -8Z" style="fill:#c9281d"/><rect class="o1" x="-6.5" y="-12" width="5" height="4" style="fill:#c99a5b"/><rect class="o1" x="1" y="-12" width="5" height="4" style="fill:#c99a5b"/>`,
+    tps: `<rect class="o1" x="-8" y="-14" width="16" height="14" style="fill:#fffdf6"/><path class="o1" d="M-9 -14L0 -21L9 -14Z" style="fill:#2f6bff"/><rect class="o1" x="-3" y="-8" width="6" height="8" style="fill:#7a4a24"/><rect class="o1" x="9.5" y="-5" width="5" height="5" style="fill:#ddd"/>`,
+    lapak: `<rect class="o1" x="-10" y="-7" width="20" height="7" style="fill:#d9b86a"/><path class="o1" d="M-12 -7L-9 -17H9L12 -7Z" style="fill:#f7941d"/><path class="wl" d="M-4 -17L-6 -7M0 -17V-7M4 -17L6 -7"/><circle class="o1" cx="-5" cy="-8.6" r="1.6" style="fill:#c9281d"/><circle class="o1" cx="0" cy="-8.6" r="1.6" style="fill:#f4b400"/><circle class="o1" cx="5" cy="-8.6" r="1.6" style="fill:#3d9a4a"/>`,
+    truk: `<rect class="o1" x="-13" y="-10" width="17" height="8" style="fill:#fffdf6"/><circle class="o1" cx="-9" cy="-11" r="2.2" style="fill:#f7941d"/><circle class="o1" cx="-4.6" cy="-11.4" r="2.2" style="fill:#f7941d"/><circle class="o1" cx="-0.4" cy="-11" r="2.2" style="fill:#f7941d"/><path class="o1" d="M4 -10H10L13.4 -5.4V-2H4Z" style="fill:#c9281d"/><circle cx="-8" cy="-1.6" r="2.4" style="fill:#111"/><circle cx="8.6" cy="-1.6" r="2.4" style="fill:#111"/>`,
+  };
+  const f = (a, ...p) => ({ a, p });
+  /* aktivitas: c = keterangan (tampil di ticker), s = benda tetap, x = posisi benda, q = berbaris antre, f = para warga
+     anim: wk jalan, rn lari, id diam, wv melambai, pl mengacungkan poster, wr bekerja, ju melompat, co batuk, sp menyemprot air */
+  const SCN = {
+    tenang: { c: "Warga menikmati suasana tenang", f: [f("wk"), f("wk", "topi"), f("ju", "kid", "bola"), f("ju", "kid"), f("wv"), f("wk", "tas"), f("rn")] },
+    sibuk: { c: "Warga sibuk bekerja dan berbelanja", f: [f("wk", "tas"), f("wk", "tas", "topi"), f("wk", "ponsel"), f("wv"), f("wk"), f("wk", "tas"), f("ju", "kid")] },
+    gerah: { c: "Cuaca panas, warga mulai gerah", f: [f("wk", "kipas"), f("wk", "kipas", "topi"), f("id", "kipas"), f("wv"), f("wk", "topi"), f("wk", "ponsel"), f("id")] },
+    resah: { c: "Warga resah dan mulai berkumpul", f: [f("id", "plak"), f("wk", "ponsel"), f("id", "tanya"), f("wk", "payung"), f("id", "plak", "ikat"), f("wk"), f("co")] },
+    rusuh: { c: "Situasi rusuh, warga berlarian", f: [f("rn", "tas"), f("rn"), f("rn", "ponsel"), f("pl", "plak", "ikat"), f("pl", "plak", "ikat"), f("co"), f("wk", "payung")] },
+    sawit: { c: "Harga sawit naik, petani memanen", s: "truk", x: 270, f: [f("wr", "caping", "egrek"), f("wr", "caping", "egrek"), f("id", "caping", "tandan"), f("wk", "caping", "tandan"), f("id", "caping"), f("wk", "topi")] },
+    wisata: { c: "Wisatawan membludak", f: [f("wk", "topi", "kamera"), f("wk", "tas", "koper"), f("id", "kamera"), f("wv", "topi"), f("wk", "kamera", "topi"), f("ju", "kid"), f("wk", "koper")] },
+    proyek: { c: "Pekerja proyek sibuk membangun", f: [f("wr", "helm", "rompi", "cangkul"), f("wr", "helm", "rompi", "cangkul"), f("id", "helm", "rompi", "clip"), f("wk", "helm", "rompi"), f("wr", "helm", "cangkul"), f("id", "helm", "rompi")] },
+    pilkada: { c: "Warga mencoblos di TPS", s: "tps", x: 285, q: 1, f: [f("id"), f("id", "peci"), f("id"), f("wk", "bendera"), f("wv"), f("wk", "peci"), f("id", "topi")] },
+    bansos: { c: "Warga antre bantuan sosial", s: "loket", x: 285, q: 1, f: [f("id", "kardus"), f("id"), f("id", "kardus"), f("id", "topi"), f("wk", "kardus"), f("wv")] },
+    amal: { c: "Donasi CSR dibagikan ke warga", s: "loket", x: 285, q: 1, f: [f("id", "kardus"), f("id"), f("id", "kardus"), f("wv"), f("wk", "tas")] },
+    pajak: { c: "Warga antre membayar pajak darurat", s: "loket", x: 285, q: 1, f: [f("id", "clip"), f("id", "clip"), f("id"), f("id", "ponsel"), f("wk", "tas"), f("co")] },
+    bbm: { c: "Antre BBM di SPBU", s: "pompa", x: 285, q: 1, f: [f("id", "jerigen"), f("id", "jerigen"), f("id", "ponsel"), f("id", "jerigen"), f("wk", "jerigen"), f("co")] },
+    pasar: { c: "Harga naik, warga mengeluh di pasar", s: "lapak", x: 285, q: 1, f: [f("id", "tas"), f("wv", "tas"), f("id", "kardus"), f("wv"), f("wk", "tas"), f("id", "tanya")] },
+    modal: { c: "Pedagang menerima modal usaha", s: "lapak", x: 285, f: [f("wv"), f("wv", "topi"), f("id", "tas"), f("wk", "tas"), f("ju", "kid")] },
+    syukur: { c: "Warga bersyukur dan bersuka cita", f: [f("ju"), f("ju", "emas"), f("wv"), f("ju", "kid"), f("wk", "emas"), f("wv"), f("wk")] },
+    lesu: { c: "Warga lesu dan cemas", f: [f("id", "kardus"), f("id", "ponsel"), f("wk", "tas"), f("id"), f("wk", "kardus"), f("id", "tanya")] },
+    demo: { c: "Warga berdemo di jalan", f: [f("pl", "plak", "ikat"), f("pl", "plak", "ikat"), f("pl", "plak"), f("pl", "plak", "ikat"), f("wv", "ikat"), f("wk", "bendera"), f("rn")] },
+    audit: { c: "Petugas memeriksa dan menagih pajak", f: [f("id", "clip", "peci"), f("id", "clip", "peci"), f("wk", "kamera"), f("id", "tas"), f("wk", "clip", "peci")] },
+    wartawan: { c: "Wartawan mengejar kabar", f: [f("wk", "mic"), f("wk", "mic"), f("id", "kamera"), f("id", "kamera"), f("id", "peci"), f("rn", "kamera")] },
+    blusukan: { c: "Presiden blusukan, warga menyambut", f: [f("wv"), f("wv"), f("wv", "topi"), f("wk", "kamera"), f("id", "bendera"), f("ju", "kid"), f("id", "peci")] },
+    bebas: { c: "Keluarga menyambut yang dibebaskan", f: [f("wv"), f("wv", "bendera"), f("ju"), f("ju", "kid"), f("wk")] },
+    libur: { c: "Warga berlibur dan berpiknik", f: [f("wk", "tas", "topi"), f("ju", "kid", "bola"), f("ju", "kid", "bola"), f("wv"), f("wk", "koper"), f("wk", "topi")] },
+    pinjol: { c: "Warga cemas urusan pinjol", f: [f("id", "ponsel"), f("id", "ponsel"), f("id", "ponsel", "tanya"), f("wk", "ponsel"), f("id")] },
+    bingung: { c: "Warga bingung nama kota berubah", f: [f("id", "tanya"), f("id", "tanya"), f("wk", "tanya", "ponsel"), f("id", "tanya"), f("wk")] },
+    kh0: { c: "Warga melihat titik api di kejauhan", f: [f("id", "ponsel"), f("id", "ponsel", "tanya"), f("wv"), f("id", "seru"), f("wk", "ponsel"), f("id")] },
+    kh1atasi: { c: "Petugas dan warga memadamkan api", x: 150, f: [f("sp", "helmm", "rompim", "selang"), f("sp", "helmm", "rompim", "selang"), f("wr", "ember", "helm"), f("wr", "ember"), f("wk", "ember"), f("id", "helmm", "rompim", "clip")] },
+    kh1biarkan: { c: "Api meluas, warga mengungsi", f: [f("rn", "masker", "tas"), f("rn", "masker", "tas"), f("rn", "masker"), f("co", "masker"), f("wk", "masker", "kardus"), f("id", "masker", "seru")] },
+    kh2atasi: { c: "Api padam, warga lega", f: [f("ju"), f("wv"), f("ju", "kid"), f("wv"), f("id", "masker"), f("wk", "ember"), f("wk")] },
+    kh2biarkan: { c: "Asap pekat: warga terbatuk dan memprotes", f: [f("co", "masker"), f("co", "masker"), f("pl", "plak", "masker"), f("pl", "plak", "masker"), f("id", "masker", "tanya"), f("wk", "masker")] },
+    kh3: { c: "Bekas hutan dibuka dan ditanami sawit", f: [f("wr", "caping", "cangkul"), f("wr", "caping", "cangkul"), f("wr", "caping", "cangkul"), f("wk", "caping", "bibit"), f("wk", "caping", "bibit"), f("id", "helm", "rompi", "clip")] },
+    kh4: { c: "Sawit berbuah, panen dimulai", s: "truk", x: 270, f: [f("wr", "caping", "egrek"), f("wr", "caping", "egrek"), f("wk", "caping", "tandan"), f("wk", "caping", "tandan"), f("id", "helm", "clip"), f("id", "caping", "tandan")] },
+  };
+  /* id berita -> aktivitas (id "evN" = berita ekonomi dasar, "arc-..." = seri bersambung) */
+  const EVSC = {
+    ev0: "pasar", ev1: "lesu", ev2: "sawit", ev3: "bbm", ev4: "wisata", ev5: "proyek", ev6: "proyek", ev7: "demo", ev8: "pilkada", ev9: "pasar", ev10: "lesu", ev11: "syukur", ev12: "syukur", ev13: "lesu", ev14: "proyek", ev15: "audit",
+    bansos: "bansos", csr: "amal", endorse: "modal", blusukan: "blusukan", monoprotes: "demo", kppu: "audit", pajakkaya: "audit", endus: "wartawan", reshuffle: "wartawan", amnesti: "bebas", pinjol: "pinjol", rupiah: "pasar", libur: "libur", namakota: "bingung", kupon: "lesu", napas: "pajak", jembatan: "proyek",
+    "arc-kasus": "wartawan", "arc-tol": "proyek", "arc-gelap": "demo",
+  };
+  const BASESC = ["tenang", "sibuk", "gerah", "resah", "rusuh"];
+  const isWalk = (s) => s.a == "wk" || s.a == "rn";
+  const BASEY = 29;
+  /* satu orang: kaki di (0,0), tinggi ±18 satuan */
+  const orang = (s, i) => {
+    const sl = (k) =>
+      s.p
+        .map((n) => PR[n])
+        .filter((x) => x && x[0] == k)
+        .map((x) => x[1])
+        .join("");
+    const c = SHIRT[(i * 3 + 1) % SHIRT.length],
+      sk = SKIN[(i * 5 + 2) % SKIN.length],
+      sp = s.a == "rn" ? 0.28 : 0.5 + (i % 3) * 0.06;
+    return (
+      `<g class="fk ${s.a}" style="--sp:${sp}s;--dl:-${((i * 0.37) % 2).toFixed(2)}s;--pkc:${PKC[i % 4]};--ac:${c}">` +
+      `<path class="ar a am" d="M-2.6 -12L-3.6 -7"/>` +
+      `<path class="lg a" d="M-1.2 -6.6L-1.5 0"/><path class="lg b" d="M1.2 -6.6L1.5 0"/>` +
+      `<g class="bd"><path class="o1" d="M-3 -6.8L-2.7 -12.6Q0 -13.5 2.7 -12.6L3 -6.8Z" style="fill:${c}"/>${sl("b")}` +
+      `<circle class="o1" cx="0" cy="-15.6" r="2.7" style="fill:${sk}"/>${sl("h")}${sl("x")}</g>` +
+      `<g class="ar b"><path class="am" d="M2.6 -12L3.6 -7"/>${sl("a")}</g>${sl("g")}</g>`
+    );
+  };
+  const pasangOrang = (s, i, x, y, flip) => {
+    const k = (s.p.includes("kid") ? 0.72 : 1) * 1.3; /* 1,3 = pembesaran agar warga terbaca di papan */
+    return `<g transform="translate(${f1(x)} ${f1(y)}) scale(${flip ? -k : k} ${k})">${orang(s, i)}</g>`;
+  };
+  /* diam = mode hemat (gerak dikurangi / FX low): semua orang berdiri di tempat, tanpa animasi */
+  const folkSvg = (sc, diam) => {
+    const list = sc.f.slice(0, diam ? 5 : 8),
+      st = [],
+      wk = [];
+    list.forEach((s, i) => (diam || !isWalk(s) ? st : wk).push({ s: diam && isWalk(s) ? { ...s, a: "id" } : s, i }));
+    let g = "";
+    if (sc.s) g += `<g transform="translate(${sc.x} ${BASEY}) scale(1.25)" class="spc">${SP[sc.s]}</g>`;
+    st.forEach((o, j) => {
+      let x;
+      if (sc.q) x = sc.x - 20 - j * 16;
+      else {
+        const cx = sc.s ? sc.x - 65 : sc.x || 200;
+        x = cx + (j - (st.length - 1) / 2) * 19;
+      }
+      x = Math.max(14, Math.min(386, x));
+      g += pasangOrang(o.s, o.i, x, BASEY - (j % 2) * 2, !sc.q && j % 2 == 1);
+    });
+    wk.forEach((o, w) => {
+      const d = 26 + w * 5,
+        l = w % 2 == 1;
+      g += `<g class="mv ${l ? "l" : "r"}" style="--d:${d}s;animation-delay:-${((d * (w + 0.5)) / wk.length).toFixed(1)}s">${pasangOrang(o.s, o.i, 0, BASEY - (w % 2) * 2, l)}</g>`;
+    });
+    return `<svg viewBox="0 0 400 30" preserveAspectRatio="xMidYMax meet" aria-hidden="true">${g}</svg>`;
+  };
+
   const SKY =
     `<div class="sk" id="sk" aria-hidden="true">` +
     [0, 1, 2, 3, 4].map((i) => `<i class="sk-bg p${i}"></i>`).join("") +
     `<div class="sk-sun">${SUN}</div>` +
     `<div class="sk-bird">${BIRD}</div><div class="sk-bird b2">${BIRD}</div>` +
     `<div class="sk-cl c1">${CLOUD}</div><div class="sk-cl c2">${CLOUD}</div><div class="sk-cl c3">${CLOUD}</div>` +
-    `<div class="sk-plane">${PLANE}</div><div class="sk-ball">${BALLOON}</div>${FW}<div class="sk-storm"></div><div class="sk-haze"></div>` +
-    `<div class="sk-ground"></div><div class="sk-city">${CITY}</div><div class="sk-train">${KERETA}</div><div class="sk-road">${ROAD}</div><div class="sk-town" id="sk-town"></div>` +
+    `<div class="sk-plane">${PLANE}</div><div class="sk-ball">${BALLOON}</div>${FW}<div class="sk-storm"></div><div class="sk-haze"></div><div class="sk-glow"></div><div class="sk-forest" id="sk-forest">${FOREST}</div><div class="sk-heli">${HELI}</div>` +
+    `<div class="sk-ground"></div><div class="sk-city">${CITY}</div><div class="sk-train">${KERETA}</div><div class="sk-road">${ROAD}</div><div class="sk-town" id="sk-town"></div><div class="sk-asap"><i></i><i></i><i></i></div><div class="sk-folk" id="sk-folk"></div>` +
     `<div class="sk-rain r1"></div><div class="sk-rain r2"></div>` +
     `<div class="sk-sir m"></div><div class="sk-sir b"></div>` +
     `<div class="sk-bolt">${BOLT}</div><div class="sk-flash"></div></div>`;
@@ -154,7 +403,7 @@ const PLANE = `<svg viewBox="0 0 60 20" aria-hidden="true"><path d="M2 10H12" st
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
   const kali = (n) => "×" + (Math.round(n * 100) / 100).toString().replace(".", ",");
   const hist = []; /* judul berita terbaru (maks 3), terbaru di depan */
-  let last = { ph: -1, c: -1, ap: "", tk: "", lite: null };
+  let last = { ph: -1, c: -1, ap: "", tk: "", lite: null, sc: null };
 
   const lite = () => {
     try {
@@ -298,6 +547,18 @@ const PLANE = `<svg viewBox="0 0 60 20" aria-hidden="true"><path d="M2 10H12" st
     const pi = pjInfo();
     if (pi) it.push(["Proyek", pi]);
     try {
+      const k = khData();
+      if (k && k.s >= 0) {
+        const c = (v) => k.pl.filter((x) => x === v).length,
+          h = [];
+        if (c(1)) h.push(c(1) + " petak hutan terbakar");
+        if (c(2)) h.push(c(2) + " petak hangus");
+        if (c(3) + c(4)) h.push(c(3) + c(4) + " petak jadi lahan sawit");
+        if (h.length) it.push(["Hutan", h.join(" · ")]);
+      }
+    } catch (e) {}
+    if (last.sc && last.sc.c) it.push(["Warga", last.sc.c]);
+    try {
       if (crS()) it.push(["Krisis", `Tahap ${crS()}: sewa ${kali(crM())}, gaji ${kali(crG())}`]);
     } catch (e) {}
     try {
@@ -426,6 +687,87 @@ const PLANE = `<svg viewBox="0 0 60 20" aria-hidden="true"><path d="M2 10H12" st
     b.innerHTML = L.map((x, i) => `<span class="mbr${i === top && L.length > 1 ? " lead" : ""}" style="--h:${Math.max(8, Math.round((x.v / mx) * 100))}%;--bc:${x.c}"></span>`).join("");
   };
 
+  /* ---------- Fase 2b/2c: hutan, asap, dan warga ---------- */
+  const khData = () => {
+    try {
+      return NW.kh && Array.isArray(NW.kh.pl) ? NW.kh : null;
+    } catch (e) {
+      return null;
+    }
+  };
+  /* tingkat kabut asap 0..3 menurut tahap seri & pilihan pemerintah */
+  const asapLv = (k) => {
+    if (!k || k.s < 0) return 0;
+    const b = k.ch == "biarkan";
+    if (k.s == 0) return 1;
+    if (k.s == 1) return b ? 3 : 2;
+    if (k.s == 2) return b ? 3 : 1;
+    return k.s == 3 && b ? 1 : 0;
+  };
+  const KHNOTE = [
+    ["Titik api terdeteksi di hutan", 1],
+    ["Kebakaran meluas: pemerintah memutuskan", 1],
+    ["", 0],
+    ["Bekas hutan dibuka jadi lahan sawit", 0],
+    ["Kebun sawit mulai berproduksi", 0],
+  ];
+  function paintForest() {
+    const k = khData(),
+      key = k ? k.pl.join("") + "|" + k.s + "|" + k.ch : "-";
+    if (key === last.kh) return;
+    const baru = last.kh !== undefined && last.kh !== "" && last.khS !== undefined;
+    last.kh = key;
+    const pts = ctr.querySelectorAll(".sk-forest .pt");
+    pts.forEach((g, i) => g.setAttribute("class", "pt s" + (k && k.pl[i] > 0 ? k.pl[i] : 0)));
+    ctr.dataset.asap = String(asapLv(k));
+    ctr.dataset.heli = k && k.ch == "atasi" && k.s == 1 ? "1" : "0";
+    ctr.dataset.fire = k && k.pl.includes(1) ? "1" : "0";
+    const s = k ? k.s : -1;
+    if (baru && s !== last.khS && s >= 0) {
+      let t = KHNOTE[s] ? KHNOTE[s][0] : "",
+        bad = KHNOTE[s] ? !!KHNOTE[s][1] : false;
+      if (s == 2) {
+        t = k.ch == "atasi" ? "Api padam, sebagian hutan selamat" : "Kabut asap pekat selimuti negeri";
+        bad = k.ch != "atasi";
+      }
+      if (t) pjNote(t, bad);
+    }
+    last.khS = s;
+  }
+  /* aktivitas warga yang sedang tampil: tahap karhutla yang masih panas > berita terbaru > suasana nasional */
+  function pickScene(ph) {
+    let ev = null,
+      key = null,
+      r = 0;
+    try {
+      ev = NW.ev;
+      r = rnd;
+    } catch (e) {}
+    const k = khData(),
+      kkey = k && k.s >= 0 ? "kh" + k.s + (k.s == 1 || k.s == 2 ? k.ch : "") : null;
+    if (kkey && SCN[kkey]) {
+      if (ev && ev.i == "arc-karhutla" && r - (k.r || 0) <= 2) key = kkey;
+      else if (k.s >= 1 && k.s <= 2 && r - (k.r || 0) <= 3) key = kkey;
+    }
+    if (!key && ev && r - ev.r <= 2 && EVSC[ev.i]) key = EVSC[ev.i];
+    if (!key) key = BASESC[ph] || "tenang";
+    return { k: key, s: SCN[key] || SCN.tenang };
+  }
+  function paintFolk(ph) {
+    const el = q("#sk-folk");
+    if (!el) return;
+    const sc = pickScene(ph),
+      diam = lite() || RM.matches,
+      key = sc.k + "|" + (diam ? 1 : 0);
+    last.sc = sc.s;
+    if (el.dataset.k === key) return;
+    el.dataset.k = key;
+    el.classList.remove("in");
+    el.innerHTML = folkSvg(sc.s, diam);
+    void el.offsetWidth;
+    el.classList.add("in");
+  }
+
   function update() {
     pasang();
     let c, ph;
@@ -482,6 +824,8 @@ const PLANE = `<svg viewBox="0 0 60 20" aria-hidden="true"><path d="M2 10H12" st
     pjStep();
     paintTown();
     paintMon();
+    paintForest();
+    paintFolk(ph);
 
     /* judul berita terbaru */
     try {

@@ -68,7 +68,8 @@
                 "Berita hanya terbit jika berdampak pada permainan; jedanya makin pendek seiring meningkatnya tingkat kekacauan.",
                 "<b>Stress level</b> (0–100) tampil sebagai lingkaran di ringkasan Situasi negara, di samping berita terakhir. Makin tinggi, lingkarannya berdenyut makin cepat, dan bila terus naik berturut-turut ia bergetar panik. Nilainya dipengaruhi putaran, tahap krisis, pion OTT, pemain di penjara, jejak korupsi, aset negara, dan pengetatan fiskal.",
                 "Lima fase: Stabil, Mulai memanas, Panas, Gawat, Krisis berat. Berita menyesuaikan kondisi permainan (pemain terkaya/termiskin, monopoli warna, kas APBN, presiden, penjara, utang).",
-                "Ada tiga seri bersambung (kasus rekening, Tol Langit, demonstrasi) yang dapat terulang di fase Gawat. Efek ekonomi berlaku 3 putaran atau satu kali. Contoh dasar:",
+                "Ada empat seri bersambung (kasus rekening, Tol Langit, demonstrasi, kebakaran hutan) yang dapat terulang di fase Gawat. Efek ekonomi berlaku 3 putaran atau satu kali.",
+                "<b>Kebakaran hutan</b> (5 bagian, hanya muncul bila ada Presiden): titik api muncul, lalu Presiden memutuskan <b>Atasi</b> (APBN Rp5.000.000, api padam, sebagian hutan selamat, kekacauan turun) atau <b>Biarkan</b> (gratis, tetapi api dan asap memburuk: semua pemain membayar biaya kesehatan Rp500.000, sewa kawasan wisata ×0,6 selama 3 putaran, kekacauan naik). Bekas hutan yang terbakar lalu dibuka menjadi kebun sawit dan APBN menerima Rp1.500.000 per petak. Semuanya tampak di peta tengah, bersama warga kecil yang beraktivitas mengikuti berita terbaru. Contoh berita dasar:",
               ].concat(EV.map((e) => e.n)),
             ),
           ) +

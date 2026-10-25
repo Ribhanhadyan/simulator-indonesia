@@ -1,7 +1,7 @@
       /* ================= BERITA NASIONAL v2 (awal) =================
          Hanya berita yang berdampak pada permainan. Meter kekacauan dihitung dari kondisi game dan menentukan
          suasana (5 fase), jenis berita, serta seberapa sering berita berefek terbit. */
-      const NW = { bump: 0, last: "", feed: [], hist: [], ph: 0, arc: null, n: {}, cd: 0 };
+      const NW = { bump: 0, last: "", feed: [], hist: [], ph: 0, arc: null, n: {}, cd: 0, kh: null, ev: null };
       const NPH = [
           ["Stabil", "🟢", "#3bb273"],
           ["Mulai memanas", "🟡", "#9ccc3b"],
@@ -247,6 +247,32 @@
         },
       });
 
+
+      /* ---- Kebakaran hutan: keadaan hutan disimpan di NW.kh (ikut tersimpan otomatis bersama NW) dan digambar di peta tengah (21-tengah.js).
+         pl = 8 petak hutan. Nilai petak: 0 hutan, 1 terbakar, 2 hangus, 3 dibuka & ditanami bibit sawit, 4 kebun sawit.
+         s = bagian seri terakhir yang terbit (-1 belum ada), ch = pilihan pemerintah ("atasi" / "biarkan"), r = putaran terakhir berubah. ---- */
+      const KH_N = 8,
+        KH_BIAYA = 5e6 /* biaya APBN memadamkan api */,
+        KH_ASAP = 5e5 /* biaya kesehatan per pemain bila api dibiarkan */,
+        KH_PNBP = 15e5; /* pajak ekspor sawit per petak kebun */
+      const khGet = () => (NW.kh && Array.isArray(NW.kh.pl) && NW.kh.pl.length === KH_N ? NW.kh : (NW.kh = { s: -1, ch: "", pl: Array(KH_N).fill(0), r: 0 })),
+        khCount = (v) => khGet().pl.filter((x) => x === v).length,
+        khSet = (dari, ke, n) => {
+          const kh = khGet(),
+            ix = shuf(kh.pl.map((v, i) => i).filter((i) => dari.includes(kh.pl[i]))).slice(0, n);
+          ix.forEach((i) => (kh.pl[i] = ke));
+          return ix.length;
+        },
+        khPres = () => (PRES.id >= 0 && P[PRES.id] && !P[PRES.id].x ? P[PRES.id] : null);
+      /* seri terputus (mis. Presiden bangkrut): hutan yang sedang terbakar langsung jadi kebun sawit, tanpa dampak lain */
+      function khBeres() {
+        const kh = khGet();
+        kh.pl = kh.pl.map((v) => (v > 0 ? 4 : 0));
+        kh.s = 4;
+        kh.r = rnd;
+        say("🌴 Lahan bekas kebakaran hutan akhirnya menjadi kebun sawit");
+      }
+
       /* ---- Seri bersambung: tiap bagian terbit beberapa putaran sekali dan makin memuncak. Dapat terulang sebagai "Jilid 2" di fase Gawat ke atas ---- */
       const NARC = {
         kasus: {
@@ -343,6 +369,113 @@
             },
           ],
         },
+        karhutla: {
+          t: "Kebakaran Hutan dan Lahan",
+          lo: 0,
+          hi: 4,
+          /* "target" seri = Presiden yang memutuskan; seri hanya mulai bila ada Presiden dan masih ada ≥3 petak hutan hijau */
+          tgt: () => (khPres() && khGet().pl.filter((v) => v === 0).length >= 3 ? PRES.id : null),
+          st: [
+            {
+              b: 2,
+              tx: () => "Satelit BMKG mendeteksi puluhan <b>titik api</b> di kawasan hutan dan lahan gambut. Asap tipis mulai naik.",
+              fx: () => "Dua petak hutan mulai terbakar; kekacauan naik sedikit",
+              run: async () => {
+                const kh = khGet();
+                kh.s = 0;
+                kh.ch = "";
+                kh.r = rnd;
+                khSet([0], 1, 2);
+                say("🔥 Titik api muncul di kawasan hutan");
+                render();
+              },
+            },
+            {
+              tx: () => "Kebakaran hutan meluas dan kabut asap mulai menyelimuti kota. <b>Pemerintah harus memutuskan</b>: memadamkan api atau membiarkannya.",
+              fx: () => `Presiden memilih: atasi (APBN ${fm(KH_BIAYA)}) atau biarkan (gratis, tetapi api dan asap memburuk)`,
+              run: async () => {
+                const kh = khGet(),
+                  pr = khPres();
+                let k;
+                if (!pr) k = POOL >= KH_BIAYA ? "atasi" : "biarkan";
+                else if (pr.b) k = POOL >= KH_BIAYA * 1.5 && Math.random() < 0.7 ? "atasi" : "biarkan";
+                else
+                  k = await ask(
+                    `<h3>🔥 Kebakaran Hutan</h3><div class="sub">Keputusan Presiden ${pr.n}</div>` +
+                      sec("🚒 Atasi · " + fm(KH_BIAYA) + " dari APBN", '<p class="ct">Satgas, water bombing, dan hujan buatan. Api cepat padam, sebagian besar hutan selamat, asap singkat. Kas APBN berkurang dan kebun sawit yang lahir lebih sedikit.</p>') +
+                      sec("🔥 Biarkan · gratis", '<p class="ct">Api meluas dan asap pekat melumpuhkan kota: semua pemain menanggung biaya kesehatan, sewa kawasan wisata anjlok, kekacauan naik. Lahan yang terbakar jadi kebun sawit lebih luas dan APBN mendapat pajak ekspornya.</p>'),
+                    [
+                      ["🚒 Atasi · " + fm(KH_BIAYA), "atasi"],
+                      ["🔥 Biarkan", "biarkan"],
+                    ],
+                    pr,
+                  );
+                kh.s = 1;
+                kh.ch = k;
+                kh.r = rnd;
+                if (k == "atasi") {
+                  const b = apbnBayar(KH_BIAYA);
+                  khSet([0], 1, 1);
+                  NW.bump -= 3;
+                  say(`🚒 ${pr ? "Presiden " + pr.n : "Pemerintah"} memerintahkan pemadaman: APBN ${fm(b)}`);
+                } else {
+                  khSet([0], 1, 3);
+                  NW.bump += 4;
+                  say(`🔥 ${pr ? "Presiden " + pr.n : "Pemerintah"} membiarkan api: kebakaran meluas`);
+                }
+                render();
+              },
+            },
+            {
+              tx: () => (khGet().ch == "atasi" ? "Satgas karhutla, TNI, dan helikopter <b>water bombing</b> berhasil memadamkan sebagian besar api." : "Api tak terkendali. Asap pekat melintasi batas negara, sekolah diliburkan, dan negara tetangga melayangkan protes."),
+              fx: () => (khGet().ch == "atasi" ? "Sebagian hutan terselamatkan; kekacauan turun" : `Semua pemain membayar ${fm(KH_ASAP)} (biaya kesehatan); sewa kawasan wisata ×0,6 selama 3 putaran`),
+              run: async () => {
+                const kh = khGet();
+                kh.s = 2;
+                kh.r = rnd;
+                if (kh.ch == "atasi") {
+                  khSet([1], 2, 9);
+                  NW.bump -= 4;
+                  say("🚒 Api padam; sebagian hutan terselamatkan");
+                } else {
+                  khSet([0], 1, 1);
+                  khSet([1], 2, 9);
+                  NW.bump += 4;
+                  if (!ECO.d) ECO = { ...BASE, g: { yl: 0.6, gr: 0.6 }, n: "Kabut asap: sewa kawasan wisata ×0,6", d: 3 };
+                  for (const q of nAlv()) await pay(q, KH_ASAP);
+                  say("😷 Kabut asap pekat: warga jatuh sakit dan wisata sepi");
+                }
+                render();
+              },
+            },
+            {
+              tx: () => "Bekas hutan yang terbakar dibuka dan ditanami <b>sawit</b>. Alat berat dan bibit berdatangan.",
+              fx: () => `${khCount(2)} petak bekas hutan berubah menjadi kebun sawit`,
+              run: async () => {
+                const kh = khGet();
+                kh.s = 3;
+                kh.r = rnd;
+                khSet([2], 3, 9);
+                say("🌴 Bekas hutan terbakar dibuka menjadi lahan sawit");
+                render();
+              },
+            },
+            {
+              tx: () => "Kebun sawit di bekas hutan mulai berproduksi dan truk pengangkut buah sawit memenuhi jalan.",
+              fx: () => `APBN menerima ${fm(KH_PNBP * khCount(3))} dari pajak ekspor sawit`,
+              run: async () => {
+                const kh = khGet(),
+                  n = khSet([3], 4, 9),
+                  g = KH_PNBP * n;
+                kh.s = 4;
+                kh.r = rnd;
+                POOL += g;
+                say(`🌴 Kebun sawit berproduksi: APBN menerima ${fm(g)}`);
+                render();
+              },
+            },
+          ],
+        },
         gelap: {
           t: "Gelombang Demonstrasi Nasional",
           lo: 2,
@@ -432,6 +565,8 @@
             seri = { k, d, s: 0, p: d.tgt ? P[pid] : null };
           }
         }
+        /* seri karhutla terputus (mis. Presiden bangkrut): hutan dibereskan tanpa dampak */
+        if (!NW.arc && !seri && NW.kh && NW.kh.s >= 0 && NW.kh.s < 4) khBeres();
         if (seri) {
           cx = { p: seri.p, jl: NW.n[seri.k] ? " · Jilid " + (NW.n[seri.k] + 1) : "", tw: Math.random() < 0.25 };
           cx.a = cx.p ? Math.max(1e6, nRd(cx.p.cash * 0.08)) : 0;
@@ -479,6 +614,7 @@
         NW.cd = NCD[ph];
         NW.ph = ph;
         NW.last = nPl(hx);
+        NW.ev = { i: h.id, s: seri ? seri.s : -1, r: rnd }; /* dipakai peta tengah: aktivitas warga mengikuti berita */
         NW.hist = NW.hist.concat([h.id]).slice(-10);
         render();
       }

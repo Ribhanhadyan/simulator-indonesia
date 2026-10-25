@@ -1539,3 +1539,651 @@
 #pins .fx-pion.p4 {
   background-image: url(../png/pion/pion-2.png);
 }
+
+/* =====================================================================
+   FASE 2b: HUTAN (kebakaran hutan -> bekas hutan jadi lahan sawit)
+   Bukit hutan di belakang kota, dibagi 8 petak. Kelas petak (.pt.s0 ... .pt.s4) diatur 21-tengah.js dari NW.kh:
+   s0 hutan, s1 terbakar, s2 hangus, s3 lahan dibuka + bibit sawit, s4 kebun sawit dewasa.
+   Kabut asap (#ctr[data-asap=1..3]) dan helikopter (#ctr[data-heli=1]) mengikuti tahap seri & pilihan pemerintah.
+   ===================================================================== */
+.sk-forest {
+  left: 0;
+  width: 100%;
+  bottom: 19%;
+  height: 38%;
+  filter: brightness(var(--shade));
+  transition: filter 1.8s;
+  pointer-events: none;
+}
+.sk-forest svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.sk-forest .o1 {
+  stroke: #111;
+  stroke-width: 1.2px;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.sk-forest .hl {
+  fill: none;
+  stroke: #111;
+  stroke-width: 2px;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.sk-forest .hb {
+  fill: color-mix(in srgb, #2f7a3a, #000 var(--dim));
+}
+.pt .gr {
+  fill: color-mix(in srgb, #3f8a45, #000 var(--dim));
+  transition: fill 1.4s;
+}
+.pt .tk {
+  fill: color-mix(in srgb, #6b4a2a, #000 var(--dim));
+}
+.pt .cn.c0 {
+  fill: color-mix(in srgb, #2f8a3e, #000 var(--dim));
+}
+.pt .cn.c1 {
+  fill: color-mix(in srgb, #3f9f4a, #000 var(--dim));
+}
+.pt .cn.c2 {
+  fill: color-mix(in srgb, #55b052, #000 var(--dim));
+}
+.pt .cl2 {
+  stroke: none;
+}
+.pt .cl2.c0 {
+  fill: color-mix(in srgb, #4fae5a, #000 var(--dim));
+}
+.pt .cl2.c1 {
+  fill: color-mix(in srgb, #63bd62, #000 var(--dim));
+}
+.pt .cl2.c2 {
+  fill: color-mix(in srgb, #7bcb6e, #000 var(--dim));
+}
+.pt .tr,
+.pt .ch,
+.pt .sb,
+.pt .sw,
+.pt .fl,
+.pt .sm {
+  display: none;
+}
+.pt.s0 .tr,
+.pt.s1 .tr {
+  display: inline;
+}
+.pt.s1 .fl,
+.pt.s1 .sm,
+.pt.s2 .sm {
+  display: inline;
+}
+.pt.s2 .ch {
+  display: inline;
+}
+.pt.s3 .sb {
+  display: inline;
+}
+.pt.s4 .sw {
+  display: inline;
+}
+.pt.s1 .gr {
+  fill: #5b4a2c;
+}
+.pt.s1 .cn {
+  fill: #6b3d20;
+}
+.pt.s1 .cl2 {
+  fill: #b5541c;
+}
+.pt.s2 .gr {
+  fill: #34312c;
+}
+.pt.s3 .gr {
+  fill: color-mix(in srgb, #a9794a, #000 var(--dim));
+}
+.pt.s4 .gr {
+  fill: color-mix(in srgb, #6aa84f, #000 var(--dim));
+}
+/* hangus: batang hitam tanpa daun */
+.pt .hk {
+  fill: none;
+  stroke: #26211d;
+  stroke-width: 2px;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+/* api & asap */
+.pt .fm {
+  fill: #f7941d;
+}
+.pt .fm2 {
+  fill: #ffe45e;
+  stroke: none;
+}
+.pt .fmg {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: kh-flick 0.55s ease-in-out infinite alternate;
+}
+@keyframes kh-flick {
+  from {
+    transform: scale(1, 0.82);
+  }
+  to {
+    transform: scale(1.12, 1.2);
+  }
+}
+.pt .sc {
+  fill: #6d6560;
+  stroke: #111;
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: kh-smoke 7s ease-out infinite;
+}
+/* tiang asap: naik tinggi sampai terlihat di atas papan judul */
+@keyframes kh-smoke {
+  0% {
+    opacity: 0.85;
+    transform: translate(0, 0) scale(0.5);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(26px, -170px) scale(3.4);
+  }
+}
+.sk-glow {
+  left: 0;
+  right: 0;
+  bottom: 19%;
+  height: 34%;
+  opacity: 0;
+  transition: opacity 1.6s;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 100%, rgba(255, 120, 30, 0.6), rgba(255, 120, 30, 0) 70%);
+}
+#ctr[data-fire="1"] .sk-glow {
+  opacity: 1;
+  animation: kh-glow 1.4s ease-in-out infinite alternate;
+}
+@keyframes kh-glow {
+  to {
+    opacity: 0.6;
+  }
+}
+.pt.s2 .sm {
+  opacity: 0.6;
+}
+.pt.s2 .sm .sc:nth-child(n + 2) {
+  display: none;
+}
+/* lahan dibuka + bibit sawit */
+.pt .so {
+  fill: none;
+  stroke: #7a4a24;
+  stroke-width: 1.4px;
+  opacity: 0.7;
+  vector-effect: non-scaling-stroke;
+}
+.pt .sd {
+  fill: none;
+  stroke: #2f8a3e;
+  stroke-width: 1.5px;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+/* kebun sawit dewasa */
+.pt .pk1 {
+  stroke: #5a3a1c;
+  stroke-width: 2px;
+}
+.pt .fr1 {
+  fill: color-mix(in srgb, #2f8a3e, #000 var(--dim));
+}
+.pt .bn {
+  fill: #f7941d;
+  stroke: #111;
+  stroke-width: 0.8px;
+  vector-effect: non-scaling-stroke;
+}
+
+/* helikopter water bombing (Presiden memilih "Atasi") */
+.sk-heli {
+  top: 36%;
+  left: 0;
+  width: 10%;
+  display: none;
+  pointer-events: none;
+  animation: kh-heli 17s linear infinite;
+  animation-delay: -5s;
+}
+#ctr[data-heli="1"] .sk-heli {
+  display: block;
+}
+.sk-heli svg {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+.sk-heli .o1 {
+  stroke: #111;
+  stroke-width: 1.2px;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.sk-heli .rt {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: kh-rotor 0.12s linear infinite alternate;
+}
+.sk-heli .dr circle {
+  fill: #6ec6f2;
+  stroke: #111;
+  stroke-width: 0.6px;
+  vector-effect: non-scaling-stroke;
+  animation: kh-drop 1s ease-in infinite;
+}
+.sk-heli .dr circle:nth-child(2) {
+  animation-delay: -0.33s;
+}
+.sk-heli .dr circle:nth-child(3) {
+  animation-delay: -0.66s;
+}
+@keyframes kh-heli {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(1050%);
+  }
+}
+@keyframes kh-rotor {
+  to {
+    transform: scaleX(0.35);
+  }
+}
+@keyframes kh-drop {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(26px);
+    opacity: 0;
+  }
+}
+
+/* kabut asap: selimut cokelat + gumpalan yang bergeser pelan; matahari memerah saat pekat */
+.sk-asap {
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.8s;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(128, 104, 80, 0.7), rgba(158, 128, 96, 0.45) 55%, rgba(110, 90, 72, 0.35));
+}
+.sk-asap i {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(70, 60, 52, 0.75), transparent);
+  animation: kh-haze 36s ease-in-out infinite alternate;
+}
+.sk-asap i:nth-child(1) {
+  width: 70%;
+  height: 50%;
+  left: -10%;
+  top: 5%;
+}
+.sk-asap i:nth-child(2) {
+  width: 60%;
+  height: 45%;
+  right: -8%;
+  top: 20%;
+  animation-duration: 44s;
+  animation-delay: -12s;
+}
+.sk-asap i:nth-child(3) {
+  width: 80%;
+  height: 40%;
+  left: 10%;
+  top: 40%;
+  animation-duration: 52s;
+  animation-delay: -20s;
+}
+@keyframes kh-haze {
+  to {
+    transform: translateX(14%);
+  }
+}
+#ctr[data-asap="1"] .sk-asap {
+  opacity: 0.38;
+}
+#ctr[data-asap="2"] .sk-asap {
+  opacity: 0.62;
+}
+#ctr[data-asap="3"] .sk-asap {
+  opacity: 0.85;
+}
+#ctr[data-asap="2"] .sk-sun .disc,
+#ctr[data-asap="3"] .sk-sun .disc {
+  fill: #e8502a;
+}
+#ctr[data-asap="2"] .sk-sun .ray,
+#ctr[data-asap="3"] .sk-sun .ray {
+  stroke: #e8502a;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pt .sc {
+    opacity: 0.55;
+  }
+  .sk-heli {
+    display: none !important;
+  }
+}
+#ctr.tg-lite .pt .sc {
+  opacity: 0.55;
+}
+#ctr.tg-lite .sk-heli {
+  display: none !important;
+}
+
+/* =====================================================================
+   FASE 2c: WARGA KECIL
+   Orang-orang kecil di jalur depan kota. Aktivitas (jalan, lari, melambai, demo, kerja, melompat, batuk, menyemprot air)
+   dipilih 21-tengah.js dari berita terbaru; gerak dimatikan di mode hemat (orang berdiri diam).
+   ===================================================================== */
+.sk-folk {
+  left: 0;
+  width: 100%;
+  bottom: calc(3.7 * max(1.55em, 8.5px) - 0.3em); /* tepat di atas ticker berita (tinggi sama dengan .tvs) */
+  height: 10%;
+  filter: brightness(var(--shade));
+  transition: filter 1.8s;
+  pointer-events: none;
+}
+.sk-folk svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.sk-folk.in svg {
+  animation: fk-in 0.6s ease-out both;
+}
+@keyframes fk-in {
+  from {
+    opacity: 0;
+  }
+}
+.fk .o1 {
+  stroke: #111;
+  stroke-width: 1.1px;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.spc .o1 {
+  stroke: #111;
+  stroke-width: 1.3px;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.spc .wl,
+.fk .wl {
+  fill: none;
+  stroke: #fffdf6;
+  stroke-width: 1.1px;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.fk .ln {
+  fill: none;
+  stroke: #111;
+  stroke-width: 1.1px;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.spc .ln {
+  fill: none;
+  stroke: #111;
+  stroke-width: 1.3px;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.fk .lg {
+  fill: none;
+  stroke: #2b3140;
+  stroke-width: 2px;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.fk .am {
+  fill: none;
+  stroke: var(--ac, #888);
+  stroke-width: 1.8px;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.fk .wt {
+  fill: none;
+  stroke: #6ec6f2;
+  stroke-width: 1.4px;
+  stroke-dasharray: 3 2;
+  vector-effect: non-scaling-stroke;
+}
+.fk .qm {
+  font: 700 7px var(--font-d, sans-serif);
+  fill: var(--brand, #c9281d);
+  stroke: #fffdf6;
+  stroke-width: 0.6px;
+  paint-order: stroke;
+}
+/* poros sendi (satuan koordinat lokal orang) */
+.fk .lg.a {
+  transform-origin: -1.2px -6.6px;
+}
+.fk .lg.b {
+  transform-origin: 1.2px -6.6px;
+}
+.fk .ar.a {
+  transform-origin: -2.6px -12px;
+}
+.fk .ar.b {
+  transform-origin: 2.6px -12px;
+}
+/* berjalan lintas jalur */
+.mv {
+  animation: fk-r var(--d, 28s) linear infinite;
+}
+.mv.l {
+  animation-name: fk-l;
+}
+@keyframes fk-r {
+  from {
+    transform: translateX(-26px);
+  }
+  to {
+    transform: translateX(426px);
+  }
+}
+@keyframes fk-l {
+  from {
+    transform: translateX(426px);
+  }
+  to {
+    transform: translateX(-26px);
+  }
+}
+@keyframes fk-sw {
+  from {
+    transform: rotate(-28deg);
+  }
+  to {
+    transform: rotate(28deg);
+  }
+}
+@keyframes fk-aw {
+  from {
+    transform: rotate(20deg);
+  }
+  to {
+    transform: rotate(-20deg);
+  }
+}
+@keyframes fk-bob {
+  to {
+    transform: translateY(-0.8px);
+  }
+}
+@keyframes fk-wave {
+  from {
+    transform: rotate(-140deg);
+  }
+  to {
+    transform: rotate(-172deg);
+  }
+}
+@keyframes fk-work {
+  from {
+    transform: rotate(-75deg);
+  }
+  to {
+    transform: rotate(20deg);
+  }
+}
+@keyframes fk-jump {
+  to {
+    transform: translateY(-4px);
+  }
+}
+@keyframes fk-pk {
+  to {
+    transform: translateY(-2.4px);
+  }
+}
+@keyframes fk-cough {
+  0% {
+    transform: none;
+  }
+  8% {
+    transform: translate(0, -0.6px) rotate(-6deg);
+  }
+  12% {
+    transform: rotate(5deg);
+  }
+  16% {
+    transform: translate(0, -0.4px) rotate(-4deg);
+  }
+  20%,
+  100% {
+    transform: none;
+  }
+}
+@keyframes fk-wt {
+  to {
+    stroke-dashoffset: -5;
+  }
+}
+@keyframes fk-ball {
+  to {
+    transform: translateY(-6px);
+  }
+}
+.fk.wk .lg.a,
+.fk.rn .lg.a {
+  animation: fk-sw var(--sp) ease-in-out infinite alternate;
+}
+.fk.wk .lg.b,
+.fk.rn .lg.b {
+  animation: fk-sw var(--sp) ease-in-out infinite alternate-reverse;
+}
+.fk.wk .ar.a,
+.fk.rn .ar.a {
+  animation: fk-aw var(--sp) ease-in-out infinite alternate;
+}
+.fk.wk .ar.b,
+.fk.rn .ar.b {
+  animation: fk-aw var(--sp) ease-in-out infinite alternate-reverse;
+}
+.fk.wk .bd,
+.fk.rn .bd {
+  animation: fk-bob var(--sp) ease-in-out infinite alternate;
+}
+.fk.id .bd,
+.fk.wv .bd {
+  animation: fk-bob 2.2s ease-in-out infinite alternate;
+  animation-delay: var(--dl);
+}
+.fk.wv .ar.b {
+  animation: fk-wave 0.55s ease-in-out infinite alternate;
+  animation-delay: var(--dl);
+}
+.fk.pl .ar.a {
+  transform: rotate(155deg);
+}
+.fk.pl .ar.b {
+  transform: rotate(-155deg);
+}
+.fk.pl .pk {
+  animation: fk-pk 0.6s ease-in-out infinite alternate;
+  animation-delay: var(--dl);
+}
+.fk.wr .ar.b {
+  animation: fk-work 0.7s ease-in-out infinite alternate;
+  animation-delay: var(--dl);
+}
+.fk.wr .bd {
+  animation: fk-bob 0.7s ease-in-out infinite alternate;
+  animation-delay: var(--dl);
+}
+.fk.ju {
+  animation: fk-jump 0.6s cubic-bezier(0.3, 0.7, 0.5, 1) infinite alternate;
+  animation-delay: var(--dl);
+}
+.fk.ju .ar.b {
+  transform: rotate(-150deg);
+}
+.fk.co .ar.b {
+  transform: rotate(-150deg);
+}
+.fk.co .bd {
+  animation: fk-cough 2.4s steps(1) infinite;
+  animation-delay: var(--dl);
+}
+.fk.sp .ar.b {
+  transform: rotate(-85deg);
+}
+.fk.sp .wt {
+  animation: fk-wt 0.5s linear infinite;
+}
+.fk .bl {
+  animation: fk-ball 0.6s ease-out infinite alternate;
+}
+/* mode hemat / gerak dikurangi: warga berdiri diam (21-tengah.js sudah menyusunnya tanpa jalur jalan) */
+@media (prefers-reduced-motion: reduce) {
+  .sk-folk.in svg {
+    animation: none;
+  }
+}
+#ctr.tg-lite .sk-folk.in svg {
+  animation: none;
+}
+:root[data-theme="dark"] .sk-folk,
+:root[data-theme="dark"] .sk-forest {
+  filter: brightness(calc(var(--shade) * 0.72));
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .sk-folk,
+  :root:not([data-theme="light"]) .sk-forest {
+    filter: brightness(calc(var(--shade) * 0.72));
+  }
+}
